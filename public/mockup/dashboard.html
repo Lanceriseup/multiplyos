@@ -1,0 +1,748 @@
+<style>
+  :root {
+    --ground: #F6F5F3;
+    --card: #FFFFFF;
+    --hair: #ECEAE6;
+    --hair-2: #E3E0DA;
+    --ink: #1B1A17;
+    --muted: #8A867E;
+    --muted-2: #A9A49B;
+    --orange: #EA7B1B;
+    --orange-soft: #FCEEE0;
+    --navy: #1F2937;
+    --pink: #FBEAEA;
+    --pink-ink: #D8563F;
+    --green: #2BA463;
+    --green-soft: #E7F6EE;
+    --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, sans-serif;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+
+  html, body { margin: 0; background: transparent; overflow: hidden; }
+  .doc { background: transparent; color: var(--ink); font-family: var(--sans); -webkit-font-smoothing: antialiased; padding: 0; display: flex; justify-content: center; }
+  .wrap { max-width: 1180px; margin: 0 auto; width: 100%; }
+  .masthead { padding-bottom: 20px; }
+  .eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--orange); margin: 0 0 9px; }
+  .masthead h1 { font-size: clamp(24px, 4vw, 34px); line-height: 1.05; letter-spacing: -0.025em; font-weight: 750; margin: 0; }
+  .masthead .lede { color: var(--muted); font-size: 14.5px; line-height: 1.55; margin: 11px 0 0; max-width: 64ch; }
+  .hint { display: inline-flex; align-items: center; gap: 8px; margin-top: 14px; font-size: 12.5px; color: #6A655E; background: #fff; border: 1px solid var(--hair-2); border-radius: 999px; padding: 6px 13px; }
+  .hint .pulse { width: 7px; height: 7px; border-radius: 50%; background: var(--orange); box-shadow: 0 0 0 0 rgba(234,123,27,0.6); animation: pulse 1.8s infinite; }
+  @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(234,123,27,0.5); } 70% { box-shadow: 0 0 0 7px rgba(234,123,27,0); } 100% { box-shadow: 0 0 0 0 rgba(234,123,27,0); } }
+
+  .viewport { position: relative; width: 100%; margin-top: 18px; overflow: hidden; }
+  .scale { width: 1180px; transform-origin: top left; transform: scale(var(--s, 1)); }
+
+  .frame-browser { border-radius: 14px; overflow: hidden; background: #fff; border: 1px solid rgba(0,0,0,0.06); }
+  .chrome { height: 40px; background: #F0EEEA; border-bottom: 1px solid var(--hair); display: flex; align-items: center; gap: 16px; padding: 0 16px; }
+  .lights { display: flex; gap: 8px; }
+  .lights i { width: 12px; height: 12px; border-radius: 50%; display: block; }
+  .lights .r { background: #F0655A; } .lights .y { background: #F4BE4F; } .lights .g { background: #61C454; }
+  .urlbar { flex: 1; height: 24px; background: #fff; border: 1px solid var(--hair-2); border-radius: 7px; display: flex; align-items: center; justify-content: center; gap: 7px; color: var(--muted); font-size: 12.5px; max-width: 380px; margin: 0 auto; }
+  .urlbar svg { width: 12px; height: 12px; flex: none; }
+
+  /* ===== APP SHELL ===== */
+  .app { width: 1180px; height: 700px; display: flex; background: var(--ground); overflow: hidden; font-size: 13px; color: var(--ink); position: relative; }
+
+  /* sidebar */
+  .sb { width: 226px; flex: none; background: #fff; border-right: 1px solid var(--hair); display: flex; flex-direction: column; padding: 14px 12px 18px; }
+  .brand { display: flex; align-items: center; gap: 1px; font-weight: 800; font-size: 16px; letter-spacing: -0.02em; padding: 4px 8px 12px; }
+  .brand .gear { color: var(--orange); font-size: 17px; line-height: 1; }
+  .switcher { display: flex; align-items: center; gap: 9px; padding: 9px 10px; border: 1px solid var(--hair-2); border-radius: 9px; margin-bottom: 12px; }
+  .switcher .sq { width: 22px; height: 22px; border-radius: 6px; background: #EFEDE8; display: grid; place-items: center; color: var(--muted); }
+  .switcher .sq svg { width: 13px; height: 13px; }
+  .switcher b { font-size: 13px; font-weight: 650; }
+  .switcher .chev { margin-left: auto; color: var(--muted-2); }
+  .nav { display: flex; flex-direction: column; gap: 1px; }
+  .nav a { display: flex; align-items: center; gap: 11px; padding: 8px 10px; border-radius: 8px; color: #54504A; text-decoration: none; font-size: 13px; font-weight: 500; cursor: pointer; position: relative; transition: background-color 0.15s ease, color 0.15s ease; }
+  .nav a:not(.active):hover { background: #F4F2EE; color: #2E2A24; }
+  .nav a:not(.active):hover svg.ic { color: #6A655E; }
+  .navload { position: absolute; left: 10px; right: 10px; bottom: 2px; height: 2.5px; border-radius: 2px; background: rgba(234,123,27,0.2); overflow: hidden; }
+  .navload i { display: block; height: 100%; width: 0; border-radius: 2px; background: var(--orange); }
+  @keyframes navfill { from { width: 0; } to { width: 100%; } }
+  @media (prefers-reduced-motion: reduce) { .navload i { width: 100% !important; animation: none !important; } }
+  .nav a svg.ic { width: 17px; height: 17px; flex: none; color: var(--muted); }
+  .nav a .caret { margin-left: auto; color: var(--muted-2); transition: transform 0.2s; }
+  .nav a .dot { margin-left: auto; width: 6px; height: 6px; border-radius: 50%; background: var(--orange); }
+  .nav a.has-caret .dot { margin-left: 6px; }
+  .nav a.active { background: var(--orange-soft); color: var(--orange); font-weight: 650; }
+  .nav a.active svg.ic { color: var(--orange); }
+  .nav a.active .caret { transform: rotate(90deg); color: var(--orange); }
+  .subgroup { display: none; flex-direction: column; gap: 1px; margin: 1px 0 1px 8px; padding-left: 12px; border-left: 1px solid var(--hair); }
+  .subgroup a { display: flex; align-items: center; gap: 10px; padding: 7px 10px; border-radius: 8px; color: #6A655E; font-size: 12.5px; font-weight: 500; text-decoration: none; }
+  .subgroup a svg { width: 15px; height: 15px; color: var(--muted-2); }
+  .subgroup a .dot { margin-left: auto; width: 6px; height: 6px; border-radius: 50%; background: var(--orange); }
+  .subgroup a.on { background: var(--orange-soft); color: var(--orange); font-weight: 650; }
+  .subgroup a.on svg { color: var(--orange); }
+  .sb .spacer { flex: 1; }
+  .upgrade { display: flex; align-items: center; gap: 9px; padding: 9px 11px; border-radius: 9px; background: linear-gradient(180deg, #F49230, #EA7B1B); color: #fff; font-weight: 650; font-size: 13px; box-shadow: 0 8px 16px -8px rgba(234,123,27,0.7); margin-bottom: 4px; }
+  .upgrade svg { width: 16px; height: 16px; }
+  .foot a { display: flex; align-items: center; gap: 11px; padding: 7px 10px; border-radius: 8px; color: #6A655E; text-decoration: none; font-size: 12.5px; }
+  .foot a svg { width: 16px; height: 16px; color: var(--muted-2); }
+  .profile { display: flex; align-items: center; gap: 9px; padding: 9px 8px 2px; margin-top: 6px; border-top: 1px solid var(--hair); }
+  .profile .av { width: 28px; height: 28px; border-radius: 7px; background: linear-gradient(135deg, #F49230, #D8563F); color: #fff; display: grid; place-items: center; font-size: 11px; font-weight: 700; }
+  .profile .nm { font-size: 12.5px; font-weight: 650; line-height: 1.2; }
+  .profile .sub { font-size: 11px; color: var(--muted-2); }
+  .profile .chev { margin-left: auto; color: var(--muted-2); }
+
+  /* main */
+  .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  .topbar { height: 54px; flex: none; border-bottom: 1px solid var(--hair); display: flex; align-items: center; gap: 14px; padding: 0 20px; background: var(--ground); }
+  .plus { width: 30px; height: 30px; border-radius: 8px; background: var(--orange); color: #fff; display: grid; place-items: center; flex: none; box-shadow: 0 6px 12px -6px rgba(234,123,27,0.7); }
+  .plus svg { width: 16px; height: 16px; }
+  .search { flex: 1; max-width: 560px; margin: 0 auto; height: 34px; background: #fff; border: 1px solid var(--hair-2); border-radius: 9px; display: flex; align-items: center; gap: 9px; padding: 0 12px; color: var(--muted-2); font-size: 13px; }
+  .search svg { width: 15px; height: 15px; }
+  .search .kbd { margin-left: auto; font-family: var(--mono); font-size: 10.5px; color: var(--muted); border: 1px solid var(--hair-2); border-radius: 5px; padding: 2px 6px; background: var(--ground); }
+
+  .content { flex: 1; overflow: hidden; padding: 14px 20px; }
+  .screen { display: none; height: 100%; }
+  .screen.show { display: block; }
+  .stack { display: flex; flex-direction: column; gap: 10px; height: 100%; }
+
+  /* shared bits */
+  .card { background: var(--card); border: 1px solid var(--hair); border-radius: 12px; }
+  .btn-dark { background: var(--navy); color: #fff; border-radius: 8px; font-size: 12.5px; font-weight: 600; padding: 8px 13px; display: inline-flex; align-items: center; gap: 7px; flex: none; }
+  .btn-dark svg { width: 13px; height: 13px; }
+  .btn-orange { background: var(--orange); color: #fff; border-radius: 8px; font-size: 12.5px; font-weight: 650; padding: 8px 13px; display: inline-flex; align-items: center; gap: 7px; flex: none; }
+  .btn-orange svg { width: 14px; height: 14px; }
+  .ghost { display: inline-flex; align-items: center; gap: 7px; height: 32px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--hair-2); background: #fff; font-size: 12.5px; font-weight: 550; color: #44403A; }
+  .ghost svg { width: 14px; height: 14px; color: var(--muted); }
+  .icon-x { color: var(--muted-2); width: 16px; height: 16px; flex: none; }
+  .phead h2 { font-size: 25px; font-weight: 780; letter-spacing: -0.03em; margin: 0; }
+  .phead .psub { font-size: 13px; color: var(--muted); margin-top: 3px; }
+  .seg { display: inline-flex; background: #EDEAE4; border-radius: 8px; padding: 3px; }
+  .seg span { font-size: 12px; color: var(--muted); padding: 5px 12px; border-radius: 6px; }
+  .seg span.on { background: #fff; color: var(--ink); font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,0.06); }
+  .pills { display: inline-flex; gap: 4px; }
+  .pills span { font-size: 12px; color: var(--muted); padding: 6px 11px; border-radius: 7px; }
+  .pills span.on { color: var(--ink); font-weight: 600; }
+  .av-sm { width: 22px; height: 22px; border-radius: 50%; background: var(--navy); color: #fff; display: grid; place-items: center; font-size: 9.5px; font-weight: 700; flex: none; }
+
+  /* banner */
+  .banner { display: flex; align-items: center; gap: 12px; padding: 12px 14px; }
+  .banner .ic svg { width: 17px; height: 17px; color: var(--muted); }
+  .banner .txt { font-size: 13px; color: #44403A; }
+  .banner .grow { flex: 1; }
+
+  /* === Dashboard === */
+  .loop { padding: 16px; }
+  .loop-top { display: flex; align-items: flex-start; gap: 13px; }
+  .rk { width: 34px; height: 34px; border-radius: 9px; background: var(--ground); display: grid; place-items: center; flex: none; }
+  .rk svg { width: 18px; height: 18px; color: #595550; }
+  .grow { flex: 1; min-width: 0; }
+  .loop .lbl { font-size: 10.5px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); display: flex; align-items: center; gap: 8px; }
+  .loop .lbl .pg { color: var(--muted-2); font-weight: 600; letter-spacing: 0.02em; }
+  .loop .h { font-size: 16px; font-weight: 720; margin: 4px 0 3px; }
+  .loop .s { font-size: 12.5px; color: var(--muted); }
+  .stepper { display: flex; align-items: center; gap: 10px; margin-top: 15px; }
+  .step { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+  .step .n { width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; font-weight: 700; flex: none; }
+  .step.done .n { background: var(--navy); color: #fff; }
+  .step.now .n { border: 1.5px solid var(--navy); color: var(--navy); }
+  .step.todo .n { border: 1.5px solid var(--hair-2); color: var(--muted-2); }
+  .step.done .t { color: var(--muted); } .step.now .t { color: var(--ink); font-weight: 600; } .step.todo .t { color: var(--muted-2); }
+  .step .line { width: 120px; height: 1.5px; background: var(--hair-2); }
+  .greet { font-size: 13px; color: var(--muted); }
+  .headrow { display: flex; align-items: center; gap: 14px; margin-top: 2px; }
+  .headrow .ico { width: 30px; height: 30px; border-radius: 8px; background: #EDEAE4; display: grid; place-items: center; color: #595550; }
+  .headrow .ico svg { width: 17px; height: 17px; }
+  .pill { display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 10px; border-radius: 999px; border: 1px solid var(--hair-2); font-size: 11.5px; color: #57534C; background: #fff; }
+  .pill svg { width: 12px; height: 12px; color: var(--muted); }
+  .tag-orange { display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 11px; border-radius: 999px; background: var(--orange-soft); color: var(--orange); font-size: 12px; font-weight: 600; }
+  .tag-orange svg { width: 12px; height: 12px; }
+  .tag-new { display: inline-flex; align-items: center; height: 26px; padding: 0 11px; border-radius: 999px; border: 1px solid var(--hair-2); color: #57534C; font-size: 12px; }
+  .setup { padding: 15px 16px 6px; }
+  .pbar { height: 7px; border-radius: 999px; background: #EDEAE4; margin: 12px 0 4px; overflow: hidden; }
+  .pbar i { display: block; height: 100%; width: 33%; border-radius: 999px; background: var(--ink); }
+  .srow { display: flex; align-items: center; gap: 12px; padding: 10px 4px; border-top: 1px solid var(--hair); }
+  .srow:first-of-type { border-top: 0; }
+  .srow .ck { width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid var(--hair-2); flex: none; display: grid; place-items: center; }
+  .srow.done .ck { background: var(--green); border-color: var(--green); }
+  .srow.done .ck svg { width: 11px; height: 11px; color: #fff; }
+  .srow .si svg { width: 16px; height: 16px; color: var(--muted); }
+  .srow .lab { font-size: 13px; font-weight: 500; }
+  .srow.done .lab { color: var(--muted-2); text-decoration: line-through; }
+  .srow .caret { color: var(--muted-2); }
+  .due { display: flex; align-items: center; gap: 13px; padding: 13px 15px; border-left: 3px solid #EFA99B; background: linear-gradient(90deg, #FDF4F3, #fff 40%); }
+  .due .ic { width: 34px; height: 34px; border-radius: 9px; background: var(--pink); display: grid; place-items: center; flex: none; color: var(--pink-ink); }
+  .due .ic svg { width: 17px; height: 17px; }
+
+  /* === Inbox / My HQ === */
+  .inbox-item { display: flex; align-items: flex-start; gap: 12px; padding: 13px 16px; border-bottom: 1px solid var(--hair); }
+  .inbox-item:last-child { border-bottom: 0; }
+  .inbox-item .av { width: 30px; height: 30px; border-radius: 50%; color: #fff; display: grid; place-items: center; font-size: 11px; font-weight: 700; flex: none; }
+  .inbox-item .it { font-size: 13px; line-height: 1.45; }
+  .inbox-item .it b { font-weight: 650; }
+  .inbox-item .meta { font-size: 11.5px; color: var(--muted); margin-top: 3px; display: flex; gap: 7px; align-items: center; }
+  .inbox-item .meta .tag { color: var(--orange); font-weight: 600; }
+  .inbox-item .when { margin-left: auto; font-size: 11.5px; color: var(--muted-2); white-space: nowrap; }
+  .inbox-item .unread { width: 8px; height: 8px; border-radius: 50%; background: var(--orange); flex: none; margin-top: 6px; }
+
+  /* === One Page Plan === */
+  .opp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .box { background: #fff; border: 1px solid var(--hair); border-radius: 12px; padding: 15px 16px; }
+  .box .k { font-size: 10.5px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: var(--muted); }
+  .box .body { font-size: 13.5px; line-height: 1.5; color: #3C3833; margin-top: 8px; }
+  .vchips { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
+  .vchips span { font-size: 12px; font-weight: 600; color: #57534C; background: var(--ground); border: 1px solid var(--hair-2); border-radius: 999px; padding: 5px 11px; }
+  .swot { display: grid; grid-template-columns: 1.1fr 1fr 1fr 1fr 1fr; gap: 10px; }
+  .swot .cell { border-radius: 12px; padding: 13px 13px; border: 1px solid var(--hair); }
+  .swot .cell .t { font-size: 12.5px; font-weight: 700; display: flex; align-items: center; gap: 7px; }
+  .swot .cell .t svg { width: 14px; height: 14px; }
+  .swot .cell ul { margin: 9px 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; }
+  .swot .cell li { font-size: 11.5px; color: #57534C; line-height: 1.35; padding-left: 12px; position: relative; }
+  .swot .cell li::before { content: ""; position: absolute; left: 2px; top: 6px; width: 4px; height: 4px; border-radius: 50%; background: currentColor; opacity: 0.5; }
+  .swot .vision { background: #fff; } .swot .vis-ic { width: 38px; height: 38px; border-radius: 10px; background: #EAF1FB; display: grid; place-items: center; margin: 8px auto 6px; }
+  .swot .vis-ic svg { width: 19px; height: 19px; color: #4A86C9; }
+  .c-str { background: var(--green-soft); color: #1F8A52; } .c-wk { background: #F1EEFB; color: #6D5AB8; } .c-opp { background: #EAF1FB; color: #3E7BC0; } .c-thr { background: #FBEDED; color: #C9503B; }
+  .goalbox { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .goalbox .gh { display: flex; align-items: center; justify-content: space-between; }
+  .goalbox .gh b { font-size: 14px; } .goalbox .gh .add { font-size: 12px; color: var(--orange); font-weight: 600; }
+  .grow-item { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-top: 1px solid var(--hair); font-size: 13px; }
+  .grow-item:first-of-type { border-top: 0; }
+  .grow-item .num { color: var(--muted-2); font-weight: 600; }
+  .badge-ok { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: #1F8A52; background: var(--green-soft); border-radius: 999px; padding: 3px 9px; }
+  .badge-ok .d { width: 6px; height: 6px; border-radius: 50%; background: #2BA463; }
+
+  /* === Scoreboards === */
+  .sbtop { display: flex; align-items: center; gap: 10px; }
+  .sbtitle { font-size: 19px; font-weight: 750; display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--hair-2); background: #fff; border-radius: 9px; padding: 7px 13px; }
+  .ai-insight { display: flex; align-items: center; gap: 10px; background: #fff; border: 1px solid var(--hair); border-radius: 10px; padding: 11px 14px; }
+  .ai-insight .gl { width: 24px; height: 24px; border-radius: 7px; background: linear-gradient(135deg,#F49230,#EA7B1B); display: grid; place-items: center; }
+  .ai-insight .gl svg { width: 14px; height: 14px; color: #fff; }
+  .ai-insight b { font-size: 13px; }
+  .ai-insight .ai-tag { font-size: 10.5px; font-weight: 600; color: var(--orange); background: var(--orange-soft); border-radius: 999px; padding: 2px 8px; }
+  .tablewrap { overflow-x: auto; border: 1px solid var(--hair); border-radius: 10px; background: #fff; }
+  table.sbt { border-collapse: collapse; width: max-content; min-width: 100%; font-size: 12px; }
+  table.sbt th, table.sbt td { padding: 9px 10px; text-align: center; white-space: nowrap; border-bottom: 1px solid var(--hair); }
+  table.sbt thead th { font-size: 10px; letter-spacing: 0.04em; color: var(--muted); font-weight: 600; background: #FAF9F7; }
+  table.sbt .metric { text-align: left; font-weight: 650; font-size: 12.5px; display: flex; align-items: center; gap: 7px; }
+  table.sbt .metric svg { width: 13px; height: 13px; color: var(--muted-2); }
+  table.sbt td.goal { font-weight: 650; border-left: 1px solid var(--hair); border-right: 1px solid var(--hair); }
+  table.sbt td.cur { background: #FFF8F0; font-weight: 700; }
+  table.sbt .g { color: var(--green); font-weight: 700; } table.sbt .r { color: var(--pink-ink); font-weight: 700; }
+  table.sbt .own { display: inline-flex; align-items: center; justify-content: center; }
+  .colhead-cur { color: var(--orange) !important; font-weight: 700 !important; }
+
+  /* === Leadership Meeting === */
+  .statgrid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; }
+  .stat { background: #fff; border: 1px solid var(--hair); border-radius: 12px; padding: 14px 16px; }
+  .stat .l { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 7px; }
+  .stat .l svg { width: 15px; height: 15px; }
+  .stat .v { font-size: 24px; font-weight: 780; margin-top: 7px; letter-spacing: -0.02em; }
+  .mrow { display: flex; align-items: center; gap: 14px; padding: 12px 15px; border-bottom: 1px solid var(--hair); font-size: 13px; }
+  .mrow:last-child { border-bottom: 0; }
+  .mrow .dt { font-weight: 650; width: 130px; }
+  .mrow .chip { font-size: 11.5px; color: var(--muted); }
+  .mrow .done { margin-left: auto; font-size: 11px; font-weight: 600; color: #1F8A52; background: var(--green-soft); border-radius: 999px; padding: 3px 10px; }
+
+  /* === 1on1 === */
+  .studio-head { display: flex; align-items: center; gap: 12px; background: #fff; border: 1px solid var(--hair); border-radius: 12px; padding: 13px 16px; }
+  .studio-head .tag { font-size: 10.5px; font-weight: 700; letter-spacing: 0.06em; color: var(--orange); background: var(--orange-soft); border-radius: 999px; padding: 4px 10px; display: inline-flex; gap: 6px; align-items: center; }
+  .studio-head .tag svg { width: 12px; height: 12px; }
+  .studio-head h3 { font-size: 17px; font-weight: 750; margin: 0; }
+  .chiprow { display: flex; gap: 9px; flex-wrap: wrap; }
+  .opt-chip { font-size: 12.5px; font-weight: 600; color: #57534C; border: 1px solid var(--hair-2); background: #fff; border-radius: 8px; padding: 9px 15px; }
+  .opt-chip.on { color: var(--orange); border-color: var(--orange); background: #fff; }
+  .partner { display: flex; align-items: center; gap: 9px; padding: 8px 0; border-top: 1px solid var(--hair); font-size: 12.5px; }
+  .partner:first-of-type { border-top: 0; }
+
+  /* === Org Chart === */
+  .orgwrap { background: #fff; border: 1px solid var(--hair); border-radius: 12px; height: 100%; padding: 26px; position: relative; }
+  .node { width: 230px; border-radius: 12px; padding: 13px 14px; background: #fff; }
+  .node.ceo { border: 1.5px solid var(--orange); box-shadow: 0 8px 20px -12px rgba(234,123,27,0.5); }
+  .node.open { border: 1px solid #F1C9BE; background: #FEF6F4; }
+  .node .role { font-size: 13.5px; font-weight: 750; }
+  .node .person { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 12.5px; }
+  .node .person .av { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: 9px; font-weight: 700; color: #fff; }
+  .node .add { margin-top: 10px; display: inline-flex; align-items: center; gap: 5px; font-size: 11px; color: #6A655E; background: var(--ground); border: 1px solid var(--hair-2); border-radius: 7px; padding: 5px 9px; }
+  .node .reports { margin-top: 9px; font-size: 11px; color: var(--muted-2); display: flex; align-items: center; gap: 6px; }
+  .org-children { display: flex; gap: 18px; justify-content: center; margin-top: 44px; position: relative; }
+  .org-children::before { content: ""; position: absolute; top: -22px; left: 50%; width: 1px; height: 22px; background: var(--hair-2); }
+
+  /* === Multi AI === */
+  .multi { display: grid; grid-template-columns: 250px 1fr; gap: 0; height: 100%; border: 1px solid var(--hair); border-radius: 12px; overflow: hidden; background: #fff; }
+  .multi .conv { border-right: 1px solid var(--hair); padding: 14px; display: flex; flex-direction: column; }
+  .multi .conv .ch { display: flex; align-items: center; justify-content: space-between; }
+  .multi .conv .ch b { font-size: 14px; }
+  .multi .newchat { font-size: 11.5px; font-weight: 650; color: #fff; background: var(--orange); border-radius: 7px; padding: 6px 10px; display: inline-flex; gap: 6px; align-items: center; }
+  .multi .conv .sect { display: flex; align-items: center; justify-content: space-between; margin-top: 16px; font-size: 12.5px; color: #54504A; font-weight: 600; }
+  .multi .conv .sect .mng { color: var(--orange); font-size: 11.5px; }
+  .multi .conv .muted { font-size: 11.5px; color: var(--muted-2); margin-top: 5px; }
+  .multi .conv .empty { text-align: center; color: var(--muted-2); margin: auto 0; font-size: 12px; }
+  .multi .main2 { padding: 16px 20px; overflow: hidden; display: flex; flex-direction: column; }
+  .multi h3 { font-size: 18px; font-weight: 750; margin: 0 0 14px; }
+  .coachtabs { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 16px; }
+  .coachtab { display: flex; align-items: center; gap: 7px; border: 1px solid var(--hair-2); border-radius: 9px; padding: 7px 11px; font-size: 11.5px; background: #fff; }
+  .coachtab.on { border-color: var(--navy); background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+  .coachtab .d { width: 18px; height: 18px; border-radius: 6px; display: grid; place-items: center; }
+  .coachtab .d svg { width: 11px; height: 11px; }
+  .coachtab b { font-weight: 650; } .coachtab small { display: block; color: var(--muted-2); font-size: 9.5px; }
+  .greet-card { display: flex; gap: 13px; }
+  .greet-card .gl { width: 34px; height: 34px; border-radius: 9px; background: var(--navy); display: grid; place-items: center; flex: none; }
+  .greet-card .gl svg { width: 17px; height: 17px; color: #fff; }
+  .greet-eyebrow { font-size: 10.5px; font-weight: 700; letter-spacing: 0.08em; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+  .greet-h { font-size: 21px; font-weight: 770; letter-spacing: -0.02em; margin: 6px 0 4px; }
+  .greet-s { font-size: 13px; color: var(--muted); }
+  .onb { background: #F8FAFC; border: 1px solid #E6EBF1; border-radius: 12px; padding: 15px; margin-top: 14px; display: flex; gap: 12px; }
+  .onb .field { margin-top: 10px; } .onb .fl { font-size: 10px; font-weight: 700; letter-spacing: 0.06em; color: var(--muted); }
+  .onb .fi { height: 30px; border: 1px solid var(--hair-2); border-radius: 7px; background: #fff; margin-top: 5px; display: flex; align-items: center; padding: 0 10px; color: var(--muted-2); font-size: 12px; }
+  .onb .fi.tall { height: 40px; }
+  .suggest { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
+  .suggest .col .lbl { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; color: var(--muted); display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+  .suggest .q { border: 1px solid var(--hair); border-radius: 9px; padding: 11px 13px; font-size: 12.5px; color: #3C3833; margin-bottom: 9px; }
+  .askbar { margin-top: auto; display: flex; align-items: center; gap: 10px; border: 1px solid var(--hair-2); border-radius: 10px; padding: 9px 12px; }
+  .askbar .ph { color: var(--muted-2); font-size: 12.5px; flex: 1; }
+  .askbar .model { font-size: 11px; color: #57534C; border: 1px solid var(--hair-2); border-radius: 7px; padding: 4px 9px; }
+
+  /* ask multi */
+  .ask { position: absolute; right: 20px; bottom: 20px; display: inline-flex; align-items: center; gap: 8px; height: 38px; padding: 0 15px; border-radius: 999px; background: #fff; border: 1px solid var(--hair-2); box-shadow: 0 12px 24px -12px rgba(40,30,15,0.4); font-size: 13px; font-weight: 650; }
+  .ask .sp { width: 22px; height: 22px; border-radius: 50%; background: linear-gradient(135deg, #F49230, #EA7B1B); display: grid; place-items: center; }
+  .ask .sp svg { width: 13px; height: 13px; color: #fff; }
+</style>
+
+<div class="doc">
+  <div class="wrap">
+    <div class="viewport">
+      <div class="scale">
+        <div class="frame-browser">
+          <div class="chrome">
+            <span class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></span>
+            <span class="urlbar" id="urlbar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span id="urltext">app.multiplyos.com/dashboard</span></span>
+          </div>
+
+          <div class="app">
+            <!-- ===== SIDEBAR ===== -->
+            <aside class="sb">
+              <div class="brand">MULTIPLY<span class="gear">⚙</span>S</div>
+              <div class="switcher">
+                <span class="sq"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 21v-4h6v4"/></svg></span>
+                <b>Company</b>
+                <svg class="chev" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 9l4-4 4 4M8 15l4 4 4-4"/></svg>
+              </div>
+              <nav class="nav">
+                <a data-nav="dashboard"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Dashboard<span class="dot"></span></a>
+
+                <a data-nav="hq"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 3H5a2 2 0 0 0-2 2v4M15 3h4a2 2 0 0 1 2 2v4M9 21H5a2 2 0 0 1-2-2v-4M15 21h4a2 2 0 0 0 2-2v-4"/></svg>My HQ</a>
+
+                <a data-nav="plan"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.4" fill="currentColor"/></svg>One Page Plan</a>
+
+                <a data-nav="scoreboards"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l3-4 3 2 4-6"/></svg>Scoreboards<span class="dot"></span></a>
+
+                <a data-nav="meeting"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/></svg>Leadership Meeting</a>
+
+                <a data-nav="oneonone"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-9 8.5 8.5 8.5 0 0 1-3.8-.9L3 20l1.9-4.2A8.5 8.5 0 0 1 12 3a8.38 8.38 0 0 1 9 8.5z"/></svg>1on1s</a>
+
+                <a data-nav="org"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="5" rx="1"/><rect x="3" y="16" width="6" height="5" rx="1"/><rect x="15" y="16" width="6" height="5" rx="1"/><path d="M12 8v4M6 16v-2h12v2"/></svg>Org Chart<span class="dot"></span></a>
+
+                <a data-nav="multi"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 4.6L18.5 9l-4.6 1.4L12 15l-1.9-4.6L5.5 9l4.6-1.4z"/><path d="M18 15l.8 2.2L21 18l-2.2.8L18 21l-.8-2.2L15 18l2.2-.8z"/></svg>Multi AI</a>
+              </nav>
+
+              <div class="spacer"></div>
+              <div class="foot">
+                <a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Organization Settings</a>
+                <a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>Inbox</a>
+              </div>
+              <div class="profile">
+                <span class="av">SL</span>
+                <div><div class="nm">Skylar Lewis</div><div class="sub">Company</div></div>
+                <svg class="chev" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 9l4-4 4 4M8 15l4 4 4-4"/></svg>
+              </div>
+            </aside>
+
+            <!-- ===== MAIN ===== -->
+            <div class="main">
+              <div class="topbar">
+                <span class="plus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>
+              </div>
+
+              <div class="content">
+
+                <!-- DASHBOARD -->
+                <div class="screen" data-screen="dashboard">
+                  <div class="stack">
+                    <div class="card banner">
+                      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg></span>
+                      <span class="txt"><b>0 days</b> until quarter end - plan Q3 2026.</span>
+                      <span class="grow"></span>
+                      <span class="btn-dark">Start planning <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+                      <svg class="icon-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+                    </div>
+                    <div class="card loop">
+                      <div class="loop-top">
+                        <span class="rk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5L3 21l4.5-1.5M14 7a5 5 0 0 1 3 3M9 15l-3-3 9-9 3 3z"/><path d="M14 7l-9 9"/></svg></span>
+                        <div class="grow">
+                          <div class="lbl">Get to your first weekly loop <span class="pg">1 of 3</span></div>
+                          <div class="h">Log this week's numbers</div>
+                          <div class="s">Enter your numbers so the dashboard shows a real green/red week.</div>
+                        </div>
+                        <span class="btn-dark">Show me <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+                      </div>
+                      <div class="stepper">
+                        <div class="step done"><span class="n"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg></span><span class="t">Set up scoreboard</span></div>
+                        <span class="line"></span>
+                        <div class="step now"><span class="n">2</span><span class="t">Log a real week</span></div>
+                        <span class="line"></span>
+                        <div class="step todo"><span class="n">3</span><span class="t">Run a Leadership Meeting</span></div>
+                      </div>
+                    </div>
+                    <div>
+                      <div class="greet">Good morning, Skylar.</div>
+                      <div class="headrow">
+                        <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span>
+                        <h2 style="font-size:25px;font-weight:780;letter-spacing:-0.03em;margin:0;">Main Dashboard</h2>
+                        <span class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Personal</span>
+                        <span class="grow"></span>
+                        <span class="ghost"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h12M4 12h16M4 17h9"/></svg>Customize</span>
+                        <span class="ghost"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>Q2&nbsp; Jun 29 - Jul 5</span>
+                      </div>
+                      <div style="display:flex;gap:9px;margin-top:11px;"><span class="tag-orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Main Dashboard</span><span class="tag-new">+ New</span></div>
+                    </div>
+                    <div class="card setup">
+                      <div style="display:flex;align-items:center;gap:11px;">
+                        <span class="rk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5L3 21l4.5-1.5M14 7a5 5 0 0 1 3 3M9 15l-3-3 9-9 3 3z"/></svg></span>
+                        <div><div style="font-size:13.5px;font-weight:700;">Set up Company</div><div style="font-size:11.5px;color:var(--muted);">1 of 4 steps complete</div></div>
+                        <span class="grow"></span>
+                        <svg class="icon-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+                      </div>
+                      <div class="pbar"><i></i></div>
+                      <div class="srow done"><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg></span><span class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h4"/></svg></span><span class="lab">Add or edit metrics on your first scoreboard</span><span class="grow"></span><svg class="caret" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#A9A49B" stroke-width="1.8"><path d="M9 6l6 6-6 6"/></svg></div>
+                      <div class="srow"><span class="ck"></span><span class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/></svg></span><span class="lab">Add an annual and quarterly goal to the <b>One Page Plan</b></span><span class="grow"></span><svg class="caret" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#A9A49B" stroke-width="1.8"><path d="M9 6l6 6-6 6"/></svg></div>
+                      <div class="srow"><span class="ck"></span><span class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="9" y="3" width="6" height="5" rx="1"/><rect x="3" y="16" width="6" height="5" rx="1"/><rect x="15" y="16" width="6" height="5" rx="1"/><path d="M12 8v4M6 16v-2h12v2"/></svg></span><span class="lab">Lay out your team on the <b>Mission Alignment Chart</b></span><span class="grow"></span><svg class="caret" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#A9A49B" stroke-width="1.8"><path d="M9 6l6 6-6 6"/></svg></div>
+                      <div class="srow"><span class="ck"></span><span class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 5a2 2 0 0 1 2-2h6v18H6a2 2 0 0 0-2 2zM20 5a2 2 0 0 0-2-2h-6v18h6a2 2 0 0 1 2 2z"/></svg></span><span class="lab">Save an SOP</span><span class="grow"></span><svg class="caret" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#A9A49B" stroke-width="1.8"><path d="M9 6l6 6-6 6"/></svg></div>
+                    </div>
+                    <div class="card due">
+                      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><rect x="7" y="11" width="3" height="6"/><rect x="12" y="7" width="3" height="10"/><rect x="17" y="13" width="3" height="4"/></svg></span>
+                      <div><div style="font-size:13.5px;font-weight:700;">Scoreboards - Numbers Due</div><div style="font-size:11.5px;color:var(--muted);">Week 25 · Jun 22 - Jun 28 · 0 of 5 entered</div></div>
+                      <span class="grow"></span>
+                      <span style="font-size:12.5px;font-weight:600;color:#44403A;">Open ▾</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- MY HQ / INBOX -->
+                <div class="screen" data-screen="hq">
+                  <div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:16px;">
+                    <div class="phead"><h2>Inbox</h2><div class="psub">Mentions, assignments, and replies on your tasks and scoreboards.</div></div>
+                    <span class="grow"></span>
+                    <span class="seg"><span>All</span><span class="on">Unread</span></span>
+                    <span class="pills"><span class="on">All time</span><span>Today</span><span>This Week</span><span>This Month</span></span>
+                    <span class="ghost"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"/></svg>Mark all read</span>
+                  </div>
+                  <div class="card">
+                    <div class="inbox-item">
+                      <span class="av" style="background:#3E7BC0;">MC</span>
+                      <div class="grow"><div class="it"><b>Maya Chen</b> mentioned you on <b>Revenue</b></div><div class="meta">"@Skylar can you confirm the Q2 close number before the meeting?" <span class="tag">· Scoreboards</span></div></div>
+                      <span class="when">2h ago</span><span class="unread"></span>
+                    </div>
+                    <div class="inbox-item">
+                      <span class="av" style="background:#1F8A52;">DB</span>
+                      <div class="grow"><div class="it"><b>Devin Brooks</b> assigned you a task</div><div class="meta">"Refresh process docs" · due Jul 8 <span class="tag">· Tasks</span></div></div>
+                      <span class="when">5h ago</span><span class="unread"></span>
+                    </div>
+                    <div class="inbox-item">
+                      <span class="av" style="background:#6D5AB8;">TS</span>
+                      <div class="grow"><div class="it"><b>Tariq Singh</b> replied to your comment</div><div class="meta">"Agreed - let's review it live in the Leadership Meeting." <span class="tag">· Issues</span></div></div>
+                      <span class="when">Yesterday</span><span class="unread"></span>
+                    </div>
+                    <div class="inbox-item">
+                      <span class="av" style="background:#C9503B;">JL</span>
+                      <div class="grow"><div class="it"><b>Jordan Lee</b> commented on <b>New Customers</b></div><div class="meta">"We landed 12 this week - ahead of goal 🎉" <span class="tag">· Scoreboards</span></div></div>
+                      <span class="when">2d ago</span><span class="unread"></span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- ONE PAGE PLAN -->
+                <div class="screen" data-screen="plan">
+                  <div class="stack" style="gap:12px;">
+                    <div class="phead"><h2>One Page Plan</h2><div class="psub">Company's strategic blueprint</div></div>
+                    <div class="opp-grid">
+                      <div class="box"><div class="k">Why we exist</div><div class="body">To help mission-driven owners build companies that multiply impact - freedom, profit, and lasting influence.</div></div>
+                      <div class="box"><div style="display:flex;justify-content:space-between;"><div class="k">Values</div><span style="font-size:11px;color:var(--orange);font-weight:600;">EDIT</span></div><div class="vchips"><span>Ownership</span><span>Clarity</span><span>Multiply</span><span>Integrity</span></div></div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:9px;">
+                      <span class="seg"><span>FY 2026</span></span>
+                      <span class="pills" style="background:#EDEAE4;border-radius:8px;padding:3px;"><span>Q1</span><span style="background:var(--navy);color:#fff;border-radius:6px;font-weight:600;">Q2</span><span>Q3</span><span>Q4</span></span>
+                      <span class="grow"></span>
+                      <span class="seg"><span>Leadership</span><span style="background:var(--navy);color:#fff;">Everyone</span></span>
+                    </div>
+                    <div class="swot">
+                      <div class="cell vision"><div class="t">Company Vision</div><div class="vis-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.3h6c0-1 .4-1.8 1-2.3A7 7 0 0 0 12 2z"/></svg></div><div style="font-size:11.5px;color:#57534C;text-align:center;line-height:1.4;">Be the OS that 10,000 mission-driven businesses run on by 2030.</div></div>
+                      <div class="cell c-str"><div class="t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/></svg>Strengths</div><ul><li>Strong founder brand</li><li>Loyal early customers</li></ul></div>
+                      <div class="cell c-wk"><div class="t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.3 3.9l-8 13.9A1.5 1.5 0 0 0 3.6 20h16.8a1.5 1.5 0 0 0 1.3-2.2l-8-13.9a1.5 1.5 0 0 0-2.6 0z"/></svg>Weaknesses</div><ul><li>Thin ops bench</li><li>Manual onboarding</li></ul></div>
+                      <div class="cell c-opp"><div class="t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17l6-6 4 4 8-8"/><path d="M21 7v5h-5"/></svg>Opportunities</div><ul><li>Faith-based market</li><li>Coaching upsell</li></ul></div>
+                      <div class="cell c-thr"><div class="t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg>Threats</div><ul><li>Incumbent tools</li><li>Slower economy</li></ul></div>
+                    </div>
+                    <div class="goalbox">
+                      <div class="box"><div class="gh"><b>5+ Year Vision</b><span class="add">+ Add</span></div><div class="grow-item"><span class="num">1.</span>$25M ARR · 10k companies served<span class="badge-ok"><span class="d"></span>On Track</span></div></div>
+                      <div class="box"><div class="gh"><b>Annual Goals - 2026</b><span class="add">+ Add</span></div><div class="grow-item"><span class="num">1.</span>$1M ARR ("1milly")<span class="badge-ok"><span class="d"></span>On Track</span></div><div class="grow-item"><span class="num">2.</span>Launch v2 platform<span class="badge-ok"><span class="d"></span>On Track</span></div></div>
+                    </div>
+                    <div class="box"><div class="gh"><b>Department Goals</b><span class="add">Add or Edit Departments →</span></div><div class="grow-item"><span class="num">1.</span>Sales - 120 new logos in Q2<span class="badge-ok"><span class="d"></span>On Track</span></div></div>
+                  </div>
+                </div>
+
+                <!-- SCOREBOARDS -->
+                <div class="screen" data-screen="scoreboards">
+                  <div class="stack" style="gap:12px;">
+                    <div class="sbtop">
+                      <span class="sbtitle">Leadership Scoreboard <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></span>
+                      <span class="grow"></span>
+                      <span class="ghost"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>New scoreboard</span>
+                      <span class="ghost"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M8 8l4-4 4 4M4 20h16"/></svg>Import</span>
+                      <span class="btn-dark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Add Metric/KPI</span>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:10px;">
+                      <span style="font-size:12.5px;color:var(--muted);">High-level metrics every leader should track weekly.</span>
+                      <span class="grow"></span>
+                      <span class="ghost" style="font-size:12px;">FY 2026 (Current)</span>
+                      <span style="font-size:12px;color:var(--muted);">· Week 26 of 52</span>
+                      <span style="font-size:11px;color:#3E7BC0;background:#EAF1FB;border-radius:999px;padding:3px 9px;font-weight:600;">Weekly</span>
+                    </div>
+                    <div class="ai-insight"><span class="gl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.6 4L18 8.5 14 10l-2 4-2-4-4-1.5L10 7z"/></svg></span><b>AI Insights</b><span class="ai-tag">AI-generated</span><span style="font-size:12px;color:var(--muted);margin-left:8px;">Revenue is pacing 8% ahead of goal - New Customers recovered after last week's dip.</span><span class="grow"></span><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#A9A49B" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></div>
+                    <div class="pills"><span class="on" style="background:#EDEAE4;border-radius:7px;">All</span><span>High</span><span>Watch</span><span style="margin-left:6px;">↕ Priority</span></div>
+                    <div class="tablewrap">
+                      <table class="sbt">
+                        <thead>
+                          <tr><th style="text-align:left;padding-left:14px;">METRIC</th><th>OWNER</th><th>GOAL</th><th>PREVIOUS<br>6/22-6/28</th><th class="colhead-cur">CURRENT<br>6/29-7/5</th><th>7/6<br>7/12</th><th>7/13<br>7/19</th><th>7/20<br>7/26</th><th>7/27<br>8/2</th><th>8/3<br>8/9</th><th>8/10<br>8/16</th><th>8/17<br>8/23</th></tr>
+                        </thead>
+                        <tbody>
+                          <tr><td style="text-align:left;padding-left:14px;"><span class="metric"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17l6-6 4 4 8-8"/></svg>Revenue</span></td><td><span class="av-sm own">SL</span></td><td class="goal">$50,000</td><td class="r">$47,200</td><td class="cur g">$54,100</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
+                          <tr><td style="text-align:left;padding-left:14px;"><span class="metric"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0"/></svg>New Customers</span></td><td><span class="av-sm own">SL</span></td><td class="goal">10</td><td class="r">8</td><td class="cur g">12</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
+                          <tr><td style="text-align:left;padding-left:14px;"><span class="metric"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/></svg>Cash Balance</span></td><td><span class="av-sm own">SL</span></td><td class="goal">$100,000</td><td class="g">$101,400</td><td class="cur g">$108,900</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
+                          <tr><td style="text-align:left;padding-left:14px;"><span class="metric"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l2.5 5 5.5.8-4 3.9 1 5.5-5-2.6-5 2.6 1-5.5-4-3.9 5.5-.8z"/></svg>Customer Satisfaction</span></td><td><span class="av-sm own">SL</span></td><td class="goal">90%</td><td class="r">88%</td><td class="cur g">93%</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
+                          <tr><td style="text-align:left;padding-left:14px;"><span class="metric"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Team Tasks Completed</span></td><td><span class="av-sm own">SL</span></td><td class="goal">25</td><td class="r">21</td><td class="cur g">28</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
+                        </tbody>
+                      </table>
+                    </div>
+                    <div style="font-size:11.5px;color:var(--muted-2);">Scroll horizontally to see all 52 weeks. Click a cell to edit.</div>
+                  </div>
+                </div>
+
+                <!-- LEADERSHIP MEETING -->
+                <div class="screen" data-screen="meeting">
+                  <div class="stack" style="gap:14px;">
+                    <div style="display:flex;align-items:flex-start;">
+                      <div class="phead"><h2>Leadership Meeting</h2><div class="psub">One meeting per week.</div></div>
+                      <span class="grow"></span>
+                      <span class="ghost"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h10M4 12h16M4 17h7"/><circle cx="17" cy="7" r="2" fill="#fff"/></svg>Meeting Settings</span>
+                    </div>
+                    <div class="statgrid">
+                      <div class="stat"><div class="l"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 17l6-6 4 4 8-8"/></svg>Total Meetings</div><div class="v">14</div></div>
+                      <div class="stat"><div class="l"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>Last Meeting</div><div class="v">Jun 24</div></div>
+                      <div class="stat"><div class="l"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Avg Duration</div><div class="v">53 min</div></div>
+                    </div>
+                    <div style="display:flex;align-items:center;"><b style="font-size:15px;">Meetings</b><span class="grow"></span><span class="btn-orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4l14 8-14 8z"/></svg>Start this week's meeting</span></div>
+                    <div class="card">
+                      <div class="mrow"><span class="dt">Jun 24, 2026</span><span class="chip">6 attendees</span><span class="chip">· 4 issues solved</span><span class="chip">· 51 min</span><span class="done">Completed</span></div>
+                      <div class="mrow"><span class="dt">Jun 17, 2026</span><span class="chip">5 attendees</span><span class="chip">· 3 issues solved</span><span class="chip">· 58 min</span><span class="done">Completed</span></div>
+                      <div class="mrow"><span class="dt">Jun 10, 2026</span><span class="chip">6 attendees</span><span class="chip">· 5 issues solved</span><span class="chip">· 47 min</span><span class="done">Completed</span></div>
+                      <div class="mrow"><span class="dt">Jun 3, 2026</span><span class="chip">4 attendees</span><span class="chip">· 2 issues solved</span><span class="chip">· 55 min</span><span class="done">Completed</span></div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 1ON1S -->
+                <div class="screen" data-screen="oneonone">
+                  <div class="stack" style="gap:14px;">
+                    <div class="studio-head">
+                      <span class="tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-9 8.5 8.5 8.5 0 0 1-3.8-.9L3 20l1.9-4.2A8.5 8.5 0 0 1 12 3a8.38 8.38 0 0 1 9 8.5z"/></svg>1ON1 STUDIO</span>
+                      <h3>1on1 studio</h3>
+                      <span class="grow"></span>
+                      <span class="ghost">Org chart</span><span class="ghost">Past meetings</span><span class="ghost">Scorecard</span><span class="ghost">1on1 Default ▾</span>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 320px;gap:14px;">
+                      <div>
+                        <div style="font-size:13px;font-weight:650;display:flex;align-items:center;gap:7px;"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Who is this meeting with?</div>
+                        <div style="font-size:12px;color:var(--muted);margin:5px 0 12px;">Pick a teammate to begin a 1on1.</div>
+                        <div class="chiprow" style="margin-bottom:18px;">
+                          <span class="opt-chip" style="display:flex;align-items:center;gap:7px;"><span class="av-sm" style="background:#3E7BC0;">MC</span>Maya Chen</span>
+                          <span class="opt-chip" style="display:flex;align-items:center;gap:7px;"><span class="av-sm" style="background:#1F8A52;">DB</span>Devin Brooks</span>
+                          <span class="opt-chip" style="display:flex;align-items:center;gap:7px;"><span class="av-sm" style="background:#6D5AB8;">TS</span>Tariq Singh</span>
+                        </div>
+                        <div style="font-size:12.5px;font-weight:650;margin-bottom:8px;">Meeting length</div>
+                        <div class="chiprow" style="margin-bottom:16px;"><span class="opt-chip">15 min</span><span class="opt-chip">30 min</span><span class="opt-chip on">45 min</span><span class="opt-chip">60 min</span><span class="opt-chip">90 min</span></div>
+                        <div style="font-size:12.5px;font-weight:650;margin-bottom:8px;">Meeting type</div>
+                        <div class="chiprow" style="margin-bottom:16px;"><span class="opt-chip on">Regular 1on1</span><span class="opt-chip">Monthly check-in</span><span class="opt-chip">Quarterly check-in</span><span class="opt-chip">Annual review</span></div>
+                        <div style="font-size:12.5px;font-weight:650;margin-bottom:8px;">Choose a flow</div>
+                        <div class="opt-chip on" style="display:block;padding:14px 16px;font-size:14px;">Standard cadence</div>
+                        <div style="margin-top:16px;"><span class="btn-orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 4l14 8-14 8z"/></svg>Begin meeting</span></div>
+                      </div>
+                      <div class="box">
+                        <div style="display:flex;justify-content:space-between;align-items:center;"><b style="font-size:14px;">1on1s</b><span style="font-size:11.5px;color:var(--orange);font-weight:600;">+ Add or remove</span></div>
+                        <div class="partner"><span class="av-sm" style="background:#3E7BC0;">MC</span>Maya Chen<span style="margin-left:auto;font-size:11px;color:var(--muted-2);">Last: Jun 18</span></div>
+                        <div class="partner"><span class="av-sm" style="background:#1F8A52;">DB</span>Devin Brooks<span style="margin-left:auto;font-size:11px;color:var(--muted-2);">Last: Jun 11</span></div>
+                        <div class="partner"><span class="av-sm" style="background:#6D5AB8;">TS</span>Tariq Singh<span style="margin-left:auto;font-size:11px;color:var(--muted-2);">Last: Jun 4</span></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- ORG CHART -->
+                <div class="screen" data-screen="org">
+                  <div class="stack" style="gap:12px;">
+                    <div style="display:flex;align-items:flex-start;">
+                      <div class="phead"><h2>Org Chart</h2><div class="psub">Drag roles to reorganize. Hover to see outcomes and add child roles.</div></div>
+                      <span class="grow"></span>
+                      <span class="btn-orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>New User/Role</span>
+                      <span class="seg" style="margin-left:8px;"><span>Current</span></span>
+                      <span class="seg"><span class="on" style="background:var(--orange);color:#fff;">Current</span><span>Future</span></span>
+                    </div>
+                    <span class="pill" style="align-self:flex-start;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0"/></svg>1 of 1 Team Members (1 FT &amp; 0 PT)</span>
+                    <div class="orgwrap">
+                      <div style="display:flex;justify-content:center;">
+                        <div class="node ceo"><div class="role">CEO</div><div class="person"><span class="av" style="background:linear-gradient(135deg,#F49230,#D8563F);">SL</span>Skylar Lewis</div><div class="add"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Add seat department ▾</div><div class="reports"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3"/><path d="M3 19a6 6 0 0 1 12 0"/></svg>3 direct reports</div></div>
+                      </div>
+                      <div class="org-children">
+                        <div class="node open"><div class="role">Sales Manager</div><div class="person"><span class="av" style="background:#D8563F;">OP</span><span style="color:var(--pink-ink);">Open Position</span></div><div class="add"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Add seat department ▾</div></div>
+                        <div class="node open"><div class="role">Operations Manager</div><div class="person"><span class="av" style="background:#D8563F;">OP</span><span style="color:var(--pink-ink);">Open Position</span></div><div class="add"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Add seat department ▾</div></div>
+                        <div class="node open"><div class="role">Accounting Manager</div><div class="person"><span class="av" style="background:#D8563F;">OP</span><span style="color:var(--pink-ink);">Open Position</span></div><div class="add"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Add seat department ▾</div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- MULTI AI -->
+                <div class="screen" data-screen="multi">
+                  <div style="height:100%;display:flex;flex-direction:column;">
+                    <h2 style="font-size:20px;font-weight:780;margin:0 0 12px;">Multi - The AI Coach Assistant <span style="font-weight:500;color:var(--muted);font-size:14px;">(Powered by Claude / GPT)</span></h2>
+                    <div class="multi" style="flex:1;">
+                      <div class="conv">
+                        <div class="ch"><b>Conversations</b><span class="newchat"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>New Chat</span></div>
+                        <div class="sect">Hubs<span class="mng">Manage</span></div>
+                        <div class="muted">No Hubs yet - create one →</div>
+                        <div class="sect" style="margin-top:12px;">Memory</div>
+                        <div class="empty"><div style="font-weight:600;color:#54504A;">No conversations yet</div><div>Start a chat with your Strategic coach.</div></div>
+                        <div style="font-size:11.5px;color:var(--orange);font-weight:600;display:flex;align-items:center;gap:6px;"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l1.6 4L18 8.5 14 10l-2 4-2-4-4-1.5L10 7z"/></svg>Estimate AI Savings</div>
+                      </div>
+                      <div class="main2">
+                        <div class="coachtabs">
+                          <span class="coachtab on"><span class="d" style="background:var(--navy);"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M16 8l-2 6-6 2 2-6z"/></svg></span><span><b>Strategic Coach</b><small>Ask me anything</small></span></span>
+                          <span class="coachtab"><span class="d" style="background:#FBEDED;"><svg viewBox="0 0 24 24" fill="none" stroke="#C9503B" stroke-width="2"><path d="M3 11l16-6v14L3 13z"/></svg></span><span><b>CMO</b><small>Growth</small></span></span>
+                          <span class="coachtab"><span class="d" style="background:#FBEAEA;"><svg viewBox="0 0 24 24" fill="none" stroke="#C9503B" stroke-width="2"><circle cx="12" cy="12" r="8"/></svg></span><span><b>CSO</b><small>Pipeline</small></span></span>
+                          <span class="coachtab"><span class="d" style="background:#E7F6EE;"><svg viewBox="0 0 24 24" fill="none" stroke="#1F8A52" stroke-width="2"><path d="M3 17l6-6 4 4 8-8"/></svg></span><span><b>CFO</b><small>Cash</small></span></span>
+                          <span class="coachtab"><span class="d" style="background:#EAF1FB;"><svg viewBox="0 0 24 24" fill="none" stroke="#3E7BC0" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1l2-1.5-2-3.4-2.3 1"/></svg></span><span><b>COO</b><small>Execution</small></span></span>
+                          <span class="coachtab"><span class="d" style="background:#F1EEFB;"><svg viewBox="0 0 24 24" fill="none" stroke="#6D5AB8" stroke-width="2"><circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0"/></svg></span><span><b>People</b><small>Team health</small></span></span>
+                        </div>
+                        <div class="greet-card">
+                          <span class="gl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M16 8l-2 6-6 2 2-6z"/></svg></span>
+                          <div><div class="greet-eyebrow"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="var(--orange)" stroke-width="2"><path d="M12 3l1.6 4L18 8.5 14 10l-2 4-2-4-4-1.5L10 7z"/></svg>STRATEGIC COACH</div><div class="greet-h">Hey Skylar, I am Multi, your AI Coach &amp; Assistant…</div><div class="greet-s">Cross-functional analysis across every part of the business.</div></div>
+                        </div>
+                        <div class="onb">
+                          <span class="gl" style="width:30px;height:30px;border-radius:8px;background:var(--navy);display:grid;place-items:center;flex:none;"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#fff" stroke-width="2"><path d="M12 3l1.6 4L18 8.5 14 10l-2 4-2-4-4-1.5L10 7z"/></svg></span>
+                          <div class="grow"><div style="font-size:13px;font-weight:650;">Tell your coach a bit about your business</div><div style="font-size:11.5px;color:var(--muted);line-height:1.45;margin-top:3px;">We'll save your answers so every coach grounds advice in your actual size, offering, and ideal client.</div>
+                            <div class="field"><div class="fl">ESTIMATED REVENUE THIS YEAR</div><div class="fi">$ e.g. 2,500,000</div></div>
+                            <div class="field"><div class="fl">MAIN PRODUCTS &amp; SERVICES</div><div class="fi tall">e.g. Residential plumbing - drain cleaning, water-heater installs…</div></div>
+                            <div style="margin-top:12px;display:flex;gap:9px;"><span class="btn-dark" style="background:#9A958D;">✓ Save &amp; start coaching</span><span class="ghost">Skip for now</span></div>
+                          </div>
+                        </div>
+                        <div class="suggest">
+                          <div class="col"><div class="lbl"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="var(--orange)" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>THIS WEEK</div><div class="q">Based on my data, what are the top 3 things I should focus on this week?</div><div class="q">Where does the business look like it needs the most support?</div></div>
+                          <div class="col"><div class="lbl"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="var(--orange)" stroke-width="2"><path d="M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1"/></svg>CROSS-FUNCTIONAL</div><div class="q">How can I produce more results in my role, for the company?</div><div class="q">What am I not seeing in my role that I should be paying attention to?</div></div>
+                        </div>
+                        <div class="askbar"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--muted-2)" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span class="ph">Ask Multi…</span><span class="model">✦ Haiku 4.5 ▾</span></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <div class="ask"><span class="sp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.6 4L18 8.5 14 10l-2 4-2-4-4-1.5L10 7z"/></svg></span>Ask Multi AI</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    var TABS = [
+      { key: 'dashboard', url: '/dashboard' },
+      { key: 'hq', url: '/my-hq/inbox' },
+      { key: 'plan', url: '/one-page-plan' },
+      { key: 'scoreboards', url: '/scoreboards' },
+      { key: 'meeting', url: '/leadership-meeting' },
+      { key: 'oneonone', url: '/1on1s' },
+      { key: 'org', url: '/org-chart' },
+      { key: 'multi', url: '/multi-ai' }
+    ];
+    var CYCLE = 4200;  // auto-advance interval
+    var HOLD = 5000;   // how long a clicked tab stays before cycling resumes
+    var i = 0, timer = null;
+    var urlText = document.getElementById('urltext');
+    var navs = document.querySelectorAll('[data-nav]');
+    var screens = document.querySelectorAll('[data-screen]');
+
+    // Rebuild the loading bar under the active tab and fill it over `duration`.
+    function setBar(activeEl, duration) {
+      var old = document.querySelector('.navload');
+      if (old) old.remove();
+      if (!activeEl) return;
+      var bar = document.createElement('span');
+      bar.className = 'navload';
+      var inner = document.createElement('i');
+      bar.appendChild(inner);
+      activeEl.appendChild(bar);
+      void inner.offsetWidth; // force reflow so the fill restarts cleanly
+      inner.style.animation = 'navfill ' + duration + 'ms linear forwards';
+    }
+
+    function activate(idx) {
+      i = idx;
+      var t = TABS[idx];
+      var activeEl = null;
+      navs.forEach(function (a) {
+        var on = a.dataset.nav === t.key;
+        a.classList.toggle('active', on);
+        if (on) activeEl = a;
+      });
+      screens.forEach(function (s) { s.classList.toggle('show', s.dataset.screen === t.key); });
+      urlText.textContent = 'app.multiplyos.com' + t.url;
+      return activeEl;
+    }
+
+    // Show a tab for `duration` ms (bar fills over that time), then advance to
+    // the next tab on the normal CYCLE.
+    function show(idx, duration) {
+      if (timer) { clearTimeout(timer); timer = null; }
+      var el = activate(idx);
+      setBar(el, duration);
+      timer = setTimeout(function () { show((idx + 1) % TABS.length, CYCLE); }, duration);
+    }
+
+    navs.forEach(function (a) {
+      a.addEventListener('click', function () {
+        var idx = TABS.findIndex(function (x) { return x.key === a.dataset.nav; });
+        // a clicked tab holds for HOLD ms, then the auto-cycle resumes
+        if (idx >= 0) show(idx, HOLD);
+      });
+    });
+
+    show(0, CYCLE);
+
+    function postHeight() {
+      if (window.parent !== window) {
+        var h = Math.ceil(document.body.getBoundingClientRect().height);
+        window.parent.postMessage({ osm: 1, h: h }, '*');
+      }
+    }
+    function fit() {
+      var vp = document.querySelector('.viewport');
+      var sc = vp.querySelector('.scale');
+      var s = vp.clientWidth / 1180;
+      sc.style.setProperty('--s', s);
+      vp.style.height = (sc.offsetHeight * s) + 'px';
+      postHeight();
+    }
+    fit();
+    window.addEventListener('resize', fit);
+    window.addEventListener('load', fit);
+    // respond when the parent asks (covers the case where our first post raced ahead of the listener)
+    window.addEventListener('message', function (e) { if (e.data === 'osm-req') postHeight(); });
+    [60, 250, 800].forEach(function (t) { setTimeout(fit, t); });
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
+  })();
+</script>

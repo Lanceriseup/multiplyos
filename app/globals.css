@@ -1,0 +1,187 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #ffffff;
+  --foreground: #0a0a0a;
+}
+
+* {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Subtle Notion-style dotted/grid backdrop helper */
+.bg-dotted {
+  background-image: radial-gradient(#e5e5e5 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+/* ---- Eyebrow "multiply" motif dots (Option D) ---- */
+@keyframes rise {
+  0%, 100% { transform: scale(0.78); opacity: 0.55; }
+  50% { transform: scale(1.15); opacity: 1; }
+}
+.mult-dot {
+  animation: rise 2.8s ease-in-out infinite;
+}
+
+/* ---- System token cluster float (eyebrow) ---- */
+@keyframes token-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+.token-float {
+  animation: token-float 4.5s ease-in-out infinite;
+}
+
+/* ---- Rotating gear cluster (Option A) ---- */
+@keyframes spin-cw { to { transform: rotate(360deg); } }
+@keyframes spin-ccw { to { transform: rotate(-360deg); } }
+.gear-cw,
+.gear-ccw {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.gear-cw { animation: spin-cw 9s linear infinite; }
+.gear-ccw { animation: spin-ccw 7s linear infinite; }
+.gear-cw.fast { animation-duration: 5s; }
+
+/* ---- Orange strip: thematic icon micro-animations ---- */
+@keyframes os-ripple { 0% { transform: scale(0.5); opacity: 0.85; } 100% { transform: scale(1.7); opacity: 0; } }
+@keyframes os-heartbeat { 0%, 100% { transform: scale(1); } 12% { transform: scale(1.22); } 26% { transform: scale(1); } 40% { transform: scale(1.13); } 54% { transform: scale(1); } }
+@keyframes os-flicker { 0%, 100% { opacity: 1; } 45% { opacity: 0.45; } 55% { opacity: 1; } }
+@keyframes os-bob { 0%, 100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-3px) rotate(-4deg); } }
+@keyframes os-spin { to { transform: rotate(360deg); } }
+.os-ring { animation: os-ripple 2.6s ease-out infinite; }
+.os-bob { animation: os-bob 3.2s ease-in-out infinite; transform-origin: center; }
+.os-flicker { animation: os-flicker 2.4s ease-in-out infinite; }
+.os-spin { animation: os-spin 6s linear infinite; }
+.os-heartbeat { animation: os-heartbeat 2.4s ease-in-out infinite; transform-origin: center; }
+
+/* ---- Orange strip: Option D gradient-ring orbs ---- */
+@keyframes os-orbspin { to { transform: rotate(360deg); } }
+.os-orb-ring {
+  background: conic-gradient(from 0deg, var(--orb-c), #ffffff 35%, var(--orb-c) 70%, var(--orb-c));
+  padding: 3px;
+  -webkit-mask: radial-gradient(closest-side, transparent calc(100% - 3px), #000 calc(100% - 3px));
+  mask: radial-gradient(closest-side, transparent calc(100% - 3px), #000 calc(100% - 3px));
+  animation: os-orbspin 6s linear infinite;
+  opacity: 0.9;
+}
+.os-orb { transition: transform 0.25s ease; }
+.os-orb-item:hover .os-orb-ring { animation-duration: 1.8s; opacity: 1; }
+.os-orb-item:hover .os-orb { transform: scale(1.07); }
+
+/* ---- OS overview window ---- */
+@keyframes os-progress { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes os-rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.os-progress-bar { transform-origin: left; animation: os-progress 3.6s linear forwards; }
+.os-rise { animation: os-rise 0.4s ease; }
+
+/* ---- Demo modal: mini-window progress bars ---- */
+@keyframes mw-fill { from { transform: scaleX(0.25); } to { transform: scaleX(1); } }
+.mw-fill { transform-origin: left; animation: mw-fill 3.4s ease-in-out infinite alternate; }
+
+/* ---- Value band: frosted-glass drifting orbs ---- */
+@keyframes strip-orb-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-16px); } }
+.strip-orb { animation: strip-orb-float 9s ease-in-out infinite; }
+
+/* ---- Feature scoreboard: current-cell flash when a count-up value lands ---- */
+@keyframes sb-flash { 0% { background-color: #CBEFD7; } 100% { background-color: #EAF7F0; } }
+.sb-flash { animation: sb-flash 0.6s ease; }
+
+/* ---- Feature CFO dashboard: chart line draw, area fade, pie sweep ---- */
+@property --cfo-pie { syntax: "<angle>"; inherits: false; initial-value: 0turn; }
+.cfo-pie { -webkit-mask: conic-gradient(#000 var(--cfo-pie), transparent 0); mask: conic-gradient(#000 var(--cfo-pie), transparent 0); }
+@keyframes cfo-pie-reveal { to { --cfo-pie: 1turn; } }
+.cfo-pie-play { animation: cfo-pie-reveal 1s ease-out forwards; }
+.cfo-line { stroke-dasharray: 520; stroke-dashoffset: 520; }
+.cfo-line-play { transition: stroke-dashoffset 1.15s ease; stroke-dashoffset: 0; }
+.cfo-area { opacity: 0; }
+.cfo-area-play { animation: cfo-area-in 0.9s ease 0.25s forwards; }
+@keyframes cfo-area-in { to { opacity: 1; } }
+
+/* ---- Feature AI card: "thinking" orb ---- */
+@keyframes ai-orb-breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+@keyframes ai-orb-glow { 0%, 100% { opacity: 0.5; transform: scale(1); } 50% { opacity: 0.9; transform: scale(1.15); } }
+@keyframes ai-orb-spin { to { transform: rotate(360deg); } }
+.ai-orb { animation: ai-orb-breathe 2.6s ease-in-out infinite; }
+.ai-orb-glow { animation: ai-orb-glow 2.6s ease-in-out infinite; }
+.ai-orb-spin { animation: ai-orb-spin 7s linear infinite; }
+.ai-orb-dot { position: absolute; top: 50%; left: 50%; width: 7px; height: 7px; margin: -3.5px; border-radius: 50%; background: #fff; box-shadow: 0 0 7px rgba(255, 255, 255, 0.95); }
+@keyframes ai-orb-ripple { 0% { transform: scale(0.7); opacity: 0.9; } 100% { transform: scale(1.7); opacity: 0; } }
+.ai-orb-pulse { animation: ai-orb-ripple 2.4s ease-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .ai-orb, .ai-orb-glow, .ai-orb-spin, .ai-orb-pulse { animation: none; }
+}
+
+/* ---- Feature SOP: click-to-expand walkthrough ---- */
+.sop-player { position: absolute; left: 12px; right: 12px; top: 44px; bottom: 12px; border-radius: 10px; overflow: hidden; background: #fff; border: 1px solid #ECEAE6; box-shadow: 0 14px 30px -10px rgba(0,0,0,0.3); opacity: 0; transform: scale(0.55); transform-origin: 50% 18%; transition: opacity 0.35s ease, transform 0.5s cubic-bezier(0.22,1,0.36,1); }
+.sop-app.sop-open .sop-player { opacity: 1; transform: scale(1); }
+.sop-body { transition: opacity 0.3s ease; }
+.sop-app.sop-open .sop-body { opacity: 0.3; }
+.sop-playbtn { transition: transform 0.25s ease, opacity 0.25s ease; }
+.sop-app.sop-open .sop-playbtn { opacity: 0; transform: scale(0.5); }
+.sop-cell { transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease; }
+.sop-cell.win { background: #EAF7F0; color: #2BA463; border-color: #BDE7CE; }
+.sop-scrub { position: absolute; left: 0; right: 0; bottom: 0; height: 4px; background: rgba(0,0,0,0.08); }
+.sop-scrub > i { display: block; height: 100%; width: 0; background: #A56A43; }
+.sop-tip { position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%); background: #15120E; color: #fff; font-size: 9px; font-weight: 600; padding: 4px 9px; border-radius: 6px; opacity: 0; transition: opacity 0.3s ease; white-space: nowrap; z-index: 20; }
+
+/* ---- Value band: icon badge shimmer sweep ---- */
+@keyframes icon-shimmer-sweep { 0% { left: -70%; } 55%, 100% { left: 150%; } }
+.icon-shimmer { position: relative; overflow: hidden; }
+.icon-shimmer > svg { position: relative; z-index: 1; }
+.icon-shimmer::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -70%;
+  width: 55%;
+  height: 100%;
+  z-index: 2;
+  pointer-events: none;
+  background: linear-gradient(105deg, transparent, rgba(255, 255, 255, 0.75), transparent);
+  transform: skewX(-18deg);
+  animation: icon-shimmer-sweep 3s ease-in-out infinite;
+  animation-delay: var(--shimmer-delay, 0s);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mult-dot, .gear-cw, .gear-ccw, .token-float,
+  .os-ring, .os-bob, .os-flicker, .os-spin, .os-heartbeat,
+  .os-orb-ring, .os-progress-bar, .os-rise, .mw-fill, .strip-orb { animation: none; }
+  .icon-shimmer::after { animation: none; opacity: 0; }
+}
+
+/* ---- Built-in AI coach: streaming answer ---- */
+@keyframes ai-num-flash { 0% { background-color: rgba(91, 75, 214, 0.28); } 100% { background-color: transparent; } }
+.ai-num-flash { border-radius: 3px; animation: ai-num-flash 0.7s ease; }
+@keyframes ai-caret-blink { 50% { opacity: 0; } }
+.ai-caret {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  margin-left: 1px;
+  vertical-align: -2px;
+  background: #5b4bd6;
+  animation: ai-caret-blink 1s steps(1) infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ai-num-flash, .ai-caret { animation: none; }
+}
+
+/* ---- Closing CTA: ambient orange glow ---- */
+@keyframes cta-glow { 0%, 100% { opacity: 0.4; } 50% { opacity: 0.82; } }
+.cta-glow { animation: cta-glow 5.5s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .cta-glow { animation: none; opacity: 0.55; }
+}
