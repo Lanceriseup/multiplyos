@@ -64,10 +64,9 @@ function VideoCard({ item }: { item: Item }) {
               </svg>
             </span>
 
-            {/* name / role caption */}
+            {/* name caption */}
             <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#080603]/85 via-[#080603]/25 to-transparent px-5 pb-4 pt-8 text-left">
               <span className="block text-[16.5px] font-bold tracking-tight text-white">{item.name}</span>
-              <span className="mt-0.5 block text-[12.5px] text-white/80">{item.role}</span>
             </span>
           </button>
         )}
