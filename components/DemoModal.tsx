@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import BookingCalendar from "@/components/BookingCalendar";
 
 /* ------------------------------------------------------------------ */
 /*  Context — lets any button anywhere open the demo modal             */
@@ -37,6 +38,12 @@ export default function DemoProvider({ children }: { children: ReactNode }) {
 /* ------------------------------------------------------------------ */
 function DemoModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [step, setStep] = useState<"form" | "booking">("form");
+  const [contactId, setContactId] = useState<string | null>(null);
+  const [leadName, setLeadName] = useState("");
+  const [leadEmail, setLeadEmail] = useState("");
 
   // Lock body scroll + close on Escape while open
   useEffect(() => {
@@ -56,14 +63,53 @@ function DemoModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   // Reset the success state shortly after closing so it's fresh next open
   useEffect(() => {
     if (open) return;
-    const t = setTimeout(() => setSubmitted(false), 300);
+    const t = setTimeout(() => {
+      setSubmitted(false);
+      setError(null);
+      setStep("form");
+      setContactId(null);
+    }, 300);
     return () => clearTimeout(t);
   }, [open]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // No backend yet — show the confirmation state.
-    setSubmitted(true);
+    setError(null);
+    setLoading(true);
+    try {
+      const fd = new FormData(e.currentTarget);
+      const name = String(fd.get("name") || "");
+      const email = String(fd.get("email") || "");
+      const res = await fetch("/api/lead", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          email,
+          company: fd.get("company"),
+          teamSize: fd.get("teamSize"),
+          message: fd.get("message"),
+          source: "Demo Request",
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.ok) throw new Error(json.error || "Submit failed");
+
+      // Move to the in-modal booking step to pick a slot.
+      if (json.contactId) {
+        setLeadName(name.trim());
+        setLeadEmail(email.trim());
+        setContactId(json.contactId);
+        setStep("booking");
+        return;
+      }
+      // Fallback: no contact returned — show a simple confirmation.
+      setSubmitted(true);
+    } catch {
+      setError("Something went wrong. Please try again or email support@multiplyos.com.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -87,7 +133,9 @@ function DemoModal({ open, onClose }: { open: boolean; onClose: () => void }) {
 
           {/* Panel */}
           <motion.div
-            className="relative grid w-full max-w-[880px] overflow-hidden rounded-[20px] bg-white shadow-[0_40px_80px_-24px_rgba(10,10,10,0.45),0_12px_28px_-16px_rgba(10,10,10,0.3)] sm:grid-cols-[1.05fr_1fr]"
+            className={`relative w-full overflow-hidden rounded-[20px] bg-white shadow-[0_40px_80px_-24px_rgba(10,10,10,0.45),0_12px_28px_-16px_rgba(10,10,10,0.3)] ${
+              step === "form" ? "grid max-w-[880px] sm:grid-cols-[1.05fr_1fr]" : "block max-w-[860px]"
+            }`}
             initial={{ opacity: 0, y: 14, scale: 0.985 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.99 }}
@@ -105,6 +153,8 @@ function DemoModal({ open, onClose }: { open: boolean; onClose: () => void }) {
               </svg>
             </button>
 
+            {step === "form" ? (
+              <>
             {/* ---------- Left: warm ivory showroom panel ---------- */}
             <div className="relative hidden overflow-hidden bg-[#FBF4E9] p-8 text-[#241C12] sm:block sm:border-r sm:border-[#F0E6D4]">
               <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(#E7B27A_1px,transparent_1px)] opacity-30 [background-size:20px_20px]" />
@@ -191,19 +241,19 @@ function DemoModal({ open, onClose }: { open: boolean; onClose: () => void }) {
                   </p>
                   <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
                     <Field label="Work email">
-                      <input type="email" required placeholder="you@company.com" className={inputCls} />
+                      <input type="email" name="email" required placeholder="you@company.com" className={inputCls} />
                     </Field>
                     <div className="grid gap-3.5 sm:grid-cols-2">
                       <Field label="Full name">
-                        <input type="text" required placeholder="Jordan Lee" className={inputCls} />
+                        <input type="text" name="name" required placeholder="Jordan Lee" className={inputCls} />
                       </Field>
                       <Field label="Company">
-                        <input type="text" required placeholder="Acme Inc." className={inputCls} />
+                        <input type="text" name="company" required placeholder="Acme Inc." className={inputCls} />
                       </Field>
                     </div>
                     <Field label="Team size">
                       <div className="relative">
-                        <select required defaultValue="" className={`${inputCls} appearance-none pr-10`}>
+                        <select name="teamSize" required defaultValue="" className={`${inputCls} appearance-none pr-10`}>
                           <option value="" disabled>
                             Select…
                           </option>
@@ -227,16 +277,21 @@ function DemoModal({ open, onClose }: { open: boolean; onClose: () => void }) {
                     </Field>
                     <Field label="What would you like to see?">
                       <textarea
+                        name="message"
                         rows={2}
                         placeholder="e.g. how Multiply OS replaces our project + finance stack"
                         className={`${inputCls} min-h-[72px] resize-none`}
                       />
                     </Field>
+                    {error && (
+                      <p className="text-center text-[13px] font-medium text-[#C0392B]">{error}</p>
+                    )}
                     <button
                       type="submit"
-                      className="mt-1 w-full rounded-[9px] bg-brand-orange px-4 py-3 text-[15.5px] font-semibold text-white shadow-[0_6px_16px_-8px_rgba(234,123,27,0.8)] transition-colors hover:bg-brand-orange-dark"
+                      disabled={loading}
+                      className="mt-1 w-full rounded-[9px] bg-brand-orange px-4 py-3 text-[15.5px] font-semibold text-white shadow-[0_6px_16px_-8px_rgba(234,123,27,0.8)] transition-colors hover:bg-brand-orange-dark disabled:cursor-not-allowed disabled:opacity-70"
                     >
-                      Request a Demo
+                      {loading ? "Submitting…" : "Request a Demo"}
                     </button>
                     <p className="mt-1 text-center text-xs text-brand-gray">
                       By submitting you agree to our{" "}
@@ -274,6 +329,15 @@ function DemoModal({ open, onClose }: { open: boolean; onClose: () => void }) {
                 </motion.div>
               )}
             </div>
+              </>
+            ) : (
+              <BookingCalendar
+                contactId={contactId}
+                leadName={leadName}
+                leadEmail={leadEmail}
+                onBack={() => setStep("form")}
+              />
+            )}
           </motion.div>
         </motion.div>
       )}

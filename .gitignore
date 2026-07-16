@@ -12,3 +12,6 @@ next-env.d.ts
 
 # Local design/HTML option mockups — not part of the app
 /design
+
+# Testimonial videos — exceed GitHub's 100MB limit; host/compress before shipping
+/public/testimonials/*.mp4

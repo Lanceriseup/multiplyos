@@ -185,3 +185,29 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .cta-glow { animation: none; opacity: 0.55; }
 }
+
+/* ---- Testimonials: float, play-halo, poster shine ---- */
+@keyframes testi-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-9px); } }
+.testi-float { animation: testi-float 7s ease-in-out infinite; }
+@keyframes testi-halo { 0% { transform: scale(1); opacity: 0.7; } 100% { transform: scale(1.7); opacity: 0; } }
+.testi-halo { animation: testi-halo 2.6s ease-out infinite; }
+@keyframes testi-shine { 0%, 100% { transform: translateX(-120%); } 55% { transform: translateX(120%); } }
+.testi-shine { animation: testi-shine 5.5s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .testi-float, .testi-shine { animation: none; }
+  .testi-halo { display: none; }
+}
+
+/* ---- Booking confirmation: pop-in + confetti ---- */
+@keyframes book-pop { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.book-pop { animation: book-pop 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.3) both; }
+@keyframes book-confetti {
+  0% { transform: translateY(-16px) rotate(0); opacity: 0; }
+  15% { opacity: 1; }
+  100% { transform: translateY(150px) rotate(240deg); opacity: 0; }
+}
+.book-confetti-piece { animation: book-confetti 2.8s ease-in forwards; }
+@media (prefers-reduced-motion: reduce) {
+  .book-pop { animation: none; }
+  .book-confetti-piece { display: none; }
+}

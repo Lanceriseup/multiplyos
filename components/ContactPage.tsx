@@ -49,11 +49,35 @@ function Detail({
 export default function ContactPage() {
   const { openDemo } = useDemo();
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // No backend yet — show the confirmation state.
-    setSubmitted(true);
+    setError(null);
+    setLoading(true);
+    try {
+      const fd = new FormData(e.currentTarget);
+      const res = await fetch("/api/lead", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: fd.get("name"),
+          email: fd.get("email"),
+          company: fd.get("company"),
+          topic: fd.get("topic"),
+          message: fd.get("message"),
+          source: "Contact Form",
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.ok) throw new Error(json.error || "Submit failed");
+      setSubmitted(true);
+    } catch {
+      setError(`Something went wrong. Please try again or email ${CONTACT_EMAIL}.`);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -135,19 +159,19 @@ export default function ContactPage() {
               <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                 <div className="grid gap-4 sm:grid-cols-2">
                   <Field label="Full name">
-                    <input type="text" required placeholder="Jordan Lee" className={inputCls} />
+                    <input type="text" name="name" required placeholder="Jordan Lee" className={inputCls} />
                   </Field>
                   <Field label="Work email">
-                    <input type="email" required placeholder="you@company.com" className={inputCls} />
+                    <input type="email" name="email" required placeholder="you@company.com" className={inputCls} />
                   </Field>
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <Field label="Company">
-                    <input type="text" placeholder="Acme Inc." className={inputCls} />
+                    <input type="text" name="company" placeholder="Acme Inc." className={inputCls} />
                   </Field>
                   <Field label="Topic">
                     <div className="relative">
-                      <select required defaultValue="" className={`${inputCls} appearance-none pr-10`}>
+                      <select name="topic" required defaultValue="" className={`${inputCls} appearance-none pr-10`}>
                         <option value="" disabled>
                           Select…
                         </option>
@@ -172,17 +196,22 @@ export default function ContactPage() {
                 </div>
                 <Field label="Message">
                   <textarea
+                    name="message"
                     required
                     rows={4}
                     placeholder="How can we help?"
                     className={`${inputCls} min-h-[120px] resize-none`}
                   />
                 </Field>
+                {error && (
+                  <p className="text-center text-[13px] font-medium text-[#C0392B]">{error}</p>
+                )}
                 <button
                   type="submit"
-                  className="mt-1 w-full rounded-[9px] bg-brand-orange px-4 py-3 text-[15.5px] font-semibold text-white shadow-[0_6px_16px_-8px_rgba(234,123,27,0.8)] transition-colors hover:bg-brand-orange-dark"
+                  disabled={loading}
+                  className="mt-1 w-full rounded-[9px] bg-brand-orange px-4 py-3 text-[15.5px] font-semibold text-white shadow-[0_6px_16px_-8px_rgba(234,123,27,0.8)] transition-colors hover:bg-brand-orange-dark disabled:cursor-not-allowed disabled:opacity-70"
                 >
-                  Send message
+                  {loading ? "Sending…" : "Send message"}
                 </button>
                 <p className="text-center text-xs text-brand-gray">
                   Prefer email? Reach us at{" "}

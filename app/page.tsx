@@ -8,6 +8,7 @@ import FeatureCfo from "@/components/FeatureCfo";
 import FeatureAiMeetings from "@/components/FeatureAiMeetings";
 import FeatureSop from "@/components/FeatureSop";
 import FeatureProjectsTasks from "@/components/FeatureProjectsTasks";
+import Testimonials from "@/components/Testimonials";
 import CTA from "@/components/CTA";
 import FAQ from "@/components/FAQ";
 import Footer from "@/components/Footer";
@@ -31,6 +32,7 @@ export default function Home() {
       </div>
       <FeatureSop />
       <FeatureProjectsTasks />
+      <Testimonials />
       <CTA />
       <FAQ />
       <Footer />
