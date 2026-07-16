@@ -214,20 +214,6 @@ function DemoModal({ open, onClose }: { open: boolean; onClose: () => void }) {
                   ))}
                 </div>
 
-                <div className="mt-6 flex items-center gap-2.5 text-[11.5px] text-[#A08B6F]">
-                  <span className="flex">
-                    {[12, 32, 45, 68].map((id) => (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        key={id}
-                        src={`https://i.pravatar.cc/64?img=${id}`}
-                        alt=""
-                        className="-ml-2 h-7 w-7 rounded-full border-2 border-[#FBF4E9] object-cover first:ml-0"
-                      />
-                    ))}
-                  </span>
-                  Trusted by 400+ operating teams
-                </div>
               </div>
             </div>
 

@@ -14,6 +14,10 @@ export const metadata: Metadata = {
   description:
     "Multiply OS brings your tools, teams, and AI into one connected workspace. Do more, with less.",
   metadataBase: new URL("https://www.multiplyos.com"),
+  icons: {
+    icon: "/MultiplyOS_GearsOnly.png",
+    apple: "/MultiplyOS_GearsOnly.png",
+  },
   openGraph: {
     title: "Multiply OS",
     description:
