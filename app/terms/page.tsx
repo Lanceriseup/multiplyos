@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 
 export default function TermsPage() {
   return (
-    <LegalPage title="Multiply OS Terms of Service" lastUpdated="June 26, 2026">
+    <LegalPage title="Multiply OS Terms of Service" lastUpdated="July 17, 2026">
       <p>
         This Terms of Service (&ldquo;Agreement&rdquo;) governs your access to
         and use of the Multiply OS platform. Please read it carefully.
@@ -76,8 +76,9 @@ export default function TermsPage() {
       <Section heading="5. Third-Party Integrations">
         <p>
           The Service may integrate with third-party services, including but not
-          limited to Intuit QuickBooks Online. When you connect a third-party
-          service, you authorize us to access and retrieve data from that service
+          limited to Intuit QuickBooks Online, Plaid and Documenso. When you
+          connect a third-party service, you authorize us to access and retrieve
+          data from that service
           on your behalf. Your use of third-party services is governed by their
           respective terms and policies. We are not responsible for the
           availability, accuracy, or practices of third-party services.

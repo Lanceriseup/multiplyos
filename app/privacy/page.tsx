@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 export default function PrivacyPage() {
   return (
-    <LegalPage title="Multiply OS Privacy Policy" lastUpdated="June 26, 2026">
+    <LegalPage title="Multiply OS Privacy Policy" lastUpdated="July 17, 2026">
       <Section heading="1. Introduction">
         <p>
           Multiply OS LLC (&ldquo;Company,&rdquo; &ldquo;we,&rdquo;
@@ -33,8 +33,8 @@ export default function PrivacyPage() {
         <SubHeading>2.2 Information from Third-Party Services</SubHeading>
         <p>
           When you connect third-party services (such as Intuit QuickBooks
-          Online), we collect financial data from those services on your behalf,
-          including but not limited to:
+          Online, Plaid), we collect financial data from those services on your
+          behalf, including but not limited to:
         </p>
         <List
           items={[
@@ -42,6 +42,8 @@ export default function PrivacyPage() {
             "Profit & Loss reports",
             "Balance Sheet reports",
             "Company financial metadata",
+            "Banking transaction metadata",
+            "Banking account balance metadata",
           ]}
         />
         <p>
@@ -101,7 +103,8 @@ export default function PrivacyPage() {
       <Section heading="5. Third-Party Integrations">
         <p>
           The Service allows you to connect third-party accounts such as Intuit
-          QuickBooks Online. When you connect a third-party service:
+          QuickBooks Online or your bank utilizing Plaid. When you connect a
+          third-party service:
         </p>
         <List
           items={[
@@ -134,6 +137,36 @@ export default function PrivacyPage() {
             className="font-medium text-brand-orange hover:underline"
           >
             intuit.com/privacy/statement
+          </a>
+          .
+        </p>
+        <SubHeading>5.2 Plaid &mdash; specific disclosures</SubHeading>
+        <p>
+          For Plaid specifically: The data collected, used, and shared depends on
+          the Plaid products and services that you, and/or the app you have
+          connected to, use. This information may include, for example, your:
+        </p>
+        <List
+          items={[
+            "Account holder information: name, address, phone number, and email address, as held by your bank or other financial institution;",
+            "Account transactions: amount, date, type, and a description of the transaction; and",
+            "Account details: account name, account type, account and routing numbers, and balance.",
+          ]}
+        />
+        <p>
+          By creating a Plaid Portal account, you can see the types of data that
+          Plaid has shared with your connected apps.
+        </p>
+        <p>
+          Third-party services have their own privacy policies. We encourage you
+          to review how Plaid handles data and Plaid&rsquo;s{" "}
+          <a
+            href="https://plaid.com/legal/#end-user-privacy-policy"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-medium text-brand-orange hover:underline"
+          >
+            End User Privacy Policy here
           </a>
           .
         </p>
