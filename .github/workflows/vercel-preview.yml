@@ -2,12 +2,11 @@ name: Vercel Preview
 
 # Triggers a preview deployment for every pull request and posts the URL
 # back as a sticky PR comment. The actual build/deploy logic lives in the
-# reusable workflow `_vercel-build-deploy.yml` so the production caller
-# can share it; keeping the trigger and the work in separate files is
-# what stops PRs from showing a "Production deployment (skipped)" check.
+# reusable workflow `_vercel-build-deploy.yml`; keeping the trigger and the
+# work in separate files prevents unrelated skipped jobs in PR check lists.
 #
 # See `_vercel-build-deploy.yml` for the required secrets and project
-# resolution rules — they're shared with the production caller.
+# resolution rules.
 
 on:
   pull_request:
@@ -31,4 +30,7 @@ jobs:
     with:
       environment: preview
       comment_pr: true
-    secrets: inherit
+    secrets:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
