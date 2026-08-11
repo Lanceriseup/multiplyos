@@ -1,0 +1,34 @@
+name: Vercel Preview
+
+# Triggers a preview deployment for every pull request and posts the URL
+# back as a sticky PR comment. The actual build/deploy logic lives in the
+# reusable workflow `_vercel-build-deploy.yml` so the production caller
+# can share it; keeping the trigger and the work in separate files is
+# what stops PRs from showing a "Production deployment (skipped)" check.
+#
+# See `_vercel-build-deploy.yml` for the required secrets and project
+# resolution rules — they're shared with the production caller.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+# Cancel an in-flight preview if a newer commit lands on the same PR.
+concurrency:
+  group: vercel-preview-${{ github.ref }}
+  cancel-in-progress: true
+
+# Granted at the workflow level so the reusable workflow's job inherits
+# them. `pull-requests: write` is needed by the sticky-preview-comment
+# step in the reusable workflow.
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  preview:
+    uses: ./.github/workflows/_vercel-build-deploy.yml
+    with:
+      environment: preview
+      comment_pr: true
+    secrets: inherit
