@@ -220,6 +220,16 @@ body {
   .tour-landed { animation: none; }
 }
 
+/* ---- SOP HQ hero tour: each view fades up as it swaps in ---- */
+@keyframes sop-view-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.sop-view { animation: sop-view-in 0.34s cubic-bezier(0.22, 1, 0.36, 1) both; }
+/* Recording dot on the video-SOP mockup. */
+@keyframes sop-rec { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
+.sop-rec { animation: sop-rec 1.4s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .sop-view, .sop-rec { animation: none; }
+}
+
 /* ---- Booking confirmation: pop-in + confetti ---- */
 @keyframes book-pop { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 .book-pop { animation: book-pop 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.3) both; }

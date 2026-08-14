@@ -132,7 +132,7 @@ const ReportIcon = ({ className }: { className?: string }) => (
 const features: Feature[] = [
   { label: "Metrics Scoreboard", desc: "Know if you won the week.", href: "/features/metrics-scoreboard", color: "#EA7B1B", icon: ScoreboardIcon },
   { label: "CFO Analytics", desc: "Cash, margin & runway.", color: "#A16207", icon: CoinsIcon },
-  { label: "SOP HQ", desc: "Every process, documented.", color: "#7A4E28", icon: BookIcon },
+  { label: "SOP HQ", desc: "Every process, documented.", href: "/features/sop-hq", color: "#7A4E28", icon: BookIcon },
   { label: "Projects & Tasks", desc: "See the whole board.", color: "#5B47A8", icon: BoardIcon },
   { label: "Team Accountability", desc: "Own the week, every week.", color: "#B4532A", icon: TargetIcon },
   { label: "Team Meetings", desc: "Every meeting, on rhythm.", color: "#2C6BA6", icon: CalIcon },
