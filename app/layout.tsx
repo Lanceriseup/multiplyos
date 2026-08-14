@@ -25,6 +25,22 @@ export const metadata: Metadata = {
     url: "https://www.multiplyos.com",
     siteName: "Multiply OS",
     type: "website",
+    locale: "en_US",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Multiply OS — The operating system for your business",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Multiply OS",
+    description:
+      "The operating system for your business. Tools, teams, and AI in one place.",
+    images: ["/og-image.png"],
   },
 };
 
