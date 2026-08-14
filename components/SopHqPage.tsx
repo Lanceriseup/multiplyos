@@ -6,7 +6,8 @@
 //   1. hero: the library, then a SOP being written (see SopHqHeroTour)
 //   2. blocks: the ten block types a SOP can be built from
 //   3. video SOPs, recorded off the user's own screen
-//   4. a multi-step SOP, using the Employee Onboarding Template as the example
+//   4. a multi-step SOP. The Employee Onboarding Template is only an example, so
+//      the copy never claims a step count. See EXAMPLE_LEN.
 //   5. assigning a SOP and tracking who has actually finished it
 //   6. (last, as on every feature page) how Multi AI reads this data for insights,
 //      including the AI walkthrough it can run over a single SOP
@@ -598,9 +599,13 @@ function VideoSopDemo() {
 }
 
 // ---------------------------------------------------------------- 4. multi-step SOP
-// Seven of the twenty-three steps, so the reader sees structure without a wall of
-// text. Checking a box moves the count, which stays out of /23 because the sixteen
-// steps below the fold are all still open.
+// A SOP is as long as whoever wrote it needed, so the page never claims a number.
+// This mockup is one example: EXAMPLE_LEN steps, of which the first seven are shown
+// so the reader sees structure without a wall of text. Checking a box moves the
+// count, which stays out of the total because the steps below the fold are all
+// still open. Change EXAMPLE_LEN and both this section and Assign and track follow.
+const EXAMPLE_LEN = 23;
+
 type Step = { n: number; title: string; kind?: "video" | "form" | "link"; done: boolean };
 
 const STEPS: Step[] = [
@@ -622,7 +627,7 @@ const KIND_META = {
 function MultiStepDemo() {
   const [done, setDone] = useState<boolean[]>(STEPS.map((s) => s.done));
   const count = done.filter(Boolean).length;
-  const pct = Math.round((count / 23) * 100);
+  const pct = Math.round((count / EXAMPLE_LEN) * 100);
 
   return (
     <div className="overflow-hidden rounded-2xl border border-black/5 bg-white shadow-[0_24px_50px_-28px_rgba(40,30,15,0.4)]">
@@ -649,7 +654,7 @@ function MultiStepDemo() {
       <div className="px-4 pb-3">
         <div className="flex items-baseline gap-2">
           <span className="text-[19px] font-extrabold tabular-nums leading-none" style={{ color: pct >= 50 ? GREEN : AMBER }}>
-            {count}/23
+            {count}/{EXAMPLE_LEN}
           </span>
           <span className="text-[11px] text-brand-gray">steps complete</span>
           <span className="ml-auto text-[11px] font-semibold tabular-nums text-brand-charcoal">{pct}%</span>
@@ -707,7 +712,8 @@ function MultiStepDemo() {
       </div>
 
       <p className="border-t border-[#F1EEE9] bg-[#FAF9F7] px-4 py-2 text-[10.5px] text-brand-gray">
-        16 more steps: access, training, week-one check-ins, and the 30 day review.
+        This one runs {EXAMPLE_LEN}, covering access, training, and the week-one check-ins. The next
+        one might run six.
       </p>
     </div>
   );
@@ -717,7 +723,7 @@ function MultiStepDemo() {
 type Person = { init: string; name: string; role: string; done: number; color: string };
 
 const PEOPLE: Person[] = [
-  { init: "AD", name: "Alisha Dickerson", role: "Operations", done: 23, color: "#2E7D5B" },
+  { init: "AD", name: "Alisha Dickerson", role: "Operations", done: EXAMPLE_LEN, color: "#2E7D5B" },
   { init: "MH", name: "Marcus Hale", role: "Operations", done: 18, color: "#2C6BA6" },
   { init: "TR", name: "Tova Reyes", role: "Events", done: 8, color: "#C9832B" },
   { init: "JP", name: "Jordan Pike", role: "Events", done: 8, color: "#8A3F6D" },
@@ -726,13 +732,13 @@ const PEOPLE: Person[] = [
 ];
 
 function statusOf(done: number) {
-  if (done >= 23) return { label: "Complete", color: GREEN, bg: "#EAF7F0" };
+  if (done >= EXAMPLE_LEN) return { label: "Complete", color: GREEN, bg: "#EAF7F0" };
   if (done > 0) return { label: "In progress", color: AMBER, bg: "#FDF1DF" };
   return { label: "Not started", color: RED, bg: "#FBEEEB" };
 }
 
 function AssignDemo() {
-  const finished = PEOPLE.filter((p) => p.done >= 23).length;
+  const finished = PEOPLE.filter((p) => p.done >= EXAMPLE_LEN).length;
 
   return (
     <div className="overflow-hidden rounded-2xl border border-black/5 bg-white shadow-[0_24px_50px_-28px_rgba(40,30,15,0.4)]">
@@ -745,7 +751,7 @@ function AssignDemo() {
 
       {PEOPLE.map((p) => {
         const st = statusOf(p.done);
-        const pct = Math.round((p.done / 23) * 100);
+        const pct = Math.round((p.done / EXAMPLE_LEN) * 100);
         return (
           <div key={p.name} className="flex items-center gap-2.5 border-b border-[#F5F2ED] px-3.5 py-2.5">
             <span
@@ -764,7 +770,7 @@ function AssignDemo() {
               </span>
             </span>
             <span className="w-[42px] flex-none text-right text-[10.5px] font-bold tabular-nums text-brand-charcoal">
-              {p.done}/23
+              {p.done}/{EXAMPLE_LEN}
             </span>
             <span
               className="w-[88px] flex-none whitespace-nowrap rounded-full px-1.5 py-[3px] text-center text-[8.5px] font-bold uppercase tracking-wide"
@@ -1009,9 +1015,9 @@ export default function SopHqPage() {
       <Section
         id="steps"
         eyebrow="Multi-step SOPs"
-        title="Twenty-three steps, and not one of them"
+        title="However many steps it takes, not one of them"
         swash="gets skipped."
-        body="The Employee Onboarding Template runs 23 steps across accounts, access, training, and the first-week check-ins. Every step is ticked off by a person, on a date, with their name on it."
+        body="Some procedures are four steps. Some run past fifty. Break yours into as many as the job actually needs, group them under your own headings, and every one gets ticked off by a person, on a date, with their name on it."
         points={[
           "A checkbox on every step, with a live completion count",
           "Attach a video, a form, or a link to any step that needs one",
