@@ -20,8 +20,10 @@ const STEP = "#1F7F4C";
 const GREEN = "#2BA463";
 const RED = "#D8563F";
 
-type Row = { name: string; value: string; hit: boolean };
-type Insight = { tag: string; color: string; source: string; text: string };
+// `tone` overrides the green/red split that `hit` implies, for panels whose rows
+// are statuses rather than pass/fail numbers.
+export type Row = { name: string; value: string; hit: boolean; tone?: "green" | "red" | "amber" };
+export type Insight = { tag: string; color: string; source: string; text: string };
 
 // Marketing board here, so Tech is not the featured board in every mockup on the
 // page. Each insight names the row it came from, so the two must stay in step.
@@ -70,7 +72,48 @@ const RowsIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
-export default function MultiAiWired() {
+// Every prop defaults to the Metrics Scoreboard copy this component was written
+// for, so that page keeps passing nothing. Other feature pages swap the panel
+// contents and the wording without forking the wiring.
+export type MultiAiWiredProps = {
+  heading?: string; // leading half of the h2
+  swash?: string; // underlined tail of the h2
+  intro?: string;
+  leftLabel?: string; // frosted pill over the left column
+  leftColor?: string; // its icon tile
+  leftIcon?: (p: { className?: string }) => React.JSX.Element;
+  rightLabel?: string;
+  panelTitle?: string;
+  panelMeta?: string;
+  panelDot?: string;
+  rows?: Row[];
+  insights?: Insight[];
+  aiMeta?: string;
+  footer?: string;
+};
+
+const TONES: Record<string, { background: string; color: string }> = {
+  green: { background: "#EAF7F0", color: GREEN },
+  red: { background: "#FBEEEB", color: RED },
+  amber: { background: "#FDF1DF", color: "#9A5A18" },
+};
+
+export default function MultiAiWired({
+  heading = "Your scoreboard, read by",
+  swash = "an analyst.",
+  intro = "Multi AI is already looking at these numbers. Ask what to worry about and it answers from your actual data, naming the metric, the direction, and what to do next.",
+  leftLabel = "The numbers your team logs",
+  leftColor = "#8A3F6D",
+  leftIcon: LeftIcon = RowsIcon,
+  rightLabel = "What Multi AI reads out of them",
+  panelTitle = BOARD,
+  panelMeta = "week 32",
+  panelDot = "#8A3F6D",
+  rows = ROWS,
+  insights = INSIGHTS,
+  aiMeta = "reading 3 metrics",
+  footer = "Multi AI reads the same numbers your team logs. No exports, no prompt engineering, no separate AI subscription.",
+}: MultiAiWiredProps = {}) {
   const sectionRef = useRef<HTMLDivElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
   const boardRef = useRef<HTMLDivElement>(null);
@@ -109,7 +152,7 @@ export default function MultiAiWired() {
     const dx = Math.max(28, (ex - sx) * 0.46);
 
     const next: string[] = [];
-    for (let i = 0; i < ROWS.length; i++) {
+    for (let i = 0; i < rows.length; i++) {
       const row = rowRefs.current[i];
       const card = cardRefs.current[i];
       if (!row || !card) continue;
@@ -121,7 +164,7 @@ export default function MultiAiWired() {
     }
     setBox({ w: w.width, h: w.height });
     setPaths(next);
-  }, []);
+  }, [rows.length]);
 
   useEffect(() => {
     measure();
@@ -164,9 +207,9 @@ export default function MultiAiWired() {
             Multi AI
           </p>
           <h2 className="text-[26px] font-extrabold leading-[1.1] tracking-tight text-brand-ink sm:text-[42px] sm:leading-[1.06]">
-            Your scoreboard, read by{" "}
+            {heading}{" "}
             <span className="relative whitespace-nowrap">
-              an analyst.
+              {swash}
               <svg
                 className="absolute -bottom-2 left-0 h-3 w-full text-brand-orange"
                 viewBox="0 0 120 12"
@@ -181,8 +224,7 @@ export default function MultiAiWired() {
             </span>
           </h2>
           <p className="mx-auto mt-5 max-w-xl text-sm leading-relaxed text-brand-charcoal sm:mt-6 sm:text-lg">
-            Multi AI is already looking at these numbers. Ask what to worry about and it answers from
-            your actual data, naming the metric, the direction, and what to do next.
+            {intro}
           </p>
         </motion.div>
 
@@ -198,11 +240,11 @@ export default function MultiAiWired() {
               flow from logged numbers to read-out is stated, not implied */}
           <div className="mb-4 hidden grid-cols-[minmax(0,0.78fr)_112px_minmax(0,1.12fr)] items-center lg:grid">
             <span className="inline-flex w-fit items-center justify-self-center gap-2.5 rounded-full border border-white/90 bg-white/70 py-2 pl-2.5 pr-4 shadow-[0_6px_18px_-12px_rgba(30,20,70,0.4)] backdrop-blur-[6px]">
-              <span className="grid h-[22px] w-[22px] flex-none place-items-center rounded-md bg-[#8A3F6D] text-white">
-                <RowsIcon className="h-[13px] w-[13px]" />
+              <span className="grid h-[22px] w-[22px] flex-none place-items-center rounded-md text-white" style={{ background: leftColor }}>
+                <LeftIcon className="h-[13px] w-[13px]" />
               </span>
               <span className="text-[12.5px] font-[650] tracking-[0.01em] text-[#33302C]">
-                The numbers your team logs
+                {leftLabel}
               </span>
             </span>
 
@@ -214,14 +256,90 @@ export default function MultiAiWired() {
                 <Spark className="h-[13px] w-[13px]" />
               </span>
               <span className="text-[12.5px] font-[650] tracking-[0.01em] text-[#33302C]">
-                What Multi AI reads out of them
+                {rightLabel}
               </span>
             </span>
           </div>
 
+          {/* ---- mobile: each row carries its own finding ----
+              The wired diagram exists to answer one question: which finding came
+              from which row. Wires cannot do that in a single column, so below lg
+              the two panels are zipped into pairs and adjacency answers it instead. */}
+          <div className="lg:hidden">
+            <div className="flex items-center gap-2 rounded-xl border border-white/90 bg-white/[0.84] px-3 py-2.5 text-[11.5px] font-bold shadow-[0_10px_26px_-20px_rgba(30,20,70,0.42)] backdrop-blur-[10px]">
+              <span className="h-[7px] w-[7px] flex-none rounded-[3px]" style={{ background: panelDot }} />
+              <span className="min-w-0 truncate">{panelTitle}</span>
+              <span className="ml-auto flex-none font-mono text-[8.5px] font-normal text-brand-gray">
+                {panelMeta}
+              </span>
+            </div>
+
+            <p className="mt-3 flex items-center justify-center gap-2 text-[11.5px] font-[620] text-[#33302C]">
+              <span className="grid h-[20px] w-[20px] flex-none place-items-center rounded-md bg-gradient-to-br from-[#F49230] to-[#DE6F14] text-white">
+                <Spark className="h-3 w-3" />
+              </span>
+              Multi AI is {aiMeta}
+            </p>
+
+            <div className="mt-3 space-y-2.5">
+              {rows.map((r, i) => {
+                const ins = insights[i];
+                return (
+                  <div
+                    key={r.name}
+                    className="overflow-hidden rounded-xl border border-white/90 bg-white/[0.84] shadow-[0_14px_34px_-22px_rgba(30,20,70,0.42)] backdrop-blur-[10px]"
+                  >
+                    <div className="flex items-center gap-2 px-3 py-2.5 text-[11.5px]">
+                      <span className="min-w-0 flex-1 truncate font-[620]">{r.name}</span>
+                      <span
+                        className="flex-none rounded-[5px] px-[7px] py-[3px] font-extrabold tabular-nums"
+                        style={TONES[r.tone ?? (r.hit ? "green" : "red")]}
+                      >
+                        {r.value}
+                      </span>
+                    </div>
+                    {ins && (
+                      <div
+                        className="flex items-start gap-2.5 border-t p-3"
+                        style={{ borderColor: `${ins.color}22`, background: `${ins.color}08` }}
+                      >
+                        <span
+                          className="mt-px h-fit flex-none rounded-full px-2 py-[3px] font-mono text-[8.5px] font-bold uppercase tracking-[0.08em] text-white"
+                          style={{ background: ins.color }}
+                        >
+                          {ins.tag}
+                        </span>
+                        <p className="min-w-0 text-[12px] leading-relaxed text-brand-charcoal">{ins.text}</p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+
+              {/* any finding without a row of its own still gets shown */}
+              {insights.slice(rows.length).map((ins) => (
+                <div
+                  key={ins.tag}
+                  className="flex items-start gap-2.5 rounded-xl border p-3"
+                  style={{ borderColor: `${ins.color}22`, background: `${ins.color}08` }}
+                >
+                  <span
+                    className="mt-px h-fit flex-none rounded-full px-2 py-[3px] font-mono text-[8.5px] font-bold uppercase tracking-[0.08em] text-white"
+                    style={{ background: ins.color }}
+                  >
+                    {ins.tag}
+                  </span>
+                  <p className="min-w-0 text-[12px] leading-relaxed text-brand-charcoal">{ins.text}</p>
+                </div>
+              ))}
+            </div>
+
+            <p className="mt-3 text-center text-[10.5px] leading-relaxed text-brand-gray">{footer}</p>
+          </div>
+
           <div
             ref={wrapRef}
-            className="relative grid grid-cols-1 items-center gap-6 lg:grid-cols-[minmax(0,0.78fr)_112px_minmax(0,1.12fr)] lg:gap-0"
+            className="relative hidden grid-cols-1 items-center gap-6 lg:grid lg:grid-cols-[minmax(0,0.78fr)_112px_minmax(0,1.12fr)] lg:gap-0"
           >
             {/* ---- wires ---- */}
             <svg
@@ -235,8 +353,8 @@ export default function MultiAiWired() {
               {paths.map((d, i) => (
                 <g key={`${d}-${i}`}>
                   <path d={d} fill="none" stroke="#C9BDF0" strokeWidth="1.6" strokeDasharray="4 4" />
-                  {!reduce && inView && (
-                    <circle r="4" fill={INSIGHTS[i].color}>
+                  {!reduce && inView && insights[i] && (
+                    <circle r="4" fill={insights[i].color}>
                       <animateMotion dur="1.6s" begin={`${i * 0.45}s`} repeatCount="indefinite" path={d} />
                       <animate
                         attributeName="opacity"
@@ -257,11 +375,11 @@ export default function MultiAiWired() {
               className="relative z-10 overflow-hidden rounded-xl border border-white/90 bg-white/[0.84] shadow-[0_18px_40px_-24px_rgba(30,20,70,0.42)] backdrop-blur-[10px]"
             >
               <div className="flex items-center gap-2 border-b border-[#F1EEE9] px-3 py-2.5 text-[11.5px] font-bold">
-                <span className="h-[7px] w-[7px] flex-none rounded-[3px] bg-[#8A3F6D]" />
-                {BOARD}
-                <span className="ml-auto font-mono text-[8.5px] font-normal text-brand-gray">week 32</span>
+                <span className="h-[7px] w-[7px] flex-none rounded-[3px]" style={{ background: panelDot }} />
+                {panelTitle}
+                <span className="ml-auto font-mono text-[8.5px] font-normal text-brand-gray">{panelMeta}</span>
               </div>
-              {ROWS.map((r, i) => (
+              {rows.map((r, i) => (
                 <div
                   key={r.name}
                   ref={(el) => { rowRefs.current[i] = el; }}
@@ -270,11 +388,7 @@ export default function MultiAiWired() {
                   <span className="min-w-0 flex-1 truncate font-[620]">{r.name}</span>
                   <span
                     className="flex-none rounded-[5px] px-[7px] py-[3px] font-extrabold tabular-nums"
-                    style={
-                      r.hit
-                        ? { background: "#EAF7F0", color: GREEN }
-                        : { background: "#FBEEEB", color: RED }
-                    }
+                    style={TONES[r.tone ?? (r.hit ? "green" : "red")]}
                   >
                     {r.value}
                   </span>
@@ -295,10 +409,10 @@ export default function MultiAiWired() {
                   <Spark className="h-[13px] w-[13px]" />
                 </span>
                 <b className="text-[12.5px]">Multi AI</b>
-                <span className="ml-auto font-mono text-[8.5px] text-brand-gray">reading 3 metrics</span>
+                <span className="ml-auto font-mono text-[8.5px] text-brand-gray">{aiMeta}</span>
               </div>
 
-              {INSIGHTS.map((ins, i) => (
+              {insights.map((ins, i) => (
                 <div key={ins.tag} className="px-3 py-2 first:pt-3">
                   <div
                     ref={(el) => { cardRefs.current[i] = el; }}
@@ -322,8 +436,7 @@ export default function MultiAiWired() {
               ))}
 
               <p className="border-t border-black/[0.06] bg-white/40 px-3.5 py-2.5 text-[10.5px] text-brand-gray">
-                Multi AI reads the same numbers your team logs. No exports, no prompt engineering, no
-                separate AI subscription.
+                {footer}
               </p>
             </div>
           </div>
