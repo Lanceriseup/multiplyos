@@ -3,7 +3,7 @@
 import Reveal from "./Reveal";
 import { useDemo } from "./DemoModal";
 
-export default function CTA() {
+export default function CTA({ href }: { href?: string }) {
   const { openDemo } = useDemo();
   return (
     <section id="demo" className="scroll-mt-24 py-10 sm:py-24">
@@ -25,13 +25,22 @@ export default function CTA() {
                   on one platform.
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={openDemo}
-                className="inline-flex w-full flex-none items-center justify-center rounded-lg bg-brand-orange px-6 py-2.5 text-base font-semibold text-white shadow-[0_10px_30px_-8px_rgba(234,123,27,0.75)] transition-colors hover:bg-brand-orange-dark sm:w-auto sm:min-w-[210px]"
-              >
-                Request a Demo
-              </button>
+              {href ? (
+                <a
+                  href={href}
+                  className="inline-flex w-full flex-none items-center justify-center rounded-lg bg-brand-orange px-6 py-2.5 text-base font-semibold text-white shadow-[0_10px_30px_-8px_rgba(234,123,27,0.75)] transition-colors hover:bg-brand-orange-dark sm:w-auto sm:min-w-[210px]"
+                >
+                  Request a Demo
+                </a>
+              ) : (
+                <button
+                  type="button"
+                  onClick={openDemo}
+                  className="inline-flex w-full flex-none items-center justify-center rounded-lg bg-brand-orange px-6 py-2.5 text-base font-semibold text-white shadow-[0_10px_30px_-8px_rgba(234,123,27,0.75)] transition-colors hover:bg-brand-orange-dark sm:w-auto sm:min-w-[210px]"
+                >
+                  Request a Demo
+                </button>
+              )}
             </div>
           </div>
         </Reveal>
