@@ -165,6 +165,11 @@ function TrendChart({ t }: { t: Trend }) {
   );
 }
 
+// The last of the four feature pages to get a shared card height. 400 on
+// desktop matches SOP HQ; 340 on mobile matches it too. Written out in full
+// because Tailwind scans source for literal class names.
+const MET_CARD_CLS = "h-[340px] sm:h-[400px]";
+
 function TrendDemo() {
   // No animation in this section by design: the first chart is open from the first
   // paint, expanding is instant, and the chart line and area are drawn statically.
@@ -172,15 +177,20 @@ function TrendDemo() {
   const [open, setOpen] = useState<number | null>(0);
 
   return (
-    <div className="rounded-2xl border border-black/5 bg-white p-3 shadow-[0_24px_50px_-28px_rgba(40,30,15,0.4)]">
-      <div className="mb-2 flex items-center gap-2 px-1">
+    <div
+      className={`flex flex-col rounded-2xl border border-black/5 bg-white p-3 shadow-[0_24px_50px_-28px_rgba(40,30,15,0.4)] ${MET_CARD_CLS}`}
+    >
+      {/* "click a ▣ to open its trend" is an instruction for a mouse, so it
+          goes on a touch device. Losing it is what makes the card fit 340 with
+          the first chart already open. */}
+      <div className="mb-2 flex flex-none items-center gap-2 px-1">
         <span className="text-[13px] font-extrabold tracking-tight">Leadership Scoreboard</span>
-        <span className="text-[10.5px] text-brand-gray">· click a</span>
-        <ChartGlyph className="h-3.5 w-3.5 text-brand-orange" />
-        <span className="text-[10.5px] text-brand-gray">to open its trend</span>
+        <span className="hidden text-[10.5px] text-brand-gray sm:inline">· click a</span>
+        <ChartGlyph className="hidden h-3.5 w-3.5 text-brand-orange sm:block" />
+        <span className="hidden text-[10.5px] text-brand-gray sm:inline">to open its trend</span>
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-[#ECEAE6]">
+      <div className="min-h-0 flex-1 overflow-hidden rounded-xl border border-[#ECEAE6]">
         {TRENDS.map((t, i) => (
           <div key={t.name} className="border-b border-[#F1EEE9] last:border-0">
             <div className="flex items-center gap-2 bg-white px-3 py-2.5 text-[12px]">
@@ -256,9 +266,11 @@ function Select({ value }: { value: string }) {
 
 function AddMetricDemo() {
   return (
-    <div className="overflow-hidden rounded-2xl border border-black/5 bg-white shadow-[0_24px_50px_-28px_rgba(40,30,15,0.4)]">
+    <div
+      className={`flex flex-col overflow-hidden rounded-2xl border border-black/5 bg-white shadow-[0_24px_50px_-28px_rgba(40,30,15,0.4)] ${MET_CARD_CLS}`}
+    >
       {/* header */}
-      <div className="flex items-start gap-3 px-5 pb-3.5 pt-4">
+      <div className="flex flex-none items-start gap-3 px-5 pb-3.5 pt-4">
         <div className="min-w-0">
           <b className="block text-[16px] font-bold tracking-tight text-brand-ink">Add metric</b>
           <span className="mt-0.5 block text-[12.5px] text-brand-gray">
@@ -268,12 +280,15 @@ function AddMetricDemo() {
         <span className="ml-auto text-[17px] leading-none text-brand-gray">&times;</span>
       </div>
 
-      <div className="space-y-3 px-5 pb-4">
+      <div className="min-h-0 flex-1 space-y-3 overflow-hidden px-5 pb-4">
         <Field label="Metric name">
           <Input value="# of people on mastermind call" />
         </Field>
 
-        <div className="grid grid-cols-2 gap-3">
+        {/* One field per row below sm. At 360px each cell of a two-column grid
+            is about 150px, and "Higher is better" truncates inside its own
+            input. A form on a phone is a column, not a grid. */}
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <Field label="Type">
             <Select value="# Number" />
           </Field>
@@ -282,7 +297,7 @@ function AddMetricDemo() {
           </Field>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <Field label="Weekly goal">
             <Input value="110" />
           </Field>
@@ -331,8 +346,12 @@ function MultiBoardDemo() {
   // Accounting selected by default, not Tech
   const [active, setActive] = useState(3);
   return (
-    <div className="rounded-2xl border border-black/5 bg-white p-3.5 shadow-[0_24px_50px_-28px_rgba(40,30,15,0.4)]">
-      <div className="mb-2.5 flex items-center gap-2 px-0.5">
+    // the only card across all four feature pages that needed nothing but the
+    // shared height: five board rows and a header already fit 340
+    <div
+      className={`flex flex-col rounded-2xl border border-black/5 bg-white p-3.5 shadow-[0_24px_50px_-28px_rgba(40,30,15,0.4)] ${MET_CARD_CLS}`}
+    >
+      <div className="mb-2.5 flex flex-none items-center gap-2 px-0.5">
         <b className="text-[12.5px]">Your scoreboards</b>
         <span className="ml-auto flex items-center gap-1 rounded-md bg-brand-ink px-2 py-1 text-[10px] font-semibold text-white">
           <Plus className="h-2.5 w-2.5" />
@@ -340,7 +359,7 @@ function MultiBoardDemo() {
         </span>
       </div>
 
-      <div className="space-y-1.5">
+      <div className="min-h-0 flex-1 space-y-1.5 overflow-hidden">
         {BOARDS.map((b, i) => {
           const on = active === i;
           const pct = Math.round((b.hit / b.metrics) * 100);
@@ -393,7 +412,7 @@ const PERIODS: Record<Period, { cols: string[]; rows: { name: string; goal: stri
       { name: "Offer Visitors", goal: "125", vals: ["104", "138", "131", "142", null], tones: ["red", "green", "green", "green", "none"] },
       { name: "Total Sign Ups for the week", goal: "50", vals: ["41", "56", "47", "58", null], tones: ["red", "green", "red", "green", "none"] },
       { name: "# of people on mastermind call", goal: "110", vals: ["118", "131", "126", "134", null], tones: ["green", "green", "green", "green", "none"] },
-      { name: "# of Login RUK App", goal: "230", vals: ["212", "244", "238", "221", null], tones: ["red", "green", "green", "red", "none"] },
+      { name: "App logins", goal: "230", vals: ["212", "244", "238", "221", null], tones: ["red", "green", "green", "red", "none"] },
       { name: "Training completion", goal: "70%", vals: ["68%", "76%", "73%", "71%", null], tones: ["red", "green", "green", "green", "none"] },
       { name: "# logged in", goal: "2", vals: ["1", "3", "2", "1", null], tones: ["red", "green", "green", "red", "none"] },
       { name: "# Rank Ups", goal: "3", vals: ["4", "6", "2", "5", null], tones: ["green", "green", "red", "green", "none"] },
@@ -406,7 +425,7 @@ const PERIODS: Record<Period, { cols: string[]; rows: { name: string; goal: stri
       { name: "Offer Visitors", goal: "500", vals: ["412", "468", "521", "497", "515"], tones: ["red", "red", "green", "red", "green"] },
       { name: "Total Sign Ups for the week", goal: "200", vals: ["178", "194", "214", "203", "221"], tones: ["red", "red", "green", "green", "green"] },
       { name: "# of people on mastermind call", goal: "440", vals: ["398", "445", "472", "489", "509"], tones: ["red", "green", "green", "green", "green"] },
-      { name: "# of Login RUK App", goal: "920", vals: ["848", "902", "968", "931", "954"], tones: ["red", "red", "green", "green", "green"] },
+      { name: "App logins", goal: "920", vals: ["848", "902", "968", "931", "954"], tones: ["red", "red", "green", "green", "green"] },
       { name: "Training completion", goal: "70%", vals: ["64%", "71%", "74%", "69%", "76%"], tones: ["red", "green", "green", "red", "green"] },
       { name: "# logged in", goal: "8", vals: ["6", "9", "7", "10", "9"], tones: ["red", "green", "red", "green", "green"] },
       { name: "# Rank Ups", goal: "12", vals: ["9", "13", "14", "11", "17"], tones: ["red", "green", "green", "red", "green"] },
@@ -419,7 +438,7 @@ const PERIODS: Record<Period, { cols: string[]; rows: { name: string; goal: stri
       { name: "Offer Visitors", goal: "1,500", vals: ["1,284", "1,486", "1,533", null, "4,303"], tones: ["red", "red", "green", "none", "green"] },
       { name: "Total Sign Ups for the week", goal: "600", vals: ["542", "588", "638", null, "1,768"], tones: ["red", "red", "green", "none", "green"] },
       { name: "# of people on mastermind call", goal: "1,320", vals: ["1,197", "1,315", "1,470", null, "3,982"], tones: ["red", "red", "green", "none", "green"] },
-      { name: "# of Login RUK App", goal: "2,760", vals: ["2,518", "2,704", "2,853", null, "8,075"], tones: ["red", "red", "green", "none", "green"] },
+      { name: "App logins", goal: "2,760", vals: ["2,518", "2,704", "2,853", null, "8,075"], tones: ["red", "red", "green", "none", "green"] },
       { name: "Training completion", goal: "70%", vals: ["66%", "72%", "73%", null, "70%"], tones: ["red", "green", "green", "none", "green"] },
       { name: "# logged in", goal: "24", vals: ["19", "26", "25", null, "70"], tones: ["red", "green", "green", "none", "green"] },
       { name: "# Rank Ups", goal: "36", vals: ["31", "38", "42", null, "111"], tones: ["red", "green", "green", "none", "green"] },
@@ -433,8 +452,10 @@ function PeriodDemo() {
   const data = PERIODS[p];
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-black/5 bg-white shadow-[0_24px_50px_-28px_rgba(40,30,15,0.4)]">
-      <div className="flex items-center gap-2 border-b border-[#F1EEE9] px-3.5 py-3">
+    <div
+      className={`flex flex-col overflow-hidden rounded-2xl border border-black/5 bg-white shadow-[0_24px_50px_-28px_rgba(40,30,15,0.4)] ${MET_CARD_CLS}`}
+    >
+      <div className="flex flex-none items-center gap-2 border-b border-[#F1EEE9] px-3.5 py-3">
         <b className="text-[12.5px]">Tech Scoreboard</b>
         <span className="ml-auto flex items-center gap-0.5 rounded-lg bg-[#F1EEE9] p-0.5">
           {(Object.keys(PERIODS) as Period[]).map((k) => (
@@ -453,8 +474,66 @@ function PeriodDemo() {
         </span>
       </div>
 
-      {/* metric column gets 2fr so the longer names stop truncating to "Offer Vi..." */}
-      <div className="grid grid-cols-[minmax(0,2fr)_46px_repeat(5,minmax(0,1fr))] text-[11.5px]">
+      {/* ---------------------------------------------------------------
+          MOBILE: one row per metric, with a sparkline.
+          A table needs width and a phone has none: seven columns at 360px
+          leaves the metric column about 100px, so "Total Sign Ups for the
+          week" truncates and the five values sit almost on top of each other.
+          A row per metric keeps everything the section claims, that the same
+          metrics roll up and you can see the shape at a glance, and the
+          Weekly/Monthly/Quarterly switch still drives it.
+          See design/scoreboard-mobile-options.html (option B). */}
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden sm:hidden">
+        <div className="flex flex-none items-center gap-2 border-b border-[#F1EEE9] px-3 py-2">
+          <span className="tracking-[-2px] text-brand-gray">⠿</span>
+          <span className="text-[10.5px] font-extrabold uppercase tracking-wide text-brand-orange">
+            Growth Program
+          </span>
+          <span className="ml-auto text-[9px] text-brand-gray">{data.rows.length} metrics</span>
+        </div>
+
+        <div className="min-h-0 flex-1 overflow-hidden">
+          {data.rows.map((r) => {
+            // the last column is often blank (the week is not done yet), so the
+            // headline number is the last one actually logged
+            const logged = r.vals.filter((v): v is string => v !== null);
+            const latest = logged[logged.length - 1] ?? "–";
+            const latestTone = r.tones[logged.length - 1] ?? "none";
+            const nums = logged.map((v) => parseFloat(v.replace(/[^0-9.]/g, "")));
+            const peak = Math.max(...nums, 1);
+            return (
+              <div key={r.name} className="flex items-center gap-2.5 border-b border-[#F1EEE9] px-3 py-2">
+                <span className="min-w-0 flex-1 truncate text-[10.5px] font-medium text-brand-ink">{r.name}</span>
+                <span className="flex flex-none items-end gap-[2px]" style={{ height: 18 }}>
+                  {nums.map((n, i) => (
+                    <span
+                      key={i}
+                      className="block w-[5px] rounded-[1px]"
+                      style={{
+                        height: Math.max(4, Math.round((n / peak) * 18)),
+                        background: r.tones[i] === "green" ? GREEN : r.tones[i] === "red" ? RED : "#D9D4CB",
+                      }}
+                    />
+                  ))}
+                </span>
+                <span
+                  className="w-[42px] flex-none text-right text-[10.5px] font-bold tabular-nums"
+                  style={{ color: latestTone === "green" ? GREEN : latestTone === "red" ? RED : "#A6A6A6" }}
+                >
+                  {latest}
+                </span>
+                <span className="flex-none text-[8.5px] tabular-nums text-brand-gray">/{r.goal}</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ---------------------------------------------------------------
+          DESKTOP: the table. The metric column gets 2fr so the longer names
+          stop truncating to "Offer Vi..."
+          --------------------------------------------------------------- */}
+      <div className="hidden min-h-0 flex-1 grid-cols-[minmax(0,2fr)_46px_repeat(5,minmax(0,1fr))] overflow-hidden text-[11.5px] sm:grid">
         <div className="bg-[#FAF9F7] px-2.5 py-1.5 text-[9px] font-semibold uppercase tracking-wide text-brand-gray">
           Metric
         </div>
@@ -474,7 +553,7 @@ function PeriodDemo() {
         <div className="col-span-full flex items-center gap-2 border-t border-[#F1EEE9] px-2.5 pb-1.5 pt-2.5">
           <span className="tracking-[-2px] text-brand-gray">⠿</span>
           <span className="text-[11px] font-extrabold uppercase tracking-wide text-brand-orange">
-            4 Pillar Man Program
+            Growth Program
           </span>
           <span className="text-[9.5px] text-brand-gray">{data.rows.length} metrics</span>
         </div>
@@ -500,7 +579,7 @@ function PeriodDemo() {
         ))}
       </div>
 
-      <p className="border-t border-[#F1EEE9] px-3.5 py-2 text-[10.5px] text-brand-gray">{data.note}</p>
+      <p className="flex-none border-t border-[#F1EEE9] px-3.5 py-2 text-[10.5px] text-brand-gray">{data.note}</p>
     </div>
   );
 }
@@ -597,45 +676,48 @@ export default function MetricsScoreboardPage() {
       <Navbar />
 
       {/* ------------------------------------------------ hero */}
-      <section className="relative overflow-hidden px-5 pb-4 pt-10 sm:px-8 sm:pb-8 sm:pt-16">
+      <section className="relative overflow-hidden px-5 pb-4 pt-6 sm:px-8 sm:pb-8 sm:pt-16">
         {/* the site's own dotted backdrop, as used on the home-page hero */}
         <div className="bg-dotted pointer-events-none absolute inset-0 opacity-60" />
         <div className="relative mx-auto max-w-container">
           <Reveal className="mx-auto max-w-4xl text-center">
             {/* feature badge: icon tile + label, in the SystemTokens pill idiom */}
-            <span className="mb-6 inline-flex items-center gap-2 whitespace-nowrap rounded-full border border-black/10 bg-white py-1.5 pl-1.5 pr-[13px] shadow-sm sm:mb-7 sm:gap-3 sm:py-2 sm:pl-2 sm:pr-[22px]">
-              <span className="grid h-[24px] w-[24px] flex-none place-items-center rounded-lg bg-gradient-to-br from-[#F49230] to-[#DE6F14] text-white shadow-[0_2px_6px_rgba(234,123,27,0.34),inset_0_1px_0_rgba(255,255,255,0.34)] sm:h-[34px] sm:w-[34px] sm:rounded-[11px]">
+            <span className="mb-4 inline-flex items-center gap-2 whitespace-nowrap rounded-full border border-black/10 bg-white py-1 pl-1 pr-[11px] shadow-sm sm:mb-7 sm:gap-3 sm:py-2 sm:pl-2 sm:pr-[22px]">
+              <span className="grid h-[21px] w-[21px] flex-none place-items-center rounded-lg bg-gradient-to-br from-[#F49230] to-[#DE6F14] text-white shadow-[0_2px_6px_rgba(234,123,27,0.34),inset_0_1px_0_rgba(255,255,255,0.34)] sm:h-[34px] sm:w-[34px] sm:rounded-[11px]">
                 <ScoreboardIcon className="h-[13px] w-[13px] sm:h-[18px] sm:w-[18px]" />
               </span>
-              <span className="text-[12.5px] font-[650] tracking-[0.02em] text-[#33302C] sm:text-[16.5px]">
+              <span className="text-[11.5px] font-[650] tracking-[0.02em] text-[#33302C] sm:text-[16.5px]">
                 Metrics Scoreboard
               </span>
             </span>
             {/* 28px on mobile so "Know where you stand," fits one line inside 335px */}
-            <h1 className="text-[28px] font-extrabold leading-[1.12] tracking-tight text-brand-ink sm:text-[66px] sm:leading-[1.04]">
+            <h1 className="text-[24px] font-extrabold leading-[1.1] tracking-tight text-brand-ink sm:text-[66px] sm:leading-[1.04]">
               Know where you stand,
               <br />
               <span className="text-brand-orange">week to quarter.</span>
             </h1>
-            <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-brand-charcoal sm:mt-7 sm:text-xl">
-              One scoreboard per team. Log the week once and the monthly and quarterly roll-ups
-              build themselves.
+            <p className="mx-auto mt-3.5 max-w-2xl text-[14.5px] leading-relaxed text-brand-charcoal sm:mt-7 sm:text-xl">
+              <span className="sm:hidden">Log the week once. The roll-ups build themselves.</span>
+              <span className="hidden sm:inline">
+                One scoreboard per team. Log the week once and the monthly and quarterly roll-ups
+                build themselves.
+              </span>
             </p>
           </Reveal>
 
-          <Reveal delay={0.12} className="mt-9 sm:mt-12">
-            <div className="overflow-hidden rounded-2xl p-2.5 sm:rounded-[30px] sm:p-8" style={{ background: "linear-gradient(160deg, #FFF1E2, #FFE7D2)" }}>
+          <Reveal delay={0.12} className="mt-6 sm:mt-12">
+            <div className="overflow-hidden rounded-2xl p-2 sm:rounded-[30px] sm:p-8" style={{ background: "linear-gradient(160deg, #FFF1E2, #FFE7D2)" }}>
               <ScoreboardHeroTour />
             </div>
           </Reveal>
 
           {/* CTA sits under the board, so the tour is the first thing seen */}
-          <Reveal delay={0.2} className="mt-8 sm:mt-10">
+          <Reveal delay={0.2} className="mt-6 sm:mt-10">
             <div className="flex justify-center">
               <button
                 type="button"
                 onClick={openDemo}
-                className="inline-flex w-full max-w-[420px] items-center justify-center gap-2.5 rounded-lg bg-brand-orange px-10 py-3.5 text-base font-semibold text-white shadow-[0_12px_30px_-10px_rgba(234,123,27,0.85)] transition-colors hover:bg-brand-orange-dark sm:w-auto sm:min-w-[300px]"
+                className="inline-flex w-full max-w-[420px] items-center justify-center gap-2.5 rounded-lg bg-brand-orange px-10 py-3 text-[15px] font-semibold text-white shadow-[0_12px_30px_-10px_rgba(234,123,27,0.85)] transition-colors hover:bg-brand-orange-dark sm:w-auto sm:min-w-[300px]"
               >
                 Request a Demo
                 <Arrow className="h-[17px] w-[17px]" />

@@ -187,12 +187,18 @@ export default function MultiAiWired({
     <section
       id="multi-ai"
       ref={sectionRef}
-      className="relative overflow-hidden border-y border-[#E7E0F7] bg-[#FBFAFE] px-5 py-12 scroll-mt-24 sm:px-8 sm:py-24"
+      className="relative overflow-hidden border-y border-[#EDE7DD] bg-[#FBFAF8] px-5 py-12 scroll-mt-24 sm:border-[#E7E0F7] sm:bg-[#FBFAFE] sm:px-8 sm:py-24"
     >
-      {/* aurora mesh: two violet orbs and one orange, drifting off the edges */}
-      <span className="pointer-events-none absolute -top-[120px] left-[2%] h-[340px] w-[400px] rounded-full bg-[rgba(122,102,232,0.36)] blur-[52px]" />
-      <span className="pointer-events-none absolute -top-[70px] right-[4%] h-[300px] w-[320px] rounded-full bg-[rgba(234,123,27,0.26)] blur-[52px]" />
-      <span className="pointer-events-none absolute -bottom-[190px] left-[34%] h-[320px] w-[460px] rounded-full bg-[rgba(75,60,196,0.2)] blur-[52px]" />
+      {/* Aurora mesh: two violet orbs and one orange, drifting off the edges.
+          On a phone the orbs are sized for a much wider section, so two of the
+          three sit mostly off-screen and the whole band reads as a flat pink
+          wash. That also put the only cool section on a warm site directly
+          above a warm-stone CTA, which is the seam that read as a mistake.
+          Below sm the mesh goes warm to match the brand; from sm up the violet
+          is untouched. See design/multi-ai-color-options.html (option A). */}
+      <span className="pointer-events-none absolute -top-[120px] left-[2%] h-[340px] w-[400px] rounded-full bg-[rgba(234,123,27,0.30)] blur-[52px] sm:bg-[rgba(122,102,232,0.36)]" />
+      <span className="pointer-events-none absolute -top-[70px] right-[4%] h-[300px] w-[320px] rounded-full bg-[rgba(232,163,61,0.28)] blur-[52px] sm:bg-[rgba(234,123,27,0.26)]" />
+      <span className="pointer-events-none absolute -bottom-[190px] left-[34%] h-[320px] w-[460px] rounded-full bg-[rgba(201,101,15,0.18)] blur-[52px] sm:bg-[rgba(75,60,196,0.2)]" />
 
       <div className="relative mx-auto max-w-container">
         {/* centred heading: the first break from the alternating sections above */}
