@@ -202,7 +202,9 @@ function BlockBody({ k }: { k: BlockKey }) {
     case "text":
       return (
         <BlockShell label="Text">
-          <div className="flex items-center gap-2 rounded-md border border-[#EBE7E0] bg-[#FBFAF8] px-2 py-1 text-[9px] font-semibold text-brand-charcoal">
+          {/* chrome rather than content: the first thing to go when the card is
+              short, which below sm it always is */}
+          <div className="hidden items-center gap-2 rounded-md border border-[#EBE7E0] bg-[#FBFAF8] px-2 py-1 text-[9px] font-semibold text-brand-charcoal sm:flex">
             <span className="font-bold">B</span>
             <span className="italic">I</span>
             <span className="underline">U</span>
@@ -354,6 +356,16 @@ function BlockBody({ k }: { k: BlockKey }) {
   }
 }
 
+// SOP HQ's shared card height, which this page never had: its four mockups were
+// each whatever height their contents came to, from roughly 350px to 410px, so
+// the page ran ragged on desktop as well as on a phone.
+//
+// 340 on mobile is the "comfortable" number from
+// design/sop-blocks-height-options.html: the document keeps two full blocks,
+// which is the argument this section makes, and only air is lost. Written out
+// in full because Tailwind scans source for literal class names.
+export const SOP_CARD_CLS = "h-[340px] sm:h-[400px]";
+
 function BlocksDemo() {
   const [on, setOn] = useState<BlockKey[]>(BLOCKS_OPEN);
   const toggle = (k: BlockKey) =>
@@ -361,9 +373,9 @@ function BlocksDemo() {
   const shown = BLOCK_DEFS.filter((b) => on.includes(b.key));
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-black/5 bg-white shadow-[0_24px_50px_-28px_rgba(40,30,15,0.4)]">
+    <div className={`flex flex-col overflow-hidden rounded-2xl border border-black/5 bg-white shadow-[0_24px_50px_-28px_rgba(40,30,15,0.4)] ${SOP_CARD_CLS}`}>
       {/* SOP header, as the editor draws it, on one line to keep the card short */}
-      <div className="flex items-center gap-2.5 border-b border-[#F1EEE9] px-3.5 py-2.5">
+      <div className="flex flex-none items-center gap-2.5 border-b border-[#F1EEE9] px-3.5 py-2.5">
         <span className="min-w-0 flex-1">
           <p className="text-[8px] font-bold uppercase tracking-[0.12em] text-brand-gray">SOP Title</p>
           <h4 className="truncate text-[13.5px] font-extrabold tracking-tight">Welcome Call Script</h4>
@@ -381,11 +393,18 @@ function BlocksDemo() {
       </div>
 
       {/* the palette */}
-      <div className="border-b border-[#F1EEE9] px-3.5 py-2.5">
+      <div className="flex-none border-b border-[#F1EEE9] px-3.5 py-2.5">
         <p className="mb-1.5 text-[9.5px] text-brand-gray">
           Add a block <span className="text-[#C4BFB6]">·</span> {on.length} of {BLOCK_DEFS.length} in use
         </p>
-        <div className="flex flex-wrap gap-1">
+        {/* One scrolling row below sm, wrapping from sm up.
+            The labels are long ones (Video from Link, Screen Record,
+            Screenshot), so ten chips wrap onto four rows at 360px and the
+            palette ends up taller than the document it edits: 104px of control
+            against 180px of content. A single scrolling line costs 26px.
+            scrollbar-none keeps a grey bar off the mockup on desktop browsers
+            that show one. See design/sop-blocks-mobile-options.html. */}
+        <div className="scrollbar-none flex flex-nowrap gap-1 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-x-visible sm:pb-0">
           {BLOCK_DEFS.map((b) => {
             const Icon = b.icon;
             const active = on.includes(b.key);
@@ -395,7 +414,7 @@ function BlocksDemo() {
                 type="button"
                 aria-pressed={active}
                 onClick={() => toggle(b.key)}
-                className={`flex items-center gap-1 rounded-full border px-2 py-1 text-[9.5px] transition-colors ${
+                className={`flex flex-none items-center gap-1 whitespace-nowrap rounded-full border px-2 py-1 text-[9.5px] transition-colors ${
                   active
                     ? "border-brand-orange/55 bg-[#FFF6EC] font-semibold text-brand-orange-dark"
                     : "border-[#E6E2DB] font-medium text-brand-charcoal hover:bg-[#FAF9F7]"
@@ -411,8 +430,10 @@ function BlocksDemo() {
 
       {/* The document. Fixed height and scrolled, so adding blocks never resizes
           the card and shunts the rest of the section around. */}
-      <div className="relative bg-[#FAF9F7]">
-        <div className="h-[244px] space-y-2 overflow-y-auto px-3.5 py-3">
+      {/* The document takes whatever the card has left rather than a fixed
+          244px, so one height constant drives both breakpoints. */}
+      <div className="relative min-h-0 flex-1 bg-[#FAF9F7]">
+        <div className="h-full space-y-2 overflow-y-auto px-3.5 py-3">
           {shown.length === 0 ? (
             <p className="pt-16 text-center text-[11px] text-brand-gray">
               An empty document. Add a block to start.
@@ -429,7 +450,9 @@ function BlocksDemo() {
         )}
       </div>
 
-      <div className="flex items-center gap-2 border-t border-[#F1EEE9] px-3.5 py-2">
+      {/* stacked below sm: side by side, the sentence wraps under the button
+          and pushes the card taller for no gain */}
+      <div className="flex flex-none flex-col items-start gap-1 border-t border-[#F1EEE9] px-3.5 py-2 sm:flex-row sm:items-center sm:gap-2">
         <span className="flex flex-none items-center gap-1.5 rounded-lg border border-[#E3E0DA] px-2 py-1.5 text-[9.5px] font-semibold text-brand-charcoal">
           <PlusIcon className="h-2.5 w-2.5" />
           Convert to multi-step
@@ -460,9 +483,11 @@ function VideoSopDemo() {
   const [src, setSrc] = useState<Source>("both");
 
   return (
-    <div className="space-y-3">
+    // Two stacked cards, so the shared height applies to the pair. The recorder
+    // is pinned and the published card takes the remainder and clips.
+    <div className={`flex flex-col gap-3 ${SOP_CARD_CLS}`}>
       {/* ---- recorder ---- */}
-      <div className="overflow-hidden rounded-2xl border border-black/5 bg-white shadow-[0_24px_50px_-28px_rgba(40,30,15,0.4)]">
+      <div className="flex-none overflow-hidden rounded-2xl border border-black/5 bg-white shadow-[0_24px_50px_-28px_rgba(40,30,15,0.4)]">
         {/* Wraps below the title on narrow screens: the three sources plus the
             heading are wider than a phone, and this row used to force the whole
             card to overflow sideways. */}
@@ -492,7 +517,10 @@ function VideoSopDemo() {
 
         {/* preview */}
         <div className="p-3">
-          <div className="relative overflow-hidden rounded-xl bg-[#1B1A17]" style={{ height: 148 }}>
+          {/* 96 on a phone: this is a placeholder frame with a play button on
+              it, and it does not get more convincing at 148. The height it
+              gives back is what lets the chapter list survive below. */}
+          <div className="relative h-[96px] overflow-hidden rounded-xl bg-[#1B1A17] sm:h-[148px]">
             {src !== "camera" ? (
               <div className="absolute inset-0 p-2.5">
                 {/* a mock app window being recorded */}
@@ -538,7 +566,7 @@ function VideoSopDemo() {
             </span>
           </div>
 
-          <div className="mt-2.5 flex flex-wrap items-center gap-x-2 gap-y-1.5">
+          <div className="mt-2.5 flex flex-none flex-wrap items-center gap-x-2 gap-y-1.5">
             <span className="flex flex-none items-center gap-1.5 rounded-lg bg-[#E8574A] px-3 py-1.5 text-[11px] font-semibold text-white">
               <span className="h-2 w-2 rounded-sm bg-white" />
               Stop &amp; publish
@@ -551,9 +579,9 @@ function VideoSopDemo() {
       </div>
 
       {/* ---- published ---- */}
-      <div className="overflow-hidden rounded-2xl border border-black/5 bg-white shadow-[0_24px_50px_-28px_rgba(40,30,15,0.4)]">
-        <div className="flex items-start gap-3 px-3.5 py-3">
-          <span className="relative grid h-[42px] w-[62px] flex-none place-items-center overflow-hidden rounded-lg bg-[#22201D] text-white">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-black/5 bg-white shadow-[0_24px_50px_-28px_rgba(40,30,15,0.4)]">
+        <div className="flex flex-none items-start gap-3 px-3.5 py-3">
+          <span className="relative grid h-[30px] w-[44px] flex-none place-items-center overflow-hidden rounded-lg bg-[#22201D] text-white sm:h-[42px] sm:w-[62px]">
             <Play className="h-4 w-4" />
           </span>
           <span className="min-w-0 flex-1">
@@ -576,7 +604,7 @@ function VideoSopDemo() {
           </span>
         </div>
 
-        <div className="border-t border-[#F1EEE9] px-3.5 py-2.5">
+        <div className="min-h-0 flex-1 overflow-hidden border-t border-[#F1EEE9] px-3.5 py-2.5">
           <p className="mb-1.5 text-[9.5px] font-bold uppercase tracking-[0.08em] text-brand-gray">
             Chapters, generated for you
           </p>
@@ -590,7 +618,7 @@ function VideoSopDemo() {
           </div>
         </div>
 
-        <p className="border-t border-[#F1EEE9] px-3.5 py-2 text-[10.5px] text-brand-gray">
+        <p className="flex-none border-t border-[#F1EEE9] px-3.5 py-2 text-[10.5px] text-brand-gray">
           Fully transcribed, so a search for &ldquo;sub-account&rdquo; lands on 0:18.
         </p>
       </div>
@@ -614,7 +642,7 @@ const STEPS: Step[] = [
   { n: 3, title: "Order the laptop and ship it to their address", done: true },
   { n: 4, title: "Add them to the team calendar and Monday standup", done: true },
   { n: 5, title: "Watch: how we run the first week", kind: "video", done: false },
-  { n: 6, title: "Set up the RUK App account and confirm login", kind: "link", done: false },
+  { n: 6, title: "Set up their app account and confirm login", kind: "link", done: false },
   { n: 7, title: "Create Google Workspace account", done: false },
 ];
 
@@ -630,9 +658,11 @@ function MultiStepDemo() {
   const pct = Math.round((count / EXAMPLE_LEN) * 100);
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-black/5 bg-white shadow-[0_24px_50px_-28px_rgba(40,30,15,0.4)]">
+    <div
+      className={`flex flex-col overflow-hidden rounded-2xl border border-black/5 bg-white shadow-[0_24px_50px_-28px_rgba(40,30,15,0.4)] ${SOP_CARD_CLS}`}
+    >
       {/* SOP header */}
-      <div className="flex items-start gap-3 px-4 pb-3 pt-3.5">
+      <div className="flex flex-none items-start gap-3 px-4 pb-3 pt-3.5">
         <span className="grid h-[34px] w-[34px] flex-none place-items-center rounded-[10px] bg-[#DCE6F0] text-[11px] font-bold text-[#41638A]">
           EO
         </span>
@@ -668,7 +698,7 @@ function MultiStepDemo() {
       </div>
 
       {/* steps */}
-      <div className="border-t border-[#F1EEE9]">
+      <div className="min-h-0 flex-1 overflow-hidden border-t border-[#F1EEE9]">
         {STEPS.map((s, i) => {
           const on = done[i];
           const meta = s.kind ? KIND_META[s.kind] : null;
@@ -697,9 +727,11 @@ function MultiStepDemo() {
               >
                 {s.title}
               </span>
+              {/* the pill is what squeezes the step name to an ellipsis at
+                  360px, and the step is the content here */}
               {meta && KindIcon && (
                 <span
-                  className="flex flex-none items-center gap-1 rounded-full px-1.5 py-[2px] text-[8.5px] font-bold uppercase tracking-wide"
+                  className="hidden flex-none items-center gap-1 rounded-full px-1.5 py-[2px] text-[8.5px] font-bold uppercase tracking-wide sm:flex"
                   style={{ background: `${meta.color}14`, color: meta.color }}
                 >
                   <KindIcon className="h-[9px] w-[9px]" />
@@ -741,49 +773,70 @@ function AssignDemo() {
   const finished = PEOPLE.filter((p) => p.done >= EXAMPLE_LEN).length;
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-black/5 bg-white shadow-[0_24px_50px_-28px_rgba(40,30,15,0.4)]">
-      <div className="flex items-center gap-2 border-b border-[#F1EEE9] px-3.5 py-3">
+    <div
+      className={`flex flex-col overflow-hidden rounded-2xl border border-black/5 bg-white shadow-[0_24px_50px_-28px_rgba(40,30,15,0.4)] ${SOP_CARD_CLS}`}
+    >
+      <div className="flex flex-none items-center gap-2 border-b border-[#F1EEE9] px-3.5 py-3">
         <b className="min-w-0 flex-1 truncate text-[12.5px]">Employee Onboarding Template</b>
         <span className="flex-none whitespace-nowrap text-[10.5px] text-brand-gray">
           {finished} of {PEOPLE.length} complete
         </span>
       </div>
 
-      {PEOPLE.map((p) => {
-        const st = statusOf(p.done);
-        const pct = Math.round((p.done / EXAMPLE_LEN) * 100);
-        return (
-          <div key={p.name} className="flex items-center gap-2.5 border-b border-[#F5F2ED] px-3.5 py-2.5">
-            <span
-              className="grid h-[26px] w-[26px] flex-none place-items-center rounded-lg text-[9.5px] font-bold text-white"
-              style={{ background: p.color }}
+      {/* Two-line below sm, one line from sm up.
+          Six columns on one line left the name about 166px at 360px, so
+          "Alisha Dickerson" and "Kath Nakamura" both truncated. Stacking gives
+          the name the full width, and it brings the progress bar back on mobile,
+          where it was previously hidden entirely. The bar is what makes this a
+          tracking mockup rather than a list of people.
+          Four people rather than six: the card is fixed at 340 and the header
+          still reads "1 of 6 complete", so nothing is being hidden.
+          See design/sop-remaining-340-options.html (option B). */}
+      <div className="min-h-0 flex-1 overflow-hidden">
+        {PEOPLE.map((p) => {
+          const st = statusOf(p.done);
+          const pct = Math.round((p.done / EXAMPLE_LEN) * 100);
+          return (
+            <div
+              key={p.name}
+              className="flex flex-col gap-1.5 border-b border-[#F5F2ED] px-3.5 py-2.5 sm:flex-row sm:items-center sm:gap-2.5"
             >
-              {p.init}
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block truncate text-[11.5px] font-semibold leading-tight">{p.name}</span>
-              <span className="text-[9.5px] text-brand-gray">{p.role}</span>
-            </span>
-            <span className="hidden w-[86px] flex-none sm:block">
-              <span className="block h-[4px] overflow-hidden rounded-full bg-[#ECE8E1]">
-                <span className="block h-full rounded-full" style={{ width: `${pct}%`, background: st.color }} />
-              </span>
-            </span>
-            <span className="w-[42px] flex-none text-right text-[10.5px] font-bold tabular-nums text-brand-charcoal">
-              {p.done}/{EXAMPLE_LEN}
-            </span>
-            <span
-              className="w-[88px] flex-none whitespace-nowrap rounded-full px-1.5 py-[3px] text-center text-[8.5px] font-bold uppercase tracking-wide"
-              style={{ background: st.bg, color: st.color }}
-            >
-              {st.label}
-            </span>
-          </div>
-        );
-      })}
+              <div className="flex min-w-0 items-center gap-2.5 sm:flex-1">
+                <span
+                  className="grid h-[26px] w-[26px] flex-none place-items-center rounded-lg text-[9.5px] font-bold text-white"
+                  style={{ background: p.color }}
+                >
+                  {p.init}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[11.5px] font-semibold leading-tight">{p.name}</span>
+                  <span className="text-[9.5px] text-brand-gray">{p.role}</span>
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2.5 pl-[36px] sm:contents sm:pl-0">
+                <span className="flex-1 sm:w-[86px] sm:flex-none">
+                  <span className="block h-[4px] overflow-hidden rounded-full bg-[#ECE8E1]">
+                    <span className="block h-full rounded-full" style={{ width: `${pct}%`, background: st.color }} />
+                  </span>
+                </span>
+                <span className="flex-none text-right text-[10.5px] font-bold tabular-nums text-brand-charcoal sm:w-[42px]">
+                  {p.done}/{EXAMPLE_LEN}
+                </span>
+                <span
+                  className="flex-none whitespace-nowrap rounded-full px-1.5 py-[3px] text-center text-[8.5px] font-bold uppercase tracking-wide sm:w-[88px]"
+                  style={{ background: st.bg, color: st.color }}
+                >
+                  {st.label}
+                </span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
 
       {/* the two things that keep this list honest */}
-      <div className="space-y-1.5 bg-[#FAF9F7] px-3.5 py-2.5">
+      <div className="flex-none space-y-1.5 bg-[#FAF9F7] px-3.5 py-2.5">
         <p className="flex items-start gap-2 text-[10.5px] leading-snug text-brand-gray">
           <Check className="mt-px h-[12px] w-[12px] flex-none" style={{ color: GREEN }} />
           Everyone in Operations picked this up automatically when they joined the department.
@@ -922,35 +975,38 @@ export default function SopHqPage() {
       <Navbar />
 
       {/* ------------------------------------------------ hero */}
-      <section className="relative overflow-hidden px-5 pb-4 pt-10 sm:px-8 sm:pb-8 sm:pt-16">
+      <section className="relative overflow-hidden px-5 pb-4 pt-6 sm:px-8 sm:pb-8 sm:pt-16">
         {/* the site's own dotted backdrop, as used on the home-page hero */}
         <div className="bg-dotted pointer-events-none absolute inset-0 opacity-60" />
         <div className="relative mx-auto max-w-container">
           <Reveal className="mx-auto max-w-4xl text-center">
             {/* feature badge: icon tile + label, in the SystemTokens pill idiom */}
-            <span className="mb-6 inline-flex items-center gap-2 whitespace-nowrap rounded-full border border-black/10 bg-white py-1.5 pl-1.5 pr-[13px] shadow-sm sm:mb-7 sm:gap-3 sm:py-2 sm:pl-2 sm:pr-[22px]">
-              <span className="grid h-[24px] w-[24px] flex-none place-items-center rounded-lg bg-gradient-to-br from-[#9A6534] to-[#6B4220] text-white shadow-[0_2px_6px_rgba(122,78,40,0.34),inset_0_1px_0_rgba(255,255,255,0.34)] sm:h-[34px] sm:w-[34px] sm:rounded-[11px]">
+            <span className="mb-4 inline-flex items-center gap-2 whitespace-nowrap rounded-full border border-black/10 bg-white py-1 pl-1 pr-[11px] shadow-sm sm:mb-7 sm:gap-3 sm:py-2 sm:pl-2 sm:pr-[22px]">
+              <span className="grid h-[21px] w-[21px] flex-none place-items-center rounded-lg bg-gradient-to-br from-[#9A6534] to-[#6B4220] text-white shadow-[0_2px_6px_rgba(122,78,40,0.34),inset_0_1px_0_rgba(255,255,255,0.34)] sm:h-[34px] sm:w-[34px] sm:rounded-[11px]">
                 <BookIcon className="h-[14px] w-[14px] sm:h-[19px] sm:w-[19px]" />
               </span>
-              <span className="text-[12.5px] font-[650] tracking-[0.02em] text-[#33302C] sm:text-[16.5px]">
+              <span className="text-[11.5px] font-[650] tracking-[0.02em] text-[#33302C] sm:text-[16.5px]">
                 SOP HQ
               </span>
             </span>
             {/* 28px on mobile so "Every process, out of" fits one line inside 335px */}
-            <h1 className="text-[28px] font-extrabold leading-[1.12] tracking-tight text-brand-ink sm:text-[66px] sm:leading-[1.04]">
+            <h1 className="text-[24px] font-extrabold leading-[1.1] tracking-tight text-brand-ink sm:text-[66px] sm:leading-[1.04]">
               Every process, out of
               <br />
               <span className="text-brand-orange">someone&rsquo;s head.</span>
             </h1>
-            <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-brand-charcoal sm:mt-7 sm:text-xl">
-              Write it once, record it once, and the whole team runs it the same way. Every step,
-              video, and checklist lives where the work happens.
+            <p className="mx-auto mt-3.5 max-w-2xl text-[14.5px] leading-relaxed text-brand-charcoal sm:mt-7 sm:text-xl">
+              <span className="sm:hidden">Write it once, and the whole team runs it the same way.</span>
+              <span className="hidden sm:inline">
+                Write it once, record it once, and the whole team runs it the same way. Every step,
+                video, and checklist lives where the work happens.
+              </span>
             </p>
           </Reveal>
 
-          <Reveal delay={0.12} className="mt-9 sm:mt-12">
+          <Reveal delay={0.12} className="mt-6 sm:mt-12">
             <div
-              className="overflow-hidden rounded-2xl p-2.5 sm:rounded-[30px] sm:p-8"
+              className="overflow-hidden rounded-2xl p-2 sm:rounded-[30px] sm:p-8"
               style={{ background: "linear-gradient(160deg, #FFF1E2, #FFE7D2)" }}
             >
               <SopHqHeroTour />
@@ -958,12 +1014,12 @@ export default function SopHqPage() {
           </Reveal>
 
           {/* CTA sits under the library, so the tour is the first thing seen */}
-          <Reveal delay={0.2} className="mt-8 sm:mt-10">
+          <Reveal delay={0.2} className="mt-6 sm:mt-10">
             <div className="flex justify-center">
               <button
                 type="button"
                 onClick={openDemo}
-                className="inline-flex w-full max-w-[420px] items-center justify-center gap-2.5 rounded-lg bg-brand-orange px-10 py-3.5 text-base font-semibold text-white shadow-[0_12px_30px_-10px_rgba(234,123,27,0.85)] transition-colors hover:bg-brand-orange-dark sm:w-auto sm:min-w-[300px]"
+                className="inline-flex w-full max-w-[420px] items-center justify-center gap-2.5 rounded-lg bg-brand-orange px-10 py-3 text-[15px] font-semibold text-white shadow-[0_12px_30px_-10px_rgba(234,123,27,0.85)] transition-colors hover:bg-brand-orange-dark sm:w-auto sm:min-w-[300px]"
               >
                 Request a Demo
                 <Arrow className="h-[17px] w-[17px]" />

@@ -18,6 +18,17 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+/* Hides the scrollbar on rows that scroll sideways inside a mockup, where a
+   grey bar reads as a rendering fault rather than a control. The row still
+   scrolls; only the indicator is suppressed. */
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
 /* Subtle Notion-style dotted/grid backdrop helper */
 .bg-dotted {
   background-image: radial-gradient(#e5e5e5 1px, transparent 1px);
@@ -242,4 +253,13 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .book-pop { animation: none; }
   .book-confetti-piece { display: none; }
+}
+
+/* ---- Projects & Tasks hero tour: view swap + the checkbox tick ---- */
+@keyframes pt-view-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.pt-view { animation: pt-view-in 0.34s cubic-bezier(0.22, 1, 0.36, 1) both; }
+@keyframes pt-pop { from { transform: scale(0.2); } to { transform: scale(1); } }
+.pt-pop { animation: pt-pop 0.28s cubic-bezier(0.2, 0.9, 0.3, 1.35) both; }
+@media (prefers-reduced-motion: reduce) {
+  .pt-view, .pt-pop { animation: none; }
 }

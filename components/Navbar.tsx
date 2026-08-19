@@ -133,9 +133,9 @@ const features: Feature[] = [
   { label: "Metrics Scoreboard", desc: "Know if you won the week.", href: "/features/metrics-scoreboard", color: "#EA7B1B", icon: ScoreboardIcon },
   { label: "CFO Analytics", desc: "Cash, margin & runway.", color: "#A16207", icon: CoinsIcon },
   { label: "SOP HQ", desc: "Every process, documented.", href: "/features/sop-hq", color: "#7A4E28", icon: BookIcon },
-  { label: "Projects & Tasks", desc: "See the whole board.", color: "#5B47A8", icon: BoardIcon },
+  { label: "Projects & Tasks", desc: "See the whole board.", href: "/features/projects-tasks", color: "#5B47A8", icon: BoardIcon },
   { label: "Team Accountability", desc: "Own the week, every week.", color: "#B4532A", icon: TargetIcon },
-  { label: "Team Meetings", desc: "Every meeting, on rhythm.", color: "#2C6BA6", icon: CalIcon },
+  { label: "Team Meetings", desc: "Every meeting, on rhythm.", href: "/features/team-meetings", color: "#2C6BA6", icon: CalIcon },
   { label: "Org Chart", desc: "The whole org at a glance.", color: "#3F7A6B", icon: OrgIcon },
   { label: "DISC Assessments", desc: "Know how your team works.", color: "#8A3F6D", icon: DiscIcon },
   { label: "Forms", desc: "Capture what you need.", color: "#2E7D5B", icon: FormIcon },
@@ -202,6 +202,7 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [featuresOpen, setFeaturesOpen] = useState(false);
+  const [mobileFeaturesOpen, setMobileFeaturesOpen] = useState(false);
   const featuresRef = useRef<HTMLDivElement>(null);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { openDemo } = useDemo();
@@ -226,6 +227,30 @@ export default function Navbar() {
     if (closeTimer.current) clearTimeout(closeTimer.current);
     closeTimer.current = setTimeout(() => setFeaturesOpen(false), 120);
   };
+
+  const renderMobileItem = (item: { label: string; href: string }) =>
+    item.href === "#demo" ? (
+      <button
+        key={item.label}
+        type="button"
+        onClick={() => {
+          setMobileOpen(false);
+          openDemo();
+        }}
+        className="rounded-md px-2 py-3 text-left text-base font-medium text-brand-charcoal hover:bg-black/5"
+      >
+        {item.label}
+      </button>
+    ) : (
+      <Link
+        key={item.label}
+        href={item.href}
+        onClick={() => setMobileOpen(false)}
+        className="rounded-md px-2 py-3 text-base font-medium text-brand-charcoal hover:bg-black/5"
+      >
+        {item.label}
+      </Link>
+    );
 
   const renderSimpleItem = (item: { label: string; href: string }) =>
     item.href === "#demo" ? (
@@ -331,9 +356,81 @@ export default function Navbar() {
 
       {/* Mobile menu */}
       {mobileOpen && (
-        <div className="border-t border-black/5 bg-white px-5 pb-6 pt-2 md:hidden">
+        <div className="max-h-[calc(100vh-72px)] overflow-y-auto border-t border-black/5 bg-white px-5 pb-6 pt-2 md:hidden">
           <div className="flex flex-col">
-            {navItems.map((item) =>
+            {/* Platform first, then Features, then the rest, so the order
+                matches the desktop bar */}
+            {renderMobileItem(navItems[0])}
+
+            {/* Features, collapsed by default: twelve rows open by default
+                would bury Pricing and Contact below the fold */}
+            <button
+              type="button"
+              aria-expanded={mobileFeaturesOpen}
+              onClick={() => setMobileFeaturesOpen((v) => !v)}
+              className="flex items-center gap-2 rounded-md px-2 py-3 text-left text-base font-medium text-brand-charcoal hover:bg-black/5"
+            >
+              Features
+              <svg
+                className={`transition-transform duration-200 ${mobileFeaturesOpen ? "rotate-180" : ""}`}
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.4"
+              >
+                <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              <span className="ml-auto text-[12px] font-normal text-brand-gray">
+                {features.filter((f) => f.href).length} live
+              </span>
+            </button>
+
+            {mobileFeaturesOpen && (
+              <div className="mb-1 flex flex-col gap-0.5 border-l border-black/10 pb-1 pl-2">
+                {features.map((f) => {
+                  const Icon = f.icon;
+                  const tile = (
+                    <>
+                      <span
+                        className="grid h-9 w-9 flex-none place-items-center rounded-[10px]"
+                        style={tileStyle(f.color)}
+                      >
+                        <Icon className="h-[19px] w-[19px] [filter:drop-shadow(0_1px_1px_rgba(0,0,0,0.18))]" />
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block text-[14px] font-semibold leading-tight text-brand-ink">{f.label}</span>
+                        <span className="mt-px block text-[12px] leading-snug text-brand-charcoal">{f.desc}</span>
+                      </span>
+                    </>
+                  );
+                  const rowClass = "flex items-center gap-3 rounded-xl p-2";
+
+                  // Same rule as the desktop menu: no destination yet, so the
+                  // row renders flat and dimmed rather than pretending to link.
+                  return f.href ? (
+                    <Link
+                      key={f.label}
+                      href={f.href}
+                      onClick={() => {
+                        setMobileFeaturesOpen(false);
+                        setMobileOpen(false);
+                      }}
+                      className={`${rowClass} hover:bg-[#F6F3EE]`}
+                    >
+                      {tile}
+                    </Link>
+                  ) : (
+                    <div key={f.label} className={`${rowClass} opacity-45`} aria-disabled="true">
+                      {tile}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {navItems.slice(1).map((item) =>
               item.href === "#demo" ? (
                 <button
                   key={item.label}

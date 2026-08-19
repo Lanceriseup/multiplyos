@@ -41,12 +41,12 @@ const BOARDS: Board[] = [
   {
     name: "Tech Scoreboard",
     color: "#2C6BA6",
-    group: "4 Pillar Man Program",
+    group: "Growth Program",
     rows: [
       { name: "Offer Visitors", goal: "125", gv: 125, unit: "int", hist: [112, 87, 131, 104, 119, 96], prev: 104, cur: 138 },
       { name: "Total Sign Ups for the week", goal: "50", gv: 50, unit: "int", hist: [44, 35, 52, 41, 47, 39], prev: 41, cur: 56 },
       { name: "# logged in", goal: "2", gv: 2, unit: "int", hist: [2, 0, 3, 1, 2, 1], prev: 1, cur: 3 },
-      { name: "# of Login RUK App", goal: "230", gv: 230, unit: "int", hist: [218, 196, 241, 212, 227, 208], prev: 212, cur: 244 },
+      { name: "App logins", goal: "230", gv: 230, unit: "int", hist: [218, 196, 241, 212, 227, 208], prev: 212, cur: 244 },
       { name: "% logged in out of last 4 week's enrollees", goal: "25%", gv: 25, unit: "pct", hist: [27, 15, 31, 19, 24, 17], prev: 18, cur: 21 },
     ],
   },
