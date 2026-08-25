@@ -30,6 +30,13 @@
 // height card, so it never resizes mid-tour.
 import { useEffect, useRef, useState } from "react";
 import { useInView, useReducedMotion } from "framer-motion";
+import ActZero, { runZero, type Zero } from "./ReplacesActZero";
+
+// The tools this page replaces, crossed out before the product appears.
+const ZERO_ITEMS = [
+  { name: "Asana", logo: "/replaces-asana.png", h: 72 },
+  { name: "Monday.com", logo: "/replaces-monday.png", h: 76 },
+];
 
 const MIN_W = 940; // narrower than this and the whole stage scales down
 const STAGE_H = 468; // card height, sized to the tallest view (the gallery)
@@ -271,6 +278,7 @@ export default function ProjectsTasksHeroTour() {
   const reduce = useReducedMotion() ?? false;
 
   const [view, setView] = useState<View>("gallery");
+  const [zero, setZero] = useState<Zero>("");
   const [ticked, setTicked] = useState(false);
   const [done, setDone] = useState(259);
   const [bump, setBump] = useState(false);
@@ -414,7 +422,9 @@ export default function ProjectsTasksHeroTour() {
         setBump(false);
         await fade(0, 0);
         setCursor(MIN_W / 2, STAGE_H + 70);
-        await wait(620);
+
+        // ---------------------------------------------- ACT 0: the cross-out
+        if (!(await runZero(setZero, wait, alive, ZERO_ITEMS.length))) return;
         await fade(1, 240);
 
         // ---------------------------------------------- ACT 1: the whole board
@@ -494,6 +504,9 @@ export default function ProjectsTasksHeroTour() {
             myTasksRef={myTasksRef}
           />
         )}
+
+        {/* the tools this replaces, struck out before the board appears */}
+        {zero && <ActZero state={zero} items={ZERO_ITEMS} bg="#FFFFFF" />}
 
         {/* ---------------- cursor + ripple ----------------
             Same pointer the SOP HQ and Scoreboard tours use: white arrow with a

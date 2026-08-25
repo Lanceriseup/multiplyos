@@ -381,6 +381,72 @@ the Projects & Tasks and Metrics Scoreboard pages.
 
 ---
 
+## 6b. The three beats added in front of the hero, August 2026
+
+The hero tour originally opened on a single recurring meeting. Lance asked for three more beats
+before it, and they differ sharply in how well evidenced they are.
+
+### Confirmed, from a screenshot of the Meetings index
+
+Heading `Meetings`, subtitle **`Leadership, recurring team meetings, and ad hoc meeting notes — all
+in one place.`**, with a **`Start a meeting`** button top right.
+
+Then **`Upcoming meetings`**, subtitled **`Provider, invitation, and MOS Scribe status for scheduled
+meetings.`**, with a `View all`. Each row carries the meeting name, its date and time, an
+`N invite(s) pending` count, and four actions: a **`Scheduled`** status chip, **`Join`** with a video
+glyph, **`Edit`**, a red **`Cancel`**, and **`Review`**.
+
+Then **`Recurring Team Meetings`**, subtitled `Pick a meeting, step through its agenda, and capture
+tasks.`, a **`+ New Recurring Team Meeting`** button, and a card per meeting showing its icon, name,
+description, cadence (`Bi-Weekly · Mondays ⏱ 11:00`) and `Last run 3w ago`.
+
+**The word `Provider` in that subtitle matters.** It means a meeting has an external provider and an
+invitation state, which is the strongest in-product evidence for the calendar claim below.
+
+### Confirmed, from a screenshot of `New meeting type`
+
+The proof that a meeting is configurable rather than a fixed template:
+
+- **`Start from a template`**: `Custom Meeting`, `Sales Meeting`, `Business Development`,
+  `Accounting Meeting`, `Marketing Meeting`
+- a name field (`e.g. Sales Meeting`), **`Icon`** and **`Color`** selects, `Description (optional)`
+- **`How often`** (`Weekly`) and **`On`**, seven day pills plus a time
+- **`Agenda & timing`**, headed with a live count: **`4 stages · 30 min total`**
+- **`Meeting length`** pills: `15 min`, `30 min`, `45 min`, `60 min`, `90 min`, `Custom`
+- a reorderable, deletable stage list, each with a name and a minutes box. `Opening` carries a prompt
+  field (`Opening prompt shown to the team (optional) — e.g. share a win, set the tone...`), and
+  `Scoreboard Review` carries **`Scoreboards to review (1)`** with a named board attached
+- **`Add stage:`** `+ Opening`, `+ Scoreboard Review`, **`+ One Page Plan`**
+- `Cancel` / `Create`
+
+Two things worth pulling out: **a stage can have a scoreboard attached to it**, and **One Page Plan
+is an available stage type**, which wires meetings to two other features.
+
+### NOT confirmed: the Google Calendar beat
+
+> **Read this before anyone ships the page.** Lance's client says a meeting can be added to Google
+> Calendar. **Lance could not find the option, and nobody has screenshotted it.** He asked for the
+> beat anyway, which is a reasonable call given the supporting evidence, but the evidence is
+> circumstantial and it is listed here in full so the claim can be checked or pulled quickly.
+>
+> **What is actually confirmed:**
+>
+> 1. **`Google Calendar` is a listed integration.** It appears under `INTEGRATIONS` in the settings
+>    sidebar, visible in the DISC screenshots, alongside `Data sources`, `Marketing sources`,
+>    `QuickBooks`, and `Ontraport`.
+> 2. **The Meetings index tracks `Provider, invitation, and MOS Scribe status`** per scheduled
+>    meeting, and every row shows a `Scheduled` chip and a `Join` action with a video glyph.
+> 3. Meetings carry `N invite(s) pending`, so invitations are a real, tracked state.
+>
+> **What is inferred:** that creating a recurring meeting adds the event to the owner's Google
+> Calendar automatically, sends the invites, and puts the video link on the event. That is what the
+> tour's confirmation toast says.
+>
+> **If this turns out to be wrong**, the fix is contained: delete `CalToast` and the two `setCal`
+> calls in `components/TeamMeetingsHeroTour.tsx`. Nothing else on the page mentions calendars.
+
+---
+
 ## 7. Open questions
 
 Needed before the page can be built honestly.

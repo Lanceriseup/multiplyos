@@ -10,14 +10,14 @@ const APP_URL = "https://app.multiplyos.com";
 const navItems: { label: string; href: string }[] = [
   { label: "Platform", href: "/" },
   { label: "AI", href: "#ai" },
-  { label: "Pricing", href: `${APP_URL}/pricing` },
+  { label: "Pricing", href: "/pricing" },
   { label: "Contact", href: "/contact" },
   { label: "Request a Demo", href: "#demo" },
 ];
 
 // ---- Features submenu (the twelve product features) ----
-// `href` is intentionally omitted for now — feature destinations aren't built yet,
-// so items render as non-navigating tiles. Add `href` per feature to wire them up.
+// All twelve have a page. If a thirteenth is ever added without one, omit `href`
+// and it renders as a non-navigating tile until its page ships.
 type Feature = {
   label: string;
   desc: string;
@@ -119,11 +119,13 @@ const ChecklistIcon = ({ className }: { className?: string }) => (
     <path d="M11.8 15h8.2" />
   </svg>
 );
-const ReportIcon = ({ className }: { className?: string }) => (
+// Analytics Reports does not exist as a feature yet, so its slot went to
+// Agreements. A page with a pen across it, matching the product's own glyph.
+const AgreementIcon = ({ className }: { className?: string }) => (
   <svg className={className} {...svgProps}>
-    <rect x="4.4" y="3.3" width="15.2" height="17.4" rx="2.3" />
-    <path d="M8 8.2h5.2" />
-    <path d="M8 16.1l2.9-3.3 2.3 2 3-3.7" />
+    <path d="M19.4 11.2V5.2a1.8 1.8 0 0 0-1.8-1.8H6.4a1.8 1.8 0 0 0-1.8 1.8v13.6a1.8 1.8 0 0 0 1.8 1.8h5" />
+    <path d="M8.4 7.8h7.2M8.4 11.4h4.4" />
+    <path d="M12.8 20.6l1-3.4 5.4-5.4a1.6 1.6 0 0 1 2.3 2.3l-5.4 5.4z" />
   </svg>
 );
 
@@ -131,17 +133,17 @@ const ReportIcon = ({ className }: { className?: string }) => (
 // first column, 5–8 the second, 9–12 the third.
 const features: Feature[] = [
   { label: "Metrics Scoreboard", desc: "Know if you won the week.", href: "/features/metrics-scoreboard", color: "#EA7B1B", icon: ScoreboardIcon },
-  { label: "CFO Analytics", desc: "Cash, margin & runway.", color: "#A16207", icon: CoinsIcon },
+  { label: "CFO Analytics", desc: "Cash, margin & runway.", href: "/features/cfo-analytics", color: "#A16207", icon: CoinsIcon },
   { label: "SOP HQ", desc: "Every process, documented.", href: "/features/sop-hq", color: "#7A4E28", icon: BookIcon },
   { label: "Projects & Tasks", desc: "See the whole board.", href: "/features/projects-tasks", color: "#5B47A8", icon: BoardIcon },
-  { label: "Team Accountability", desc: "Own the week, every week.", color: "#B4532A", icon: TargetIcon },
+  { label: "Team Accountability", desc: "Own the week, every week.", href: "/features/team-accountability", color: "#B4532A", icon: TargetIcon },
   { label: "Team Meetings", desc: "Every meeting, on rhythm.", href: "/features/team-meetings", color: "#2C6BA6", icon: CalIcon },
-  { label: "Org Chart", desc: "The whole org at a glance.", color: "#3F7A6B", icon: OrgIcon },
-  { label: "DISC Assessments", desc: "Know how your team works.", color: "#8A3F6D", icon: DiscIcon },
-  { label: "Forms", desc: "Capture what you need.", color: "#2E7D5B", icon: FormIcon },
-  { label: "Checklists", desc: "Automate the routine.", color: "#6B7A2E", icon: ChecklistIcon },
-  { label: "AI Coach & Agent", desc: "Your AI Chief of Staff.", color: "#4B3CC4", icon: SparkIcon },
-  { label: "Analytics Reports", desc: "The data behind decisions.", color: "#1F5F7A", icon: ReportIcon },
+  { label: "Org Chart", desc: "The whole org at a glance.", href: "/features/org-chart", color: "#3F7A6B", icon: OrgIcon },
+  { label: "DISC Assessments", desc: "Know how your team works.", href: "/features/disc-assessments", color: "#8A3F6D", icon: DiscIcon },
+  { label: "Forms", desc: "Capture what you need.", href: "/features/forms", color: "#2E7D5B", icon: FormIcon },
+  { label: "Checklists", desc: "Automate the routine.", href: "/features/checklists", color: "#6B7A2E", icon: ChecklistIcon },
+  { label: "Agreements", desc: "Signed, and on the record.", href: "/features/agreements", color: "#1F5F7A", icon: AgreementIcon },
+  { label: "AI Coach & Agent", desc: "Your AI Chief of Staff.", href: "/features/ai-coach", color: "#4B3CC4", icon: SparkIcon },
 ];
 
 // Gradient "app tile" for each feature icon — white glyph, soft colored shadow.

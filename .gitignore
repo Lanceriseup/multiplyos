@@ -15,3 +15,4 @@ next-env.d.ts
 
 # Testimonial videos — exceed GitHub's 100MB limit; host/compress before shipping
 /public/testimonials/*.mp4
+.next-check/

@@ -4,11 +4,11 @@ import TeamMeetingsPage from "@/components/TeamMeetingsPage";
 export const metadata: Metadata = {
   title: "Team Meetings & 1on1s · Multiply OS",
   description:
-    "A timeboxed agenda that steps itself, for the whole team and for one person at a time. Tasks and issues get captured in the meeting, and unchecked topics carry to the next one.",
+    "Finally a strategic agenda that guides itself, for the whole team and for one person at a time. Tasks and issues get captured in the meeting, and unchecked topics carry to the next one.",
   openGraph: {
     title: "Team Meetings & 1on1s · Multiply OS",
     description:
-      "Run the meeting, not the notes. Nothing gets dropped, and nothing starts from zero.",
+      "Start loving meetings. A strategic agenda that guides itself, so nothing gets dropped and nothing starts from zero.",
     url: "https://www.multiplyos.com/features/team-meetings",
     siteName: "Multiply OS",
     type: "website",
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Team Meetings & 1on1s · Multiply OS",
     description:
-      "Run the meeting, not the notes. Nothing gets dropped, and nothing starts from zero.",
+      "Start loving meetings. A strategic agenda that guides itself, so nothing gets dropped and nothing starts from zero.",
     images: ["/og-image.png"],
   },
 };

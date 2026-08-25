@@ -237,8 +237,24 @@ body {
 /* Recording dot on the video-SOP mockup. */
 @keyframes sop-rec { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
 .sop-rec { animation: sop-rec 1.4s ease-in-out infinite; }
+/* The AI SOP Agent's spinner while it drafts, and the mic level meter beside
+   the recorder. Both only run while the tour is in those states. */
+.sop-spin { animation: spin-cw 0.9s linear infinite; }
+@keyframes sop-lvl { 0%, 100% { transform: scaleY(0.4); } 50% { transform: scaleY(1); } }
+.sop-lvl { transform-origin: bottom; animation: sop-lvl 0.7s ease-in-out infinite; }
+/* Screenshots landing in the draft, and each countdown digit. */
+@keyframes sop-pop { from { opacity: 0; transform: scale(0.86); } to { opacity: 1; transform: none; } }
+.sop-pop { animation: sop-pop 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.3) both; }
+/* The marker crossing out the replaced tool, in the tour's opening beat. The
+   dash length is comfortably longer than the path, so 0 offset is fully drawn. */
+@keyframes sop-strike { to { stroke-dashoffset: 0; } }
+.sop-strike { stroke-dasharray: 130; stroke-dashoffset: 130; }
+.sop-strike-go { animation: sop-strike 0.42s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
 @media (prefers-reduced-motion: reduce) {
-  .sop-view, .sop-rec { animation: none; }
+  .sop-view, .sop-rec, .sop-spin, .sop-lvl, .sop-pop { animation: none; }
+  /* struck already, rather than mid-stroke */
+  .sop-strike { stroke-dashoffset: 0; }
+  .sop-strike-go { animation: none; }
 }
 
 /* ---- Booking confirmation: pop-in + confetti ---- */
@@ -262,4 +278,104 @@ body {
 .pt-pop { animation: pt-pop 0.28s cubic-bezier(0.2, 0.9, 0.3, 1.35) both; }
 @media (prefers-reduced-motion: reduce) {
   .pt-view, .pt-pop { animation: none; }
+}
+
+/* ---- Pricing calculator sliders ----
+   The track colour is set inline per input (a gradient split at the current
+   value), so only the rail geometry and the thumb live here. */
+.price-range {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 999px;
+  outline: none;
+  cursor: pointer;
+}
+.price-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: #fff;
+  border: 2px solid #ea7b1b;
+  box-shadow: 0 1px 3px rgba(20, 14, 6, 0.28);
+  cursor: grab;
+}
+.price-range::-webkit-slider-thumb:active { cursor: grabbing; }
+.price-range::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: #fff;
+  border: 2px solid #ea7b1b;
+  box-shadow: 0 1px 3px rgba(20, 14, 6, 0.28);
+  cursor: grab;
+}
+.price-range:focus-visible {
+  outline: 2px solid #ea7b1b;
+  outline-offset: 3px;
+}
+
+/* ---- Pricing hero receipt ----
+   Torn top and bottom edges, drawn as a repeating radial mask rather than an
+   image so the paper keeps its shape at any width. */
+.receipt-perf {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 10px;
+  background-image: radial-gradient(circle at 6px 0, transparent 6px, #fff 6.5px);
+  background-size: 14px 10px;
+}
+.receipt-perf-top { top: -9px; transform: rotate(180deg); }
+.receipt-perf-bottom { bottom: -9px; }
+
+/* The seats pill: a white chip with an orange ring that breathes. */
+@keyframes seat-pulse {
+  0%, 100% { box-shadow: 0 0 0 4px rgba(234, 123, 27, 0.22); }
+  50% { box-shadow: 0 0 0 7px rgba(234, 123, 27, 0.08); }
+}
+.seat-dot { animation: seat-pulse 2.4s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .seat-dot { animation: none; box-shadow: 0 0 0 4px rgba(234, 123, 27, 0.22); }
+}
+
+/* ---- Pricing hero: the flipping receipt ----
+   Both faces must hide their own backface. Hiding only the front leaves the
+   back painted, mirrored, on top of the front at rest, which is the bug this
+   replaces. The card is the only element with preserve-3d: each face stays
+   flat so its whole subtree, stamp included, flattens into it and is governed
+   by that face's backface-visibility. */
+.flip-scene { perspective: 1600px; }
+
+.flip-card {
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 720ms cubic-bezier(0.5, 0.05, 0.2, 1);
+  will-change: transform;
+}
+.flip-card.is-flipped { transform: rotateY(180deg); }
+
+.flip-face,
+.flip-back {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.flip-face { position: relative; transform: rotateY(0deg); }
+.flip-back {
+  position: absolute;
+  inset: 0;
+  transform: rotateY(180deg);
+  display: flex;
+  flex-direction: column;
+}
+
+/* The stamp lives outside the receipt so the receipt can keep its clipped
+   corners while the stamp spills past the right edge. */
+.stamp-spill { right: -20px; }
+@media (max-width: 640px) { .stamp-spill { right: -6px; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .flip-card { transition: none; }
 }

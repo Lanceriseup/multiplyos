@@ -83,6 +83,9 @@ export type MultiAiWiredProps = {
   leftColor?: string; // its icon tile
   leftIcon?: (p: { className?: string }) => React.JSX.Element;
   rightLabel?: string;
+  // An example question, rendered as a asked-it bubble above the findings. Pages
+  // that pass nothing keep the original push-style read-out.
+  prompt?: string;
   panelTitle?: string;
   panelMeta?: string;
   panelDot?: string;
@@ -106,6 +109,7 @@ export default function MultiAiWired({
   leftColor = "#8A3F6D",
   leftIcon: LeftIcon = RowsIcon,
   rightLabel = "What Multi AI reads out of them",
+  prompt,
   panelTitle = BOARD,
   panelMeta = "week 32",
   panelDot = "#8A3F6D",
@@ -280,6 +284,15 @@ export default function MultiAiWired({
               </span>
             </div>
 
+            {prompt && (
+              <p className="mt-3 rounded-xl rounded-br-sm border border-white/90 bg-white/[0.84] px-3 py-2 text-[12px] font-[620] leading-snug shadow-[0_10px_26px_-20px_rgba(30,20,70,0.42)] backdrop-blur-[10px]">
+                <span className="mb-0.5 block font-mono text-[8.5px] font-normal uppercase tracking-[0.08em] text-brand-gray">
+                  You asked
+                </span>
+                {prompt}
+              </p>
+            )}
+
             <p className="mt-3 flex items-center justify-center gap-2 text-[11.5px] font-[620] text-[#33302C]">
               <span className="grid h-[20px] w-[20px] flex-none place-items-center rounded-md bg-gradient-to-br from-[#F49230] to-[#DE6F14] text-white">
                 <Spark className="h-3 w-3" />
@@ -417,6 +430,17 @@ export default function MultiAiWired({
                 <b className="text-[12.5px]">Multi AI</b>
                 <span className="ml-auto font-mono text-[8.5px] text-brand-gray">{aiMeta}</span>
               </div>
+
+              {/* The asked-it bubble, so the findings below read as an answer
+                  rather than an unprompted lecture. Right-aligned and tail-down,
+                  the way the person's own message sits in a chat. */}
+              {prompt && (
+                <div className="flex justify-end px-3.5 pb-1 pt-3">
+                  <p className="max-w-[85%] rounded-2xl rounded-br-md border border-black/[0.06] bg-[#F4F1EC] px-3 py-2 text-[12px] font-[620] leading-snug text-brand-ink">
+                    {prompt}
+                  </p>
+                </div>
+              )}
 
               {insights.map((ins, i) => (
                 <div key={ins.tag} className="px-3 py-2 first:pt-3">
