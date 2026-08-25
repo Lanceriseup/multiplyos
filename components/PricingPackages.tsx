@@ -15,6 +15,7 @@ type Tier = {
   oneTimeLabel: string;
   monthly: string;
   featured?: boolean;
+  ctaUrl?: string;
   groups: Group[];
   outcomes: string[];
 };
@@ -69,6 +70,7 @@ const TIERS: Tier[] = [
     oneTime: "$5,000",
     oneTimeLabel: "Onsite Strategy & Team Implementation Day",
     monthly: "$3,000",
+    ctaUrl: "https://go.riseupkings.com/full-implementation",
     groups: [
       {
         title: "Onsite Implementation Day",
@@ -105,6 +107,7 @@ const TIERS: Tier[] = [
     oneTimeLabel: "Onsite Strategy & Team Implementation Day",
     monthly: "$5,000",
     featured: true,
+    ctaUrl: "https://go.riseupkings.com/full-implementation-ceocoaching",
     groups: [
       {
         title: "Onsite Implementation Day",
@@ -284,7 +287,7 @@ function TierCard({ tier }: { tier: Tier }) {
       {/* CTA */}
       <div className="mt-auto pt-6">
         <a
-          href={CTA_URL}
+          href={tier.ctaUrl ?? CTA_URL}
           aria-label={`Subscribe now — ${tier.name}`}
           className={`flex w-full items-center justify-center rounded-lg px-6 py-3 text-sm font-semibold transition-colors ${
             featured
