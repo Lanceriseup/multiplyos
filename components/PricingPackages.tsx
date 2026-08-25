@@ -280,6 +280,21 @@ function TierCard({ tier }: { tier: Tier }) {
           ))}
         </ul>
       </div>
+
+      {/* CTA */}
+      <div className="mt-auto pt-6">
+        <a
+          href={CTA_URL}
+          aria-label={`Subscribe now — ${tier.name}`}
+          className={`flex w-full items-center justify-center rounded-lg px-6 py-3 text-sm font-semibold transition-colors ${
+            featured
+              ? "bg-brand-orange text-white shadow-[0_10px_30px_-8px_rgba(234,123,27,0.75)] hover:bg-brand-orange-dark"
+              : "border-2 border-brand-orange text-brand-orange-dark hover:bg-brand-orange hover:text-white"
+          }`}
+        >
+          Subscribe now
+        </a>
+      </div>
     </div>
   );
 }
