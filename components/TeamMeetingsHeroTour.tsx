@@ -2,7 +2,22 @@
 
 // Animated hero for the Team Meetings & 1on1s feature page.
 //
-// One continuous camera move, two acts, on a loop:
+// One continuous camera move, on a loop. Three beats were added in front of the
+// original two acts in August 2026:
+//
+//   ACT 0.5 - every meeting in one place
+//     the Meetings index: upcoming meetings with their provider and invitation
+//     state, then the recurring team meetings underneath
+//
+//   ACT 0.6 - and a meeting is something you build
+//     New meeting type: pick a template, set the cadence, and stretch a stage
+//     while the total at the top follows it. 30 minutes becomes 35.
+//
+//   ACT 0.7 - and then it is on the calendar
+//     CAVEAT: this beat is INFERRED, not screenshotted. Google Calendar is a
+//     listed integration and the index tracks "provider, invitation, and Scribe
+//     status", but nobody has seen the auto-add. See the notes, section 6b,
+//     which also says exactly what to delete if the claim does not hold.
 //
 //   ACT 1 - the team meeting runs itself
 //     1. a recurring meeting sits there with a timeboxed agenda
@@ -41,6 +56,10 @@
 // the same app and the same session concept. See docs/team-meetings-feature-notes.md.
 import { useEffect, useRef, useState } from "react";
 import { useInView, useReducedMotion } from "framer-motion";
+import ActZero, { runZero, type Zero } from "./ReplacesActZero";
+
+// The tool this page replaces, crossed out before the product appears.
+const ZERO_ITEMS = [{ name: "ninety.io", logo: "/replaces-ninety.png" }];
 
 const MIN_W = 980; // narrower than this and the whole stage scales down
 const STAGE_H = 500;
@@ -161,6 +180,50 @@ const BoardIcon = ({ className }: IconProps) => (
   </svg>
 );
 
+const FlagIcon = ({ className }: IconProps) => (
+  <Stroke className={className} d="M5.5 20.5V4.2h13l-2.6 4 2.6 4h-13" />
+);
+const VideoIcon = ({ className }: IconProps) => (
+  <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="6.5" width="12" height="11" rx="2.2" />
+    <path d="M15 11l5.5-3v8L15 13z" />
+  </svg>
+);
+const PencilIcon = ({ className }: IconProps) => (
+  <Stroke className={className} d="M4 20.2l.6-4L16.2 4.6a2 2 0 0 1 2.8 2.8L8 19.6z" />
+);
+const TrendIcon = ({ className }: IconProps) => (
+  <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+    <path d="M4 16.5l5-5.2 3.4 3.2L20 7" />
+    <path d="M15.4 7H20v4.6" />
+  </svg>
+);
+const MegaIcon = ({ className }: IconProps) => (
+  <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+    <path d="M4.5 10.2v3.6a1.6 1.6 0 0 0 1.6 1.6h2l6.6 4V4.6l-6.6 4h-2a1.6 1.6 0 0 0-1.6 1.6z" />
+    <path d="M18.2 9.4a4 4 0 0 1 0 5.2" />
+  </svg>
+);
+const CaseIcon = ({ className }: IconProps) => (
+  <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3.4" y="7.4" width="17.2" height="12.2" rx="2" />
+    <path d="M8.8 7.4V5.8a1.6 1.6 0 0 1 1.6-1.6h3.2a1.6 1.6 0 0 1 1.6 1.6v1.6" />
+  </svg>
+);
+const CashIcon = ({ className }: IconProps) => (
+  <Stroke className={className} d="M12 4v16M8.6 7.6h5a2.6 2.6 0 0 1 0 5.2h-3.2a2.6 2.6 0 0 0 0 5.2h5.2" />
+);
+// The four-colour Google mark, drawn rather than loaded: the artwork is a flat
+// wordmark and this is a 14px badge, so a glyph reads better than a squeezed png.
+const GCalIcon = ({ className }: IconProps) => (
+  <svg viewBox="0 0 24 24" className={className} fill="none">
+    <rect x="3.5" y="4.5" width="17" height="16" rx="3" fill="#fff" stroke="#DADCE0" strokeWidth="1.4" />
+    <path d="M3.5 7.5A3 3 0 0 1 6.5 4.5h11a3 3 0 0 1 3 3v1.2h-17z" fill="#4285F4" />
+    <rect x="6.6" y="11" width="10.8" height="6.4" rx="1" fill="#EA4335" opacity="0.12" />
+    <path d="M9.6 12.6h4.8M12 12.6v4.2" stroke="#1A73E8" strokeWidth="1.7" strokeLinecap="round" />
+  </svg>
+);
+
 // ---------------------------------------------------------------- people
 // Generic across the site: the same cast as the SOP HQ and Projects pages.
 const PEOPLE = {
@@ -215,8 +278,52 @@ const NAV = [
 
 const ONE_TIMES = ["0:00", "3:40", "9:15", "14:30", "19:05"];
 
+// ---- the Meetings index, act 0.5 ----
+// "Leadership, recurring team meetings, and ad hoc meeting notes, all in one
+// place" is the product's own subtitle, and the row actions are its own too.
+const UPCOMING = [
+  { name: "Leadership Team", when: "Mon, 11:00 AM", inv: "7 invites" },
+  { name: "Will and Jess 1:1", when: "Tue, 11:00 AM", inv: "2 invites" },
+  { name: "Marketing Huddle", when: "Tue, 10:00 AM", inv: "3 invites" },
+  { name: "Overview of Offboarding", when: "Wed, 12:30 PM", inv: "8 invites" },
+];
+
+const RECURRING = [
+  { name: "Marketing Meeting", sub: "Events, comms, and cross-team", cadence: "Bi-weekly · Mondays", icon: MegaIcon, c: "#C9832B", bg: "#FDF3E0" },
+  { name: "Sales Meeting", sub: "Pipeline, wins, and the numbers", cadence: "Weekly · Mondays", icon: TrendIcon, c: BLUE, bg: BLUE_BG },
+];
+
+// ---- the builder, act 0.6 ----
+// Templates, cadence, and a stage list whose minutes add up to the meeting
+// length. That sum is the detail worth animating, so the numbers stay in step.
+const TEMPLATES = [
+  { name: "Custom", icon: PeopleIcon, c: "#6B4E9E", bg: "#F1ECFA" },
+  { name: "Sales", icon: TrendIcon, c: BLUE, bg: BLUE_BG },
+  { name: "Business Dev", icon: CaseIcon, c: "#C9832B", bg: "#FDF3E0" },
+  { name: "Accounting", icon: CashIcon, c: GREEN, bg: "#E9F7EF" },
+  { name: "Marketing", icon: MegaIcon, c: "#B4532A", bg: "#FDF0E4" },
+];
+const TPL_PICK = 4; // Marketing
+
+const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const DAY_PICK = 2; // Tuesday
+
+// The Scoreboard Review stage is the one the tour lengthens, 5 to 10, which is
+// what pushes the total from 30 to 35 and makes the sum visibly live.
+const STAGES = [
+  { label: "Opening", min: 5, icon: FlagIcon },
+  { label: "Scoreboard Review", min: 5, grow: 10, icon: GaugeIcon },
+  { label: "Issues Review", min: 15, icon: AlertIcon },
+  { label: "Tasks Review", min: 5, icon: CheckIcon },
+];
+
+const NEW_MEETING = "Marketing Huddle";
+
 // ---------------------------------------------------------------- component
-type View = "team-idle" | "team-live" | "one-idle" | "one-live";
+// "index" and "builder" were added August 2026: the Meetings page itself, and
+// the New meeting type modal that proves a meeting is configurable rather than
+// a fixed template. Both sit in front of the original two acts.
+type View = "index" | "builder" | "team-idle" | "team-live" | "one-idle" | "one-live";
 
 const ABORT = Symbol("abort");
 
@@ -231,11 +338,24 @@ export default function TeamMeetingsHeroTour() {
   const oneNavRef = useRef<HTMLDivElement>(null);
   const pickRef = useRef<HTMLDivElement>(null);
   const oneStartRef = useRef<HTMLDivElement>(null);
+  const newTypeRef = useRef<HTMLDivElement>(null);
+  const tplRef = useRef<HTMLDivElement>(null);
+  const dayRef = useRef<HTMLDivElement>(null);
+  const growRef = useRef<HTMLDivElement>(null);
+  const createRef = useRef<HTMLDivElement>(null);
+  const newCardRef = useRef<HTMLDivElement>(null);
 
   const inView = useInView(wrapRef, { once: false, margin: "-60px" });
   const reduce = useReducedMotion() ?? false;
 
-  const [view, setView] = useState<View>("team-idle");
+  const [view, setView] = useState<View>("index");
+  const [zero, setZero] = useState<Zero>("");
+  // act 0.5 and 0.6: the index, the builder, and what the builder produces
+  const [tpl, setTpl] = useState(-1);
+  const [day, setDay] = useState(-1);
+  const [grown, setGrown] = useState(false);
+  const [built, setBuilt] = useState(false); // the new meeting exists on the index
+  const [cal, setCal] = useState(false); // the Google Calendar confirmation
   const [step, setStep] = useState(0); // agenda items completed
   const [caught, setCaught] = useState(0); // items captured in the meeting
   const [zoomed, setZoomed] = useState(false);
@@ -377,7 +497,7 @@ export default function TeamMeetingsHeroTour() {
     const run = async () => {
       for (;;) {
         // ---------------------------------------------- reset
-        setView("team-idle");
+        setView("index");
         setStep(0);
         setCaught(0);
         setZoomed(false);
@@ -388,12 +508,55 @@ export default function TeamMeetingsHeroTour() {
         setOneTask(false);
         setCarry(false);
         setOneT(0);
+        setTpl(-1);
+        setDay(-1);
+        setGrown(false);
+        setBuilt(false);
+        setCal(false);
         await fade(0, 0);
         setCursor(MIN_W / 2, STAGE_H + 70);
-        await wait(640);
+
+        // ---------------------------------------------- ACT 0: the cross-out
+        if (!(await runZero(setZero, wait, alive, ZERO_ITEMS.length))) return;
         await fade(1, 240);
 
+        // ---------------------------------------------- ACT 0.5: every meeting, one page
+        await wait(2400);
+
+        // ---------------------------------------------- ACT 0.6: build one
+        await tap(newTypeRef, 760);
+        setView("builder");
+        await wait(900);
+
+        await tap(tplRef, 600);
+        setTpl(TPL_PICK);
+        await wait(760);
+
+        await tap(dayRef, 520);
+        setDay(DAY_PICK);
+        await wait(700);
+
+        // the stage gets longer, and the total at the top follows it
+        await tap(growRef, 560);
+        setGrown(true);
+        await wait(1100);
+
+        await tap(createRef, 620);
+        setView("index");
+        setBuilt(true);
+        await wait(700);
+
+        // ---------------------------------------------- ACT 0.7: and it is on the calendar
+        setCal(true);
+        await wait(3200);
+        setCal(false);
+        await wait(500);
+
         // ---------------------------------------------- ACT 1: the meeting runs
+        await tap(newCardRef, 720);
+        setView("team-idle");
+        await wait(820);
+
         await tap(teamStartRef, 800);
         setView("team-live");
         await wait(1000);
@@ -513,8 +676,10 @@ export default function TeamMeetingsHeroTour() {
           }}
         >
           <TopBar />
-          <div className="flex-1 overflow-hidden px-5 py-4">
-            {shown === "team-idle" ? (
+          <div className="relative flex-1 overflow-hidden px-5 py-4">
+            {shown === "index" || shown === "builder" ? (
+              <MeetingsIndex built={built} newTypeRef={newTypeRef} newCardRef={newCardRef} />
+            ) : shown === "team-idle" ? (
               <TeamIdle startRef={teamStartRef} />
             ) : shown === "team-live" ? (
               <TeamLive step={rStep} caught={rCaught} />
@@ -523,8 +688,20 @@ export default function TeamMeetingsHeroTour() {
             ) : (
               <OneLive checks={checks} joined={joined} task={oneTask} carry={carry} t={ONE_TIMES[oneT] ?? "0:00"} />
             )}
+
+            {/* the confirmation that it landed on the calendar, over the index */}
+            {cal && <CalToast />}
           </div>
+
+          {/* the builder sits over the whole plate, the way the real modal does */}
+          {shown === "builder" && (
+            <TypeModal tpl={tpl} day={day} grown={grown} tplRef={tplRef} dayRef={dayRef} growRef={growRef} createRef={createRef} />
+          )}
         </div>
+
+        {/* the tool this replaces, struck out before the meeting appears.
+            Above the plate, which is itself z-[2]. */}
+        {zero && <ActZero state={zero} items={ZERO_ITEMS} bg="#FBFAF8" />}
 
         {/* ---------------- cursor + ripple ----------------
             Same pointer the other three feature tours use: white arrow with a
@@ -682,6 +859,317 @@ function CardHead({ children, right }: { children: React.ReactNode; right?: Reac
     <div className="flex items-center gap-2 border-b border-[#F0EDE8] px-3.5 py-2">
       <span className="text-[9.5px] font-bold uppercase tracking-[0.09em] text-brand-gray">{children}</span>
       {right && <span className="ml-auto">{right}</span>}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------- ACT 0.5
+// The Meetings page. Leadership, recurring team meetings, and ad hoc notes in
+// one place, which is the product's own subtitle and the reason this beat leads.
+function MeetingsIndex({
+  built,
+  newTypeRef,
+  newCardRef,
+}: {
+  built: boolean;
+  newTypeRef: React.RefObject<HTMLDivElement | null>;
+  newCardRef: React.RefObject<HTMLDivElement | null>;
+}) {
+  return (
+    <div className="flex h-full flex-col">
+      <div className="mb-2.5 flex items-start gap-3">
+        <div className="min-w-0 flex-1">
+          <div className="text-[16px] font-extrabold tracking-tight text-brand-ink">Meetings</div>
+          <div className="text-[10.5px] text-brand-gray">
+            Leadership, recurring team meetings, and ad hoc notes, all in one place.
+          </div>
+        </div>
+        <span className="inline-flex flex-none items-center gap-1.5 rounded-lg bg-brand-orange px-2.5 py-[5px] text-[10.5px] font-semibold text-white">
+          <PlayIcon className="h-[10px] w-[10px]" />
+          Start a meeting
+        </span>
+      </div>
+
+      <div className="mb-1 flex items-baseline gap-2">
+        <span className="text-[11px] font-bold text-brand-ink">Upcoming meetings</span>
+        <span className="text-[9.5px] text-brand-gray">Provider, invitation, and Scribe status</span>
+      </div>
+
+      <div className="overflow-hidden rounded-[10px] border border-[#E7E4DE] bg-white">
+        {UPCOMING.map((u) => (
+          <div key={u.name} className="flex items-center gap-2 border-b border-[#F3F0EB] px-3 py-[7px] last:border-b-0">
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-[11px] font-semibold text-brand-ink">{u.name}</span>
+              <span className="text-[9px] text-brand-gray">
+                {u.when} <span className="text-[#C4BFB6]">·</span> {u.inv} pending
+              </span>
+            </span>
+            <span className="inline-flex flex-none items-center gap-1 rounded-full border border-[#E7E4DE] px-2 py-[2px] text-[8.5px] font-semibold text-brand-charcoal">
+              <CalIcon className="h-[9px] w-[9px]" />
+              Scheduled
+            </span>
+            <span className="inline-flex flex-none items-center gap-1 rounded-md border border-[#E7E4DE] px-1.5 py-[2px] text-[8.5px] font-semibold text-brand-charcoal">
+              <VideoIcon className="h-[9px] w-[9px]" />
+              Join
+            </span>
+            <span className="inline-flex flex-none items-center gap-1 rounded-md border border-[#E7E4DE] px-1.5 py-[2px] text-[8.5px] font-semibold text-brand-charcoal">
+              <PencilIcon className="h-[9px] w-[9px]" />
+              Edit
+            </span>
+          </div>
+        ))}
+      </div>
+
+      <div className="mb-1 mt-3 flex items-baseline gap-2">
+        <span className="text-[11px] font-bold text-brand-ink">Recurring Team Meetings</span>
+        <span className="text-[9.5px] text-brand-gray">Pick one, step its agenda, capture tasks.</span>
+        <span
+          ref={newTypeRef}
+          className="ml-auto inline-flex flex-none items-center gap-1.5 rounded-lg bg-brand-ink px-2.5 py-[5px] text-[10px] font-semibold text-white"
+        >
+          <PlusIcon className="h-[10px] w-[10px]" />
+          New Recurring Team Meeting
+        </span>
+      </div>
+
+      <div className="grid grid-cols-3 gap-2">
+        {RECURRING.map((r) => {
+          const Icon = r.icon;
+          return (
+            <div key={r.name} className="rounded-[10px] border border-[#E7E4DE] bg-white p-2.5">
+              <div className="flex items-center gap-1.5">
+                <span className="grid h-[20px] w-[20px] flex-none place-items-center rounded-[6px]" style={{ background: r.bg, color: r.c }}>
+                  <Icon className="h-[11px] w-[11px]" />
+                </span>
+                <span className="min-w-0 truncate text-[10.5px] font-bold text-brand-ink">{r.name}</span>
+              </div>
+              <div className="mt-1 line-clamp-2 text-[9px] leading-snug text-brand-gray">{r.sub}</div>
+              <div className="mt-1.5 truncate font-mono text-[8.5px] text-brand-gray">{r.cadence}</div>
+            </div>
+          );
+        })}
+
+        {/* the one the tour builds, landing in the third slot */}
+        <div
+          ref={newCardRef}
+          className={`rounded-[10px] border bg-white p-2.5 transition-all duration-500 ${built ? "tour-landed" : ""}`}
+          style={
+            built
+              ? { borderColor: "rgba(180,83,42,0.4)", opacity: 1 }
+              : { borderColor: "#E7E4DE", opacity: 0, transform: "translateY(6px)" }
+          }
+        >
+          <div className="flex items-center gap-1.5">
+            <span className="grid h-[20px] w-[20px] flex-none place-items-center rounded-[6px]" style={{ background: "#FDF0E4", color: "#B4532A" }}>
+              <MegaIcon className="h-[11px] w-[11px]" />
+            </span>
+            <span className="min-w-0 truncate text-[10.5px] font-bold text-brand-ink">{NEW_MEETING}</span>
+          </div>
+          <div className="mt-1 line-clamp-2 text-[9px] leading-snug text-brand-gray">
+            Quick check-in on tasks and support as needed
+          </div>
+          <div className="mt-1.5 truncate font-mono text-[8.5px] text-brand-gray">
+            Weekly &middot; Tuesdays &middot; 35m
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------- ACT 0.6
+// New meeting type. The point of this beat is that a meeting is configurable
+// rather than a fixed template: pick a starting point, set the cadence, and
+// build the agenda stage by stage with the minutes adding up as you go.
+function TypeModal({
+  tpl,
+  day,
+  grown,
+  tplRef,
+  dayRef,
+  growRef,
+  createRef,
+}: {
+  tpl: number;
+  day: number;
+  grown: boolean;
+  tplRef: React.RefObject<HTMLDivElement | null>;
+  dayRef: React.RefObject<HTMLDivElement | null>;
+  growRef: React.RefObject<HTMLDivElement | null>;
+  createRef: React.RefObject<HTMLDivElement | null>;
+}) {
+  const total = STAGES.reduce((s, x) => s + (grown && x.grow ? x.grow : x.min), 0);
+
+  return (
+    <div className="absolute inset-0 z-[60] grid place-items-center bg-[rgba(24,19,12,0.42)] px-6">
+      <div className="sop-view w-[520px] rounded-[14px] bg-white px-5 py-4 shadow-[0_24px_60px_-18px_rgba(20,14,6,0.5)]">
+        <div className="text-[14px] font-bold tracking-tight text-brand-ink">New meeting type</div>
+
+        <div className="mt-2.5 text-[8.5px] font-bold uppercase tracking-[0.1em] text-brand-gray">
+          Start from a template
+        </div>
+        <div className="mt-1.5 flex flex-wrap gap-1.5">
+          {TEMPLATES.map((t, i) => {
+            const Icon = t.icon;
+            const on = tpl === i;
+            return (
+              <div
+                key={t.name}
+                ref={i === TPL_PICK ? tplRef : undefined}
+                className="inline-flex items-center gap-1.5 rounded-[9px] border px-2 py-1.5 text-[10px] font-semibold transition-all duration-200"
+                style={
+                  on
+                    ? { borderColor: `${t.c}66`, background: t.bg, color: t.c }
+                    : { borderColor: "#E7E4DE", color: "#4A4744" }
+                }
+              >
+                <span className="grid h-[17px] w-[17px] flex-none place-items-center rounded-[5px]" style={{ background: t.bg, color: t.c }}>
+                  <Icon className="h-[10px] w-[10px]" />
+                </span>
+                {t.name}
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="mt-3 grid grid-cols-[1fr_auto] items-end gap-3">
+          <div>
+            <div className="text-[8.5px] font-bold uppercase tracking-[0.1em] text-brand-gray">Name</div>
+            <div className="mt-1 rounded-lg border border-[#E7E4DE] bg-white px-2.5 py-1.5 text-[11px] font-medium text-brand-ink">
+              {tpl === TPL_PICK ? NEW_MEETING : <span className="text-brand-gray">e.g. Sales Meeting</span>}
+            </div>
+          </div>
+          <div>
+            <div className="text-[8.5px] font-bold uppercase tracking-[0.1em] text-brand-gray">How often</div>
+            <div className="mt-1 rounded-lg border border-[#E7E4DE] px-2.5 py-1.5 text-[11px] font-medium text-brand-ink">Weekly</div>
+          </div>
+        </div>
+
+        <div className="mt-2.5 text-[8.5px] font-bold uppercase tracking-[0.1em] text-brand-gray">On</div>
+        <div className="mt-1 flex gap-1">
+          {DAYS.map((d, i) => (
+            <div
+              key={d}
+              ref={i === DAY_PICK ? dayRef : undefined}
+              className="rounded-[7px] border px-2 py-1 text-[9.5px] font-semibold transition-all duration-200"
+              style={
+                day === i
+                  ? { borderColor: "transparent", background: "#16233D", color: "#fff" }
+                  : { borderColor: "#E7E4DE", color: "#4A4744" }
+              }
+            >
+              {d}
+            </div>
+          ))}
+          <div className="ml-1 rounded-[7px] border border-[#E7E4DE] px-2 py-1 font-mono text-[9.5px] text-brand-gray">
+            11:00
+          </div>
+        </div>
+
+        <div className="mt-3 flex items-baseline gap-2">
+          <span className="text-[8.5px] font-bold uppercase tracking-[0.1em] text-brand-gray">
+            Agenda &amp; timing
+          </span>
+          <span className="ml-auto font-mono text-[9.5px] text-brand-charcoal">
+            {STAGES.length} stages
+            <span className="text-[#C4BFB6]"> · </span>
+            <span
+              className="font-bold transition-colors duration-300"
+              style={{ color: grown ? "#B4532A" : "#4A4744" }}
+            >
+              {total} min total
+            </span>
+          </span>
+        </div>
+
+        <div className="mt-1.5 space-y-1">
+          {STAGES.map((s, i) => {
+            const Icon = s.icon;
+            const mins = grown && s.grow ? s.grow : s.min;
+            return (
+              <div key={s.label} className="flex items-center gap-2 rounded-[9px] border border-[#EBE7E0] bg-[#FBFAF8] px-2 py-1.5">
+                <span className="grid h-[17px] w-[17px] flex-none place-items-center rounded-[5px] bg-white text-brand-charcoal" style={{ border: "1px solid #E7E4DE" }}>
+                  <Icon className="h-[9px] w-[9px]" />
+                </span>
+                <span className="min-w-0 flex-1 truncate text-[10.5px] font-semibold text-brand-ink">{s.label}</span>
+                <div
+                  ref={s.grow ? growRef : undefined}
+                  className="flex flex-none items-center gap-1 rounded-md border bg-white px-1.5 py-[2px] transition-all duration-300"
+                  style={
+                    s.grow && grown
+                      ? { borderColor: "rgba(180,83,42,0.5)", background: "#FDF0E4" }
+                      : { borderColor: "#E7E4DE" }
+                  }
+                >
+                  <span
+                    className="font-mono text-[10px] font-bold tabular-nums transition-colors duration-300"
+                    style={{ color: s.grow && grown ? "#B4532A" : "#33302C" }}
+                  >
+                    {mins}
+                  </span>
+                  <span className="text-[8.5px] text-brand-gray">min</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="mt-2 flex items-center gap-1.5">
+          <span className="text-[8.5px] text-brand-gray">Add stage:</span>
+          {["Opening", "Scoreboard Review", "One Page Plan"].map((a) => (
+            <span key={a} className="inline-flex items-center gap-1 rounded-full border border-dashed border-[#D5D0C7] px-2 py-[2px] text-[8.5px] font-medium text-brand-charcoal">
+              <PlusIcon className="h-[8px] w-[8px]" />
+              {a}
+            </span>
+          ))}
+        </div>
+
+        <div className="mt-3 flex items-center justify-end gap-3">
+          <span className="text-[11px] font-semibold text-brand-charcoal">Cancel</span>
+          <div
+            ref={createRef}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-brand-ink px-3.5 py-1.5 text-[11.5px] font-semibold text-white"
+          >
+            <CheckIcon className="h-[11px] w-[11px]" />
+            Create
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------- ACT 0.7
+// The calendar confirmation.
+//
+// CAVEAT, and it is written on the page as well as here: nobody has screenshotted
+// this. What IS confirmed is that Google Calendar is a listed integration, and
+// that the Meetings page tracks "provider, invitation, and Scribe status" per
+// meeting. Auto-adding on create is the inference. See the notes, section 6.
+function CalToast() {
+  return (
+    <div className="sop-pop absolute bottom-3 right-3 z-[70] w-[268px] overflow-hidden rounded-[12px] border border-[#E3E0DA] bg-white shadow-[0_20px_44px_-18px_rgba(20,14,6,0.42)]">
+      <div className="flex items-center gap-2 border-b border-[#F1EEE9] px-3 py-2">
+        <GCalIcon className="h-[15px] w-[15px] flex-none" />
+        <span className="text-[10.5px] font-bold text-brand-ink">Added to Google Calendar</span>
+        {/* CheckIcon takes only a className, so the colour rides on a wrapper */}
+        <span className="ml-auto flex-none" style={{ color: GREEN }}>
+          <CheckIcon className="h-[12px] w-[12px]" />
+        </span>
+      </div>
+      <div className="px-3 py-2">
+        <div className="flex items-start gap-2">
+          <div className="w-[2.5px] flex-none self-stretch rounded-full" style={{ background: "#4285F4" }} />
+          <div className="min-w-0">
+            <div className="truncate text-[10.5px] font-semibold text-brand-ink">{NEW_MEETING}</div>
+            <div className="font-mono text-[9px] text-brand-gray">Tuesdays 11:00 to 11:35</div>
+          </div>
+        </div>
+        <div className="mt-2 flex items-center gap-1.5 border-t border-[#F1EEE9] pt-2 text-[9px] text-brand-gray">
+          <PeopleIcon className="h-[10px] w-[10px] flex-none" />
+          Invites sent to 3 people, and the video link is on the event.
+        </div>
+      </div>
     </div>
   );
 }

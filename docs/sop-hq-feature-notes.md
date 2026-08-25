@@ -355,9 +355,41 @@ Dashboard mockups across the site use **Skylar Lewis (SL)** as the owner persona
 
 Done:
 
-- **Hero** rewritten to one loop: department, subject, open a SOP, back, New SOP, format,
-  start from blank, title, editor, add a Text block and write in it. Content generalised, and the
-  invented off-palette colours dropped in favour of the five the app already ships.
+- **Hero** now runs four acts, at the client's direction (August 2026), because the old loop
+  showed navigation and none of the headline features:
+  0. *the cross-out* &mdash; the loop opens on `This replaces` over the Trainual wordmark, a marker
+     draws across it in two passes, it dims, then dissolves and the library rises into its place.
+     About 2.7s. Placement options were reviewed in
+     [`design/sop-hq-replaces-placement-options.html`](../design/sop-hq-replaces-placement-options.html);
+     this is option C. The mark is no longer a caption above the animation.
+  1. *read* &mdash; department, subject, open a SOP, back to the library
+  2. *record* &mdash; New SOP, single document, start from blank, title, then the **Screen Record**
+     block rather than a Text block: the Screen / Screen + Camera / Camera switch, the draggable
+     camera bubble, and Start recording with a live Duration
+  3. *narrate* &mdash; back out, New SOP again, this time **Record a walkthrough with screenshots**:
+     mic pick, the browser's own share sheet, the 3 second countdown, the recording strip over the
+     working library, then **the tour switches to the shared tab**: the document being narrated,
+     with the browser's own `Sharing this tab to app.multiplyos.com` bar and `Stop sharing` above
+     it. Stop sharing hands back to SOP HQ with the AI SOP Agent drafting notice, then the draft
+     opens itself with a heading, prose with the key terms bolded, and the screenshots it cut out
+     of the recording, each labelled with the timestamp it came from.
+
+     Two things here are deliberate, both from watching the live product:
+     - **The shared tab is never Multiply OS.** It is a document, currently the refund policy.
+       Recording the product inside the product is circular, and a SOP is a record of work done
+       somewhere else. Multiply OS stays in the share sheet's tab list, unpicked, so the cursor is
+       seen passing it. `PICK_TAB` selects which one.
+     - **The SOP that comes out matches the document it was recorded over.** Change the shared doc
+       and `DRAFT_TITLE` / `DRAFT_HEADING` / `DRAFT_PROSE` have to move with it, or the tour
+       narrates one thing and writes another. `Issuing a Refund` also lines up with the Quiz block
+       further down the page, which asks who approves a refund inside thirty days.
+
+  **Roughly 58s a loop, measured in the browser.** That is long for a hero.
+  `SHOW_BROWSE = false` in `SopHqHeroTour.tsx` drops act one, which buys back about 8s and takes
+  it to ~50s: the cross-out then leads straight into the two recording paths, which are the only
+  parts the client asked to highlight. Worth doing before this goes to them.
+- **Content generalised**, and the invented off-palette colours dropped in favour of the five the
+  app already ships.
 - **Section 2** is now **Blocks**, a playable palette that toggles the ten block types in and out
   of a document. It replaced the AI Agent walkthrough.
 - **The AI Agent walkthrough** moved into the Multi AI closer, rendered under the wired diagram
@@ -367,11 +399,15 @@ Done:
 
 - Department icon colours for the invented departments need a brand pass. People & HR is
   currently a purple that is off-palette.
-- The hero animation flow is still being chosen. Options live in
-  [`design/sop-hq-hero-flow-options.html`](../design/sop-hq-hero-flow-options.html).
-- Nothing on the page currently mentions the four ways a SOP gets started, the AI walkthrough
-  recorder, the Quiz completion gate, `Required training` / `Link a course`, `Versions`, or
-  `Read aloud`. All are real and all are sellable.
+- **The Share panel is still undocumented.** Section 3 records the `Share` button in the toolbar,
+  but nothing behind it: permission levels, whether a public link exists, and what
+  `Required training` / `Link a course` actually does. Screenshots needed before the page can
+  claim anything about sharing, which the client has asked for by name.
+- The page still does not mention the Quiz completion gate, `Versions`, or `Read aloud`. All are
+  real and all are sellable. The four ways in and the AI walkthrough recorder are now covered by
+  the hero.
+- Ashley Acker's top three for Projects, Metrics, and Team Meetings are still outstanding, so the
+  same hero pass cannot yet run on those pages.
 - The four ways in (blank, record, generate, import) may deserve a section of their own. The page
   currently only argues that SOPs are easy to read, never that they are easy to write.
 - Role gating exists (`Your role doesn't allow editing this feature`), so the page should not imply

@@ -230,7 +230,11 @@ function TrendDemo() {
 // Mirrors the live "Add metric" modal: name, type, direction, weekly goal, owner,
 // notes, then grouping and roll-up tucked under advanced settings. Static by
 // design, no stepped fill animation.
-const OWNER = "Skylar Lewis (skylar@rise...";
+// Deliberately unset. A new metric arrives with nobody on it, so the owner field
+// is the question the form makes you answer rather than a default you inherit
+// from whoever happened to click Add. The hero tour shows the same empty state
+// as a dashed "+" in the Owner column.
+const OWNER_PLACEHOLDER = "Select an owner";
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -253,9 +257,13 @@ function Input({ value, muted }: { value: string; muted?: boolean }) {
   );
 }
 
-function Select({ value }: { value: string }) {
+function Select({ value, muted }: { value: string; muted?: boolean }) {
   return (
-    <div className="flex h-[34px] items-center gap-2 rounded-lg border border-[#E3E0DA] bg-white px-3 text-[12.5px] font-medium text-brand-ink">
+    <div
+      className={`flex h-[34px] items-center gap-2 rounded-lg border border-[#E3E0DA] bg-white px-3 text-[12.5px] ${
+        muted ? "text-brand-gray" : "font-medium text-brand-ink"
+      }`}
+    >
       <span className="min-w-0 flex-1 truncate">{value}</span>
       <svg viewBox="0 0 24 24" className="h-3 w-3 flex-none text-brand-gray" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round">
         <path d="M6 9l6 6 6-6" />
@@ -302,7 +310,7 @@ function AddMetricDemo() {
             <Input value="110" />
           </Field>
           <Field label="Owner">
-            <Select value={OWNER} />
+            <Select value={OWNER_PLACEHOLDER} muted />
           </Field>
         </div>
 

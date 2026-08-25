@@ -1009,6 +1009,11 @@ export default function SopHqPage() {
               className="overflow-hidden rounded-2xl p-2 sm:rounded-[30px] sm:p-8"
               style={{ background: "linear-gradient(160deg, #FFF1E2, #FFE7D2)" }}
             >
+              {/* The cross-out is not here any more: it is the tour's opening
+                  beat, so the mark and the product it replaces share one motion
+                  rather than sitting in separate boxes. See ActZero in
+                  SopHqHeroTour. ReplacesStrip is still what the other three
+                  feature pages will use. */}
               <SopHqHeroTour />
             </div>
           </Reveal>

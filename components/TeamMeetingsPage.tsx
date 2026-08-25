@@ -1174,13 +1174,13 @@ export default function TeamMeetingsPage() {
               </span>
             </span>
             <h1 className="text-[24px] font-extrabold leading-[1.1] tracking-tight text-brand-ink sm:text-[66px] sm:leading-[1.04]">
-              Run the meeting,
+              Start loving
               <br />
-              <span className="text-brand-orange">not the notes.</span>
+              <span className="text-brand-orange">meetings.</span>
             </h1>
             <p className="mx-auto mt-3.5 max-w-2xl text-[14.5px] leading-relaxed text-brand-charcoal sm:mt-7 sm:text-xl">
-              <span className="sm:hidden">A timeboxed agenda that steps itself. Nothing gets dropped, nothing starts from zero.</span>
-              <span className="hidden sm:inline">A timeboxed agenda that steps itself, for the whole team and for one person at a time.
+              <span className="sm:hidden">Finally a strategic agenda that guides itself. Nothing gets dropped, nothing starts from zero.</span>
+              <span className="hidden sm:inline">Finally a strategic agenda that guides itself, for the whole team and for one person at a time.
               Nothing gets dropped, and nothing starts from zero.</span>
             </p>
           </Reveal>

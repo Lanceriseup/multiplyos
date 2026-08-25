@@ -25,10 +25,26 @@
 // height card, so it never resizes mid-tour.
 import { useEffect, useRef, useState } from "react";
 import { useInView, useReducedMotion } from "framer-motion";
+import ActZero, { runZero, type Zero } from "./ReplacesActZero";
 
 const MIN_W = 980; // narrower than this and the whole stage scales down
 const STAGE_H = 500; // card height, sized to the tallest view (the library home)
 const EASE = "cubic-bezier(0.22,1,0.36,1)";
+
+// The pull-back at the end, borrowed from the Team Meetings tour and for the
+// same reason: the rail sits BEHIND the content plate and is never scaled, so it
+// is invisible until the plate retreats, and so the one cursor target used while
+// zoomed still measures true. RAIL_W and ZOOM together decide the travel: the
+// plate's left edge must clear the rail and its right edge must stay on stage.
+const RAIL_W = 158;
+const RAIL_GAP = 14;
+const ZOOM = 0.84;
+
+// Left edge after scaling about the centre is (w - w*ZOOM)/2, so this is the
+// extra translation needed to clear the rail, in pre-scale units.
+function plateShift(w: number) {
+  return Math.max(0, (RAIL_W + RAIL_GAP - (w * (1 - ZOOM)) / 2) / ZOOM);
+}
 
 // ---------------------------------------------------------------- icons
 const ico = {
@@ -286,6 +302,46 @@ const Chat = ({ className }: IconProps) => (
     <path d="M20.4 12.6a7.4 7.4 0 0 1-7.4 7.4 8 8 0 0 1-3.3-.7L4.4 21l1.7-4.9a7.4 7.4 0 1 1 14.3-3.5z" />
   </svg>
 );
+const Mic = ({ className }: IconProps) => (
+  <svg className={className} {...ico}>
+    <rect x="9" y="3" width="6" height="10.4" rx="3" />
+    <path d="M5.6 11.4a6.4 6.4 0 0 0 12.8 0M12 17.8V21M9 21h6" />
+  </svg>
+);
+const PauseGlyph = ({ className }: IconProps) => (
+  <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+    <rect x="7" y="5.4" width="3.6" height="13.2" rx="1.1" />
+    <rect x="13.4" y="5.4" width="3.6" height="13.2" rx="1.1" />
+  </svg>
+);
+const StopGlyph = ({ className }: IconProps) => (
+  <svg className={className} {...ico} strokeWidth={2}>
+    <rect x="6.2" y="6.2" width="11.6" height="11.6" rx="1.6" />
+  </svg>
+);
+// The three tabs on the browser's own share sheet.
+const TabGlyph = ({ className }: IconProps) => (
+  <svg className={className} {...ico} strokeWidth={1.8}>
+    <path d="M3.2 8.4h6.2l1.6-2.6h9.8v12.4H3.2z" />
+  </svg>
+);
+const WindowGlyph = ({ className }: IconProps) => (
+  <svg className={className} {...ico} strokeWidth={1.8}>
+    <rect x="3.2" y="4.6" width="17.6" height="14.8" rx="2" />
+    <path d="M3.2 9h17.6" />
+  </svg>
+);
+const AllScreenGlyph = ({ className }: IconProps) => (
+  <svg className={className} {...ico} strokeWidth={1.8}>
+    <path d="M4 8.4V5.6a1.6 1.6 0 0 1 1.6-1.6h2.8M15.6 4h2.8A1.6 1.6 0 0 1 20 5.6v2.8M20 15.6v2.8a1.6 1.6 0 0 1-1.6 1.6h-2.8M8.4 20H5.6A1.6 1.6 0 0 1 4 18.4v-2.8" />
+  </svg>
+);
+const SpeakerSmall = ({ className }: IconProps) => (
+  <svg className={className} {...ico} strokeWidth={1.8}>
+    <path d="M4.6 9.4h3.2L12 6v12l-4.2-3.4H4.6z" />
+    <path d="M15.4 9.6a3.4 3.4 0 0 1 0 4.8" />
+  </svg>
+);
 
 // ---------------------------------------------------------------- data
 type Dept = {
@@ -404,26 +460,226 @@ const BLOCKS: { label: string; icon: (p: IconProps) => React.JSX.Element }[] = [
 ];
 
 const NEW_TITLE = "Client Kickoff Call";
-const BLOCK_HEADING = "Before the call";
+
+// ---------------------------------------------------------------- recording
+// Act two records a video into a blank SOP. Act three narrates a walkthrough and
+// lets the AI SOP Agent write the SOP from it. Both are real paths in the
+// product: see docs/sop-hq-feature-notes.md, sections 5 and 6.
+type RecSrc = "screen" | "both" | "camera";
+
+const REC_SOURCES: { key: RecSrc; label: string; icon: (p: IconProps) => React.JSX.Element }[] = [
+  { key: "screen", label: "Screen", icon: Monitor },
+  { key: "both", label: "Screen + Camera", icon: VideoGlyph },
+  { key: "camera", label: "Camera", icon: CameraGlyph },
+];
+
+// The tabs on the browser share sheet.
+//
+// Multiply OS is deliberately in this list and deliberately not the one picked:
+// the cursor glides past it to the CRM. Recording the product inside the product
+// would be circular, and the SOP that comes out of this recording is about
+// setting up a client in the CRM, so the shared tab has to be the CRM for the
+// draft to make sense.
+const SHARE_TABS = [
+  { title: "Multiply OS · SOP HQ", dot: "#F0821E" },
+  { title: "Your CRM · Client accounts", dot: "#2E9BD6" },
+  { title: "Refund Policy 2026 · Docs", dot: "#4285F4" },
+];
+
+const PICK_TAB = 2; // the policy document
+
+// The shared tab, as the browser draws it while a capture runs. Chrome puts its
+// own bar above the page, and Stop sharing there ends the recording just as
+// Finish & draft does inside Multiply OS.
+const SHARED_DOC_TITLE = "Refund Policy 2026";
+const SHARED_ORIGIN = "app.multiplyos.com";
+
+// A few lines of the document, so the tab reads as a real page being narrated.
+const SHARED_DOC_BODY = [
+  "Refunds requested inside thirty days of purchase are approved automatically.",
+  "No manager sign-off is required, and the finance team is notified by email.",
+  "Requests past thirty days route to the account manager for review first.",
+  "Chargebacks are handled separately. See the disputes procedure.",
+];
+
+// What the AI SOP Agent hands back. The prose is chunked rather than one string
+// so the bolded terms survive being typed a character at a time.
+// Drawn from the document the walkthrough was recorded over, and deliberately
+// the same procedure the Quiz block further down the page asks about.
+const DRAFT_TITLE = "Issuing a Refund";
+const DRAFT_HEADING = "When a refund needs approval";
+
+const DRAFT_PROSE: { t: string; b?: boolean }[] = [
+  { t: "Inside " },
+  { t: "thirty days", b: true },
+  { t: " a refund is " },
+  { t: "automatic", b: true },
+  { t: ", so nobody signs it off. Past thirty days it routes to the " },
+  { t: "account manager", b: true },
+  { t: " first." },
+];
+
+const DRAFT_PROSE_LEN = DRAFT_PROSE.reduce((n, c) => n + c.t.length, 0);
+
+// Timestamps the screenshots were pulled from, which is the detail that makes
+// "pulled straight out of the recording" land.
+const DRAFT_SHOTS = ["from 0:18", "from 0:41"];
+
+// ---------------------------------------------------------------- the shared tab
+// What the browser shows once a capture is running: Chrome's own bar pinned above
+// whatever page you switched to, with Stop sharing on it. The page underneath is
+// the document being narrated, not Multiply OS, because a SOP is a record of work
+// done somewhere else.
+function SharedTabView({ scene }: { scene: Scene }) {
+  const hot = scene.hot === "stop-share";
+  return (
+    <div className="sop-view flex h-full flex-col bg-[#F1F0EE]">
+      {/* the browser's sharing bar, drawn as the browser draws it */}
+      <div className="flex flex-none items-center justify-center gap-2.5 bg-[#3B3A38] px-5 py-2 text-white">
+        <ScreenGlyph className="h-3.5 w-3.5 flex-none text-white/80" />
+        <span className="text-[11.5px]">
+          Sharing this tab to <b className="font-semibold text-[#9CC7F2]">{SHARED_ORIGIN}</b>
+        </span>
+        <span
+          data-t="stop-share"
+          className={`ml-1.5 rounded-full bg-[#5C5A56] px-3 py-1 text-[11px] font-semibold transition-shadow duration-200 ${
+            hot ? "shadow-[0_0_0_3px_rgba(234,123,27,0.5)]" : ""
+          }`}
+        >
+          Stop sharing
+        </span>
+      </div>
+
+      {/* the document's own chrome */}
+      <div className="flex flex-none items-center gap-2.5 border-b border-[#E3E0DA] bg-white px-4 py-2.5">
+        <span className="grid h-[22px] w-[22px] flex-none place-items-center rounded bg-[#4285F4] text-white">
+          <DocGlyph className="h-3.5 w-3.5" />
+        </span>
+        <span className="min-w-0">
+          <span className="block truncate text-[12.5px] font-semibold leading-tight">{SHARED_DOC_TITLE}</span>
+          <span className="flex gap-2.5 text-[9px] text-brand-gray">
+            <span>File</span><span>Edit</span><span>View</span><span>Insert</span><span>Format</span><span>Tools</span>
+          </span>
+        </span>
+        <span className="ml-auto flex flex-none items-center gap-1.5">
+          <span className="rounded-md border border-[#E6E2DB] px-2 py-1 text-[9.5px] font-semibold text-brand-charcoal">
+            Share
+          </span>
+        </span>
+      </div>
+
+      {/* a toolbar strip, so it reads as an editor rather than a print-out */}
+      <div className="flex flex-none items-center gap-3 border-b border-[#E3E0DA] bg-[#F7F5F1] px-4 py-1.5 text-[9.5px] font-semibold text-brand-charcoal">
+        <span>100%</span>
+        <span className="h-2.5 w-px bg-[#DDD8CF]" />
+        <span>Normal text</span>
+        <span className="h-2.5 w-px bg-[#DDD8CF]" />
+        <span className="font-bold">B</span>
+        <span className="italic">I</span>
+        <span className="underline">U</span>
+        <span className="h-2.5 w-px bg-[#DDD8CF]" />
+        <ListGlyph className="h-2.5 w-2.5" />
+        <LinkGlyph className="h-2.5 w-2.5" />
+      </div>
+
+      {/* the page */}
+      <div className="min-h-0 flex-1 overflow-hidden px-10 py-5">
+        <div className="mx-auto h-full max-w-[560px] rounded-t-lg border border-[#E3E0DA] bg-white px-9 py-6 shadow-[0_10px_24px_-16px_rgba(40,30,15,0.3)]">
+          <p className="text-[8.5px] font-bold uppercase tracking-[0.16em] text-brand-orange-dark">
+            Company policy
+          </p>
+          <h4 className="mt-1.5 text-[17px] font-extrabold leading-tight tracking-tight">
+            {SHARED_DOC_TITLE}
+          </h4>
+          <div className="mt-3 space-y-2">
+            {SHARED_DOC_BODY.map((line) => (
+              <p key={line} className="text-[11px] leading-relaxed text-[#2B2926]">
+                {line}
+              </p>
+            ))}
+          </div>
+          <div className="mt-3.5 space-y-1.5">
+            {[92, 78, 86].map((w, i) => (
+              <span key={i} className="block h-1.5 rounded bg-[#EDE9E2]" style={{ width: `${w}%` }} />
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------- act zero
+// The loop opens on the tool this replaces, struck out, before the product
+// appears. The cross-out used to be a caption above the animation; here it is
+// the first thing the animation does. Roughly 2.6s, replayed every loop.
+const ZERO_ITEMS = [{ name: "Trainual", logo: "/replaces-trainual.png" }];
 
 // ---------------------------------------------------------------- scene
-type View = "home" | "subjects" | "soplist" | "read" | "editor";
-type Modal = "" | "format" | "start" | "title";
+// "planner" was added August 2026: the SOP Planner, which is the other half of
+// SOP HQ. The library is where SOPs live; the planner is where you work out
+// which ones you are missing.
+type View = "home" | "subjects" | "soplist" | "read" | "editor" | "shared" | "planner";
+type Modal = "" | "format" | "start" | "title" | "mic" | "picker" | "count";
+// A strip pinned over the library while a walkthrough records, then drafts.
+type Banner = "" | "rec" | "draft";
+// What the editor is holding: nothing, the screen recorder, or the AI draft.
+type Doc = "none" | "rec" | "draft";
 
 type Scene = {
   view: View;
   modal: Modal;
+  banner: Banner;
+  zero: Zero;
   hot: string; // data-t of the element under the cursor
   typed: string; // characters entered in the title field
   caret: boolean;
-  block: 0 | 1 | 2; // 0 none, 1 empty text block, 2 written in
-  written: string;
+  title: string; // the SOP the editor is showing
+
+  doc: Doc;
+  recSrc: RecSrc;
+  recOn: boolean; // Start recording has been pressed
+  recSecs: number; // the block's own Duration counter
+
+  picked: boolean; // a tab is selected on the share sheet
+  count: number; // 3, 2, 1 before a walkthrough starts
+  wtSecs: number; // the walkthrough's elapsed time in the top strip
+
+  draftH: string; // the heading, as it types in
+  draftP: number; // characters of prose written so far
+  shots: number; // screenshots that have landed
+
+  // the pull-back, and the planner it lands on
+  zoomed: boolean;
+  racked: boolean; // the two SOP HQ tabs come into focus on the rail
+  planTyped: string; // the SOP being named in the Operations card
+  planAdded: boolean; // it is on the plan
+  planWho: boolean; // somebody is down to write it
+  planMade: boolean; // and it exists
 };
 
-const BLANK: Scene = { view: "home", modal: "", hot: "", typed: "", caret: false, block: 0, written: "" };
+const BLANK: Scene = {
+  view: "home", modal: "", banner: "", zero: "", hot: "", typed: "", caret: false, title: NEW_TITLE,
+  doc: "none", recSrc: "screen", recOn: false, recSecs: 0,
+  picked: false, count: 3, wtSecs: 0, draftH: "", draftP: 0, shots: 0,
+  zoomed: false, racked: false, planTyped: "", planAdded: false, planWho: false, planMade: false,
+};
 
-// The static frame shown under prefers-reduced-motion: the SOP itself, open.
-const STILL: Scene = { ...BLANK, view: "read" };
+// The static frame shown under prefers-reduced-motion: the finished AI draft,
+// since that is the outcome the whole tour exists to show.
+const STILL: Scene = {
+  ...BLANK, view: "editor", title: DRAFT_TITLE, doc: "draft",
+  draftH: DRAFT_HEADING, draftP: DRAFT_PROSE_LEN, shots: DRAFT_SHOTS.length,
+};
+
+// Act one browses the library. It is the part a returning visitor already knows,
+// so it is the first thing to drop if the loop needs to be shorter: set this to
+// false and the tour opens straight into recording, at roughly 33s a loop
+// instead of 50s.
+const SHOW_BROWSE = true;
+
+// mm:ss for the two running clocks.
+const clock = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 
 // ---------------------------------------------------------------- component
 export default function SopHqHeroTour() {
@@ -442,6 +698,8 @@ export default function SopHqHeroTour() {
   const [scaled, setScaled] = useState(false);
   const [scale, setScale] = useState(1);
   const [boxH, setBoxH] = useState<number | undefined>(undefined);
+  // The plate's own width in pre-scale units, which is what plateShift needs.
+  const [boxW, setBoxW] = useState(MIN_W);
 
   const runRef = useRef(0);
   const scaleRef = useRef(1);
@@ -458,7 +716,9 @@ export default function SopHqHeroTour() {
         scaleRef.current = 1;
         setScale(1);
         setScaled(false);
+        setBoxW(hw);
       } else {
+        setBoxW(MIN_W);
         const s = hw / MIN_W;
         scaleRef.current = s;
         setScale(s);
@@ -586,72 +846,209 @@ export default function SopHqHeroTour() {
       }
     };
 
+    // Runs a clock up from zero, one tick a second, bailing if the tour moves on.
+    const tick = async (n: number, apply: (s: number) => void) => {
+      for (let i = 1; i <= n; i++) {
+        await wait(1000);
+        if (!alive()) return;
+        apply(i);
+      }
+    };
+
     (async function loop() {
       setCursor(160, 46);
       while (alive()) {
+        // ============================================ act zero: the cross-out
+        // Runs before the cursor appears, so the first thing on screen is the
+        // tool being replaced rather than a pointer looking for something.
         setScene({ ...BLANK });
-        await wait(360);
-        if (!alive()) return;
+        if (!(await runZero((z) => patch({ zero: z }), wait, alive, ZERO_ITEMS.length))) return;
         await fade(1);
 
-        // --- 1. open the department
-        if (!(await tap("dept-0", 720))) return;
-        patch({ view: "subjects" });
-        await wait(760);
+        // ============================================== act one: read a SOP
+        if (SHOW_BROWSE) {
+          // --- open the department
+          if (!(await tap("dept-0", 720))) return;
+          patch({ view: "subjects" });
+          await wait(680);
 
-        // --- 2. open the subject
-        if (!(await tap("subj-0", 600))) return;
-        patch({ view: "soplist" });
-        await wait(760);
+          // --- open the subject
+          if (!(await tap("subj-0", 600))) return;
+          patch({ view: "soplist" });
+          await wait(680);
 
-        // --- 3. open the SOP, and let it be read
-        if (!(await tap("sop-0", 600))) return;
-        patch({ view: "read" });
-        await wait(2100);
+          // --- open the SOP, and let it be read
+          if (!(await tap("sop-0", 600))) return;
+          patch({ view: "read" });
+          await wait(1500);
 
-        // --- 4. back to the library
-        if (!(await tap("crumb", 640))) return;
-        patch({ view: "home" });
-        await wait(700);
+          // --- back to the library
+          if (!(await tap("crumb", 620))) return;
+          patch({ view: "home" });
+          await wait(560);
+        }
 
-        // --- 5. New SOP, three modals
-        if (!(await tap("new-sop", 660))) return;
+        // ====================== act two: a blank SOP, with a screen recording
+        if (!(await tap("new-sop", 640))) return;
         patch({ modal: "format" });
-        await wait(560);
+        await wait(500);
 
-        if (!(await tap("fmt-single", 560))) return;
+        if (!(await tap("fmt-single", 520))) return;
         patch({ modal: "start" });
-        await wait(560);
+        await wait(500);
 
-        if (!(await tap("start-blank", 560))) return;
+        if (!(await tap("start-blank", 520))) return;
         patch({ modal: "title" });
-        await wait(560);
+        await wait(460);
 
         // type the title, then create
-        await glide(pointAt("title-field"), 520);
+        await glide(pointAt("title-field"), 500);
         if (!alive()) return;
         await click();
         patch({ caret: true });
-        await wait(240);
+        await wait(220);
         await type(NEW_TITLE, (v) => patch({ typed: v }));
         if (!alive()) return;
-        await wait(420);
-        if (!(await tap("create", 520))) return;
+        await wait(360);
+        if (!(await tap("create", 500))) return;
         patch({ modal: "", view: "editor", caret: false });
+        await wait(600);
+
+        // --- the Screen Record block, rather than a paragraph of text
+        if (!(await tap("blk-3", 640))) return;
+        patch({ doc: "rec" });
+        await wait(680);
+
+        // pick a source, so the Screen / Screen + Camera / Camera choice registers
+        if (!(await tap("src-both", 520))) return;
+        patch({ recSrc: "both" });
+        await wait(480);
+
+        // and roll it
+        if (!(await tap("rec-start", 540))) return;
+        patch({ recOn: true });
+        await tick(3, (s) => patch({ recSecs: s }));
+        if (!alive()) return;
+        await wait(500);
+
+        // ============ act three: a walkthrough, written up by the AI SOP Agent
+        if (!(await tap("all-sops", 620))) return;
+        patch({ view: "home", doc: "none", recOn: false, recSecs: 0, recSrc: "screen" });
+        await wait(560);
+
+        if (!(await tap("new-sop", 600))) return;
+        patch({ modal: "format" });
+        await wait(460);
+
+        if (!(await tap("fmt-single", 520))) return;
+        patch({ modal: "start" });
+        await wait(500);
+
+        // this time, the second card
+        if (!(await tap("start-record", 560))) return;
+        patch({ modal: "mic" });
         await wait(720);
 
-        // --- 6. add a block and write in it
-        if (!(await tap("blk-0", 640))) return;
-        patch({ block: 1 });
-        await wait(620);
-        await type(BLOCK_HEADING, (v) => patch({ written: v }), 58);
+        if (!(await tap("mic-go", 560))) return;
+        patch({ modal: "picker" });
+        await wait(600);
+
+        // the browser's own share sheet: pick a tab, then Share
+        if (!(await tap(`tab-${PICK_TAB}`, 540))) return;
+        patch({ picked: true });
+        await wait(340);
+
+        if (!(await tap("share-go", 480))) return;
+        patch({ view: "shared", modal: "count", count: 3 });
+        await fade(0, 200);
+        await wait(660);
         if (!alive()) return;
-        patch({ block: 2 });
-        await wait(2400);
+        patch({ count: 2 });
+        await wait(660);
+        if (!alive()) return;
+        patch({ count: 1 });
+        await wait(660);
+
+        // Recording. The browser's bar is the only chrome on screen, because the
+        // page being narrated is not ours.
+        if (!alive()) return;
+        patch({ modal: "" });
+        await wait(2600);
+        if (!alive()) return;
+        await fade(1, 200);
+
+        // Stop sharing, from the browser's bar, ends it and hands back to the app.
+        if (!(await tap("stop-share", 620))) return;
+        patch({ view: "home", banner: "draft" });
+        await wait(2000);
+
+        // --- the draft opens on its own
+        if (!alive()) return;
+        patch({ view: "editor", banner: "", title: DRAFT_TITLE, doc: "draft" });
+        await wait(520);
+        await type(DRAFT_HEADING, (v) => patch({ draftH: v }), 30);
+        if (!alive()) return;
+        await wait(280);
+
+        // prose is typed by character count, so the bold runs stay bold
+        for (let i = 1; i <= DRAFT_PROSE_LEN; i++) {
+          if (!alive()) return;
+          patch({ draftP: i });
+          await wait(13);
+        }
+        await wait(300);
+
+        // then the screenshots the agent pulled out of the recording
+        for (let i = 1; i <= DRAFT_SHOTS.length; i++) {
+          patch({ shots: i });
+          await wait(480);
+          if (!alive()) return;
+        }
+        await wait(1700);
+
+        // ============================ act four: the other half of SOP HQ
+        // The plate pulls back and the rail is revealed, already soft. The only
+        // thing the eye tracks is the pair of SOP HQ tabs coming into focus,
+        // which is why the rack waits for the pull-back to settle.
+        patch({ zoomed: true });
+        await wait(600);
+        patch({ racked: true });
+        await wait(900);
+
+        if (!(await tap("nav-planner", 780))) return;
+        patch({ view: "planner", zoomed: false, racked: false, doc: "none", banner: "" });
+        // let the scale settle before anything inside the plate is measured
+        await wait(900);
+        await wait(1500);
+
+        // --- name a process the company does not have written down
+        await glide(pointAt("plan-field"), 620);
+        if (!alive()) return;
+        await click();
+        for (let i = 1; i <= PLAN_SOP.length; i++) {
+          if (!alive()) return;
+          patch({ planTyped: PLAN_SOP.slice(0, i) });
+          await wait(26);
+        }
+        await wait(320);
+
+        if (!(await tap("plan-add", 520))) return;
+        patch({ planAdded: true, planTyped: "" });
+        await wait(900);
+
+        // --- put somebody's name against it
+        if (!(await tap("plan-who", 560))) return;
+        patch({ planWho: true });
+        await wait(900);
+
+        // --- and it stops being a plan
+        if (!(await tap("plan-create", 560))) return;
+        patch({ planMade: true });
+        await wait(2600);
 
         if (!alive()) return;
         await fade(0);
-        await wait(560);
+        await wait(520);
       }
     })();
 
@@ -677,24 +1074,63 @@ export default function SopHqHeroTour() {
         >
           <div
             ref={cardRef}
-            className="relative overflow-hidden rounded-2xl border border-black/5 bg-[#FAF9F7] text-brand-ink shadow-[0_30px_60px_-30px_rgba(40,30,15,0.45),0_2px_6px_-3px_rgba(40,30,15,0.12)]"
+            className="relative overflow-hidden rounded-2xl border border-black/5 bg-[#F3F1ED] text-brand-ink shadow-[0_30px_60px_-30px_rgba(40,30,15,0.45),0_2px_6px_-3px_rgba(40,30,15,0.12)]"
             style={{ height: STAGE_H }}
           >
-            {scene.view === "home" && <HomeView scene={scene} />}
-            {scene.view === "subjects" && <SubjectsView scene={scene} />}
-            {scene.view === "soplist" && <SopListView scene={scene} />}
-            {scene.view === "read" && <ReadView scene={scene} />}
-            {scene.view === "editor" && <EditorView scene={scene} />}
+            {/* Behind the plate and never scaled, so it is invisible until the
+                pull-back uncovers it, and so the one cursor target used while
+                zoomed still measures true. */}
+            <NavRail scene={scene} />
+
+            <div
+              className="absolute inset-0 z-[2] overflow-hidden bg-[#FAF9F7]"
+              style={{
+                transform: scene.zoomed
+                  ? `scale(${ZOOM}) translateX(${plateShift(boxW)}px)`
+                  : "none",
+                transformOrigin: "center center",
+                transition: `transform 780ms ${EASE}, box-shadow 780ms ${EASE}, border-radius 780ms ${EASE}`,
+                boxShadow: scene.zoomed ? "0 26px 54px -24px rgba(40,30,15,0.5)" : "0 0 0 rgba(0,0,0,0)",
+                borderRadius: scene.zoomed ? 14 : 0,
+              }}
+            >
+              {/* A strip pushes the page down rather than covering its heading,
+                  which is what the product does. The overflow it costs at the
+                  bottom is clipped by the card, so the page just reads as
+                  continuing past the frame. */}
+              <div className="h-full" style={{ paddingTop: scene.banner ? 41 : undefined }}>
+                {scene.view === "home" && <HomeView scene={scene} />}
+                {scene.view === "subjects" && <SubjectsView scene={scene} />}
+                {scene.view === "soplist" && <SopListView scene={scene} />}
+                {scene.view === "read" && <ReadView scene={scene} />}
+                {scene.view === "editor" && <EditorView scene={scene} />}
+                {scene.view === "shared" && <SharedTabView scene={scene} />}
+                {scene.view === "planner" && <PlannerView scene={scene} />}
+              </div>
+
+              {/* the walkthrough strips, pinned over whatever view is showing */}
+              {scene.banner === "rec" && <RecBanner scene={scene} />}
+              {scene.banner === "draft" && <DraftBanner />}
+            </div>
+
+            {/* the opening cross-out, over the library it is about to become */}
+            {scene.zero && <ActZero state={scene.zero} items={ZERO_ITEMS} bg="#FAF9F7" />}
 
             {scene.modal && <ModalLayer scene={scene} />}
 
-            {/* Ask Multi AI, present on every screen in the product */}
-            <span className="pointer-events-none absolute bottom-4 right-5 z-[50] flex items-center gap-1.5 rounded-full border border-[#F7D8B4] bg-white px-3 py-1.5 text-[11px] font-semibold text-brand-ink shadow-[0_10px_22px_-10px_rgba(40,30,15,0.5)]">
-              <span className="grid h-[18px] w-[18px] place-items-center rounded-full bg-gradient-to-br from-[#F49230] to-[#DE6F14] text-white">
-                <Spark className="h-[10px] w-[10px]" />
+            {/* Ask Multi AI, present on every screen in the product, and only
+                there: on the shared tab we are looking at somebody else's page,
+                so none of the app's own chrome belongs. It also steps aside
+                during the pull-back, where it would float over the rail rather
+                than sit on the app it belongs to. */}
+            {scene.view !== "shared" && !scene.zoomed && (
+              <span className="pointer-events-none absolute bottom-4 right-5 z-[50] flex items-center gap-1.5 rounded-full border border-[#F7D8B4] bg-white px-3 py-1.5 text-[11px] font-semibold text-brand-ink shadow-[0_10px_22px_-10px_rgba(40,30,15,0.5)]">
+                <span className="grid h-[18px] w-[18px] place-items-center rounded-full bg-gradient-to-br from-[#F49230] to-[#DE6F14] text-white">
+                  <Spark className="h-[10px] w-[10px]" />
+                </span>
+                Ask Multi AI
               </span>
-              Ask Multi AI
-            </span>
+            )}
           </div>
 
           {/* ---------------- cursor + ripple ---------------- */}
@@ -718,6 +1154,249 @@ export default function SopHqHeroTour() {
             <path d="M5 3l14 8-6 1.5 3.5 6-2.8 1.6-3.5-6L7 18z" />
           </svg>
         </div>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------- the rail
+// Rack focus: everything is soft, and only the two SOP HQ tabs sharpen once the
+// plate has settled. The blur is applied per row rather than to the rail itself,
+// because a filter on a parent rasterises its children with it and a child can
+// never un-blur itself back out of an ancestor's filter.
+const SOFT = { filter: "blur(3.4px)", opacity: 0.5 };
+const SHARP = { filter: "blur(0px)", opacity: 1 };
+
+const RAIL = [
+  { k: "dash", label: "Dashboard", icon: GridGlyph },
+  { k: "plan", label: "One Page Plan", icon: Star },
+  { k: "score", label: "Scoreboards", icon: Trend },
+  { k: "meet", label: "Team Meetings", icon: Clock },
+  { k: "sop", label: "SOP HQ", icon: Folder, parent: true },
+  { k: "lib", label: "SOP Library", icon: DocGlyph, sub: true, focus: true },
+  { k: "planner", label: "SOP Planner", icon: StepsGlyph, sub: true, focus: true },
+  { k: "forms", label: "Forms & Checklists", icon: ListGlyph },
+];
+
+function NavRail({ scene }: { scene: Scene }) {
+  const RACK = `filter 620ms ${EASE}, opacity 620ms ${EASE}`;
+  const active = scene.view === "planner" ? "planner" : "lib";
+
+  return (
+    <div
+      className="absolute inset-y-0 left-0 z-0 flex flex-col border-r border-[#E7E4DE] bg-white"
+      style={{ width: RAIL_W }}
+    >
+      <div className="flex items-center gap-2 px-3 py-3.5" style={{ ...SOFT, transition: RACK }}>
+        <span className="grid h-[21px] w-[21px] flex-none place-items-center rounded-[7px] bg-brand-orange text-[10.5px] font-black text-white">
+          M
+        </span>
+        <span className="text-[12px] font-extrabold tracking-tight">Multiply OS</span>
+      </div>
+
+      <div className="px-2 pb-2">
+        {RAIL.map((n) => {
+          const on = n.k === active;
+          const Icon = n.icon;
+          return (
+            <div
+              key={n.k}
+              data-t={n.k === "planner" ? "nav-planner" : undefined}
+              className="mb-0.5 flex items-center gap-2 rounded-[9px] py-[6px] pr-2"
+              style={{
+                paddingLeft: n.sub ? 22 : 8,
+                background: on
+                  ? "#FDF0E4"
+                  : scene.hot === "nav-planner" && n.k === "planner"
+                    ? "#FFF6EC"
+                    : "transparent",
+                color: on ? "#C9650F" : n.parent ? "#33302C" : "#6F6A62",
+                ...(n.focus && scene.racked ? SHARP : SOFT),
+                transition: `${RACK}, background 400ms, color 400ms`,
+              }}
+            >
+              <Icon className={n.sub ? "h-[11px] w-[11px] flex-none" : "h-[13px] w-[13px] flex-none"} />
+              <span className={`whitespace-nowrap font-semibold ${n.sub ? "text-[10.5px]" : "text-[11px]"}`}>
+                {n.label}
+              </span>
+              {n.k === "planner" && (
+                <span
+                  className="ml-auto h-[6px] w-[6px] flex-none rounded-full transition-opacity duration-500"
+                  style={{ background: "#E2703A", opacity: scene.racked ? 1 : 0 }}
+                />
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------- view: planner
+// The other half of SOP HQ. The library answers "where is the process"; the
+// planner answers "which processes do we not have yet", which is the harder
+// question and the one nobody asks until somebody leaves.
+const PLAN_DEPTS = DEPTS.slice(0, 8);
+const PLAN_DEPT = 0; // Operations
+const PLAN_SOP = "Customer Service SOP";
+
+function PlannerView({ scene }: { scene: Scene }) {
+  const planned = scene.planAdded ? 1 : 0;
+  const made = scene.planMade ? 1 : 0;
+  const pct = planned ? Math.round((made / planned) * 100) : 0;
+
+  return (
+    <div className="sop-view flex h-full flex-col px-7 pb-5 pt-5">
+      <div className="flex flex-none items-start gap-3">
+        <span className="grid h-[34px] w-[34px] flex-none place-items-center rounded-[11px] bg-[#16233D] text-white">
+          <StepsGlyph className="h-[18px] w-[18px]" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <h3 className="text-[21px] font-extrabold tracking-tight">SOP Planner</h3>
+          <p className="mt-0.5 text-[11px] leading-snug text-brand-charcoal">
+            Map out the core SOPs each department needs, assign who will write each one, and create
+            them when you are ready.
+          </p>
+        </span>
+      </div>
+
+      {/* overall progress */}
+      <div className="mt-3 flex-none rounded-xl border border-[#EBE7E0] bg-white px-3.5 py-2.5">
+        <p className="text-[9px] font-bold uppercase tracking-[0.11em] text-brand-gray">
+          Overall progress
+        </p>
+        <p className="mt-0.5 flex items-baseline gap-2">
+          <span className="text-[17px] font-extrabold tabular-nums">{made}</span>
+          <span className="text-[11px] text-brand-charcoal">
+            of {planned} planned SOP{planned === 1 ? "" : "s"} created
+          </span>
+          <span
+            className="ml-auto text-[19px] font-extrabold tabular-nums transition-colors duration-500"
+            style={{ color: pct === 100 ? "#17A673" : "#0A0A0A" }}
+          >
+            {pct}%
+          </span>
+        </p>
+        <span className="mt-1.5 block h-[5px] w-full overflow-hidden rounded-full bg-[#EFECE6]">
+          <span
+            className="block h-full rounded-full transition-all duration-700"
+            style={{ width: `${pct}%`, background: "#17A673" }}
+          />
+        </span>
+      </div>
+
+      {/* one card per department */}
+      <div className="mt-2.5 grid min-h-0 flex-1 grid-cols-2 gap-2 overflow-hidden">
+        {PLAN_DEPTS.map((d, i) => {
+          const Icon = d.icon;
+          const isTarget = i === PLAN_DEPT;
+          const has = isTarget && scene.planAdded;
+          return (
+            <div key={d.name} className="min-h-0 rounded-xl border border-[#EBE7E0] bg-white px-2.5 py-2">
+              <div className="flex items-center gap-2">
+                <span
+                  className="grid h-[22px] w-[22px] flex-none place-items-center rounded-[7px] text-white"
+                  style={{ background: d.color }}
+                >
+                  <Icon className="h-[12px] w-[12px]" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[11px] font-bold leading-tight">{d.name}</span>
+                  <span className="block text-[8.5px] text-brand-gray">
+                    {has ? `${made} of 1 created` : "No SOPs planned yet"}
+                  </span>
+                </span>
+                {has && (
+                  <span
+                    className="flex-none font-mono text-[9.5px] font-bold tabular-nums transition-colors duration-500"
+                    style={{ color: scene.planMade ? "#17A673" : "#A6A6A6" }}
+                  >
+                    {pct}%
+                  </span>
+                )}
+              </div>
+
+              {has && (
+                <div className="sop-pop mt-1.5 flex items-center gap-2 border-t border-[#F1EEE9] pt-1.5">
+                  <span
+                    className="grid h-[13px] w-[13px] flex-none place-items-center rounded-full border transition-colors duration-300"
+                    style={
+                      scene.planMade
+                        ? { background: "#17A673", borderColor: "#17A673", color: "#fff" }
+                        : { borderColor: "#C9C2B6" }
+                    }
+                  >
+                    {scene.planMade && (
+                      <svg viewBox="0 0 24 24" className="h-[8px] w-[8px]" fill="none" stroke="currentColor" strokeWidth={3.4} strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M5 12l5 5L20 7" />
+                      </svg>
+                    )}
+                  </span>
+                  <span
+                    className={`min-w-0 flex-1 truncate text-[10px] ${
+                      scene.planMade ? "text-brand-gray line-through" : "font-semibold"
+                    }`}
+                  >
+                    {PLAN_SOP}
+                  </span>
+                  <span
+                    data-t="plan-who"
+                    className="grid h-[17px] w-[17px] flex-none place-items-center rounded-full text-[6.5px] font-bold text-white transition-all duration-300"
+                    style={
+                      scene.planWho
+                        ? { background: "#B4532A" }
+                        : { background: "transparent", border: "1px dashed #C9C2B6", color: "#B7B2AA" }
+                    }
+                  >
+                    {scene.planWho ? "PN" : "+"}
+                  </span>
+                  <span
+                    data-t="plan-create"
+                    className={`flex flex-none items-center gap-1 rounded-md px-1.5 py-[3px] text-[8.5px] font-bold text-white transition-all duration-200 ${
+                      scene.hot === "plan-create" ? "shadow-[0_0_0_3px_rgba(234,123,27,0.4)]" : ""
+                    }`}
+                    style={{ background: scene.planMade ? "#9A958C" : "#16233D" }}
+                  >
+                    <Plus className="h-[8px] w-[8px]" />
+                    {scene.planMade ? "Created" : "Create SOP"}
+                  </span>
+                </div>
+              )}
+
+              {/* the field that puts a missing process on the plan */}
+              <div className="mt-1.5 flex items-center gap-1.5">
+                <span
+                  data-t={isTarget ? "plan-field" : undefined}
+                  className="min-w-0 flex-1 truncate rounded-md border bg-[#FAF9F7] px-2 py-1 text-[9.5px] transition-all duration-200"
+                  style={
+                    isTarget && scene.planTyped && !scene.planAdded
+                      ? { borderColor: "rgba(234,123,27,0.55)", background: "#fff" }
+                      : { borderColor: "#E6E2DB" }
+                  }
+                >
+                  {isTarget && scene.planTyped && !scene.planAdded ? (
+                    <span className="font-medium text-brand-ink">
+                      {scene.planTyped}
+                      <span className="tour-caret" />
+                    </span>
+                  ) : (
+                    <span className="text-brand-gray">Add an SOP this department needs...</span>
+                  )}
+                </span>
+                <span
+                  data-t={isTarget ? "plan-add" : undefined}
+                  className={`flex flex-none items-center gap-1 rounded-md border border-[#E6E2DB] px-1.5 py-1 text-[9px] font-semibold text-brand-charcoal transition-all duration-200 ${
+                    scene.hot === "plan-add" && isTarget ? "shadow-[0_0_0_3px_rgba(234,123,27,0.35)]" : ""
+                  }`}
+                >
+                  <Plus className="h-[8px] w-[8px]" />
+                  Add
+                </span>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -779,6 +1458,53 @@ function FilterBar() {
 
 function Caret() {
   return <span className="tour-caret" />;
+}
+
+// ---------------------------------------------------------------- the two strips
+// While a walkthrough records, the product keeps working underneath and the
+// controls live in a strip at the top. Both strips are drawn over the view.
+function RecBanner({ scene }: { scene: Scene }) {
+  const hot = scene.hot === "finish";
+  return (
+    <div className="sop-view absolute inset-x-0 top-0 z-[55] flex items-center gap-2.5 border-b border-[#F3C9C2] bg-[#FDF1EF] px-5 py-2.5">
+      <span className="sop-rec h-2 w-2 flex-none rounded-full bg-[#E8574A]" />
+      <b className="text-[11.5px] font-semibold text-[#8E3325]">Recording your walkthrough</b>
+      <span className="font-mono text-[11px] tabular-nums text-[#A5564A]">{clock(scene.wtSecs)}</span>
+      <span className="ml-auto flex items-center gap-1.5">
+        <span className="flex items-center gap-1.5 rounded-lg border border-[#E6E2DB] bg-white px-2.5 py-1.5 text-[10.5px] font-semibold text-brand-charcoal">
+          <PauseGlyph className="h-2.5 w-2.5" />
+          Pause
+        </span>
+        <span
+          data-t="finish"
+          className={`flex items-center gap-1.5 rounded-lg bg-[#16233D] px-3 py-1.5 text-[10.5px] font-semibold text-white transition-shadow duration-200 ${
+            hot ? "shadow-[0_0_0_3px_rgba(234,123,27,0.4)]" : ""
+          }`}
+        >
+          <StopGlyph className="h-2.5 w-2.5" />
+          Finish &amp; draft
+        </span>
+        <Trash className="h-3.5 w-3.5 text-[#C08C84]" />
+      </span>
+    </div>
+  );
+}
+
+function DraftBanner() {
+  return (
+    <div className="sop-view absolute inset-x-0 top-0 z-[55] flex items-center gap-2.5 border-b border-[#EFDDB4] bg-[#FDF8EC] px-5 py-2.5">
+      <span className="flex flex-none items-center gap-1.5 rounded-full bg-[#F6E4C4] px-2 py-[3px] text-[9.5px] font-bold text-[#7A5418]">
+        <Spark className="h-2.5 w-2.5" />
+        AI SOP Agent
+      </span>
+      {/* the product's own spinner, so the wait reads as work rather than a stall */}
+      <span className="sop-spin h-3 w-3 flex-none rounded-full border-[1.6px] border-[#D9BC85] border-t-transparent" />
+      <b className="text-[11.5px] font-semibold text-brand-ink">Drafting your SOP</b>
+      <span className="text-[10.5px] text-brand-charcoal">
+        This usually takes 30 to 120 seconds. Keep working, it opens when it is ready.
+      </span>
+    </div>
+  );
 }
 
 // ---------------------------------------------------------------- view: home
@@ -1132,7 +1858,14 @@ function EditorView({ scene }: { scene: Scene }) {
     <div className="sop-view flex h-full flex-col">
       {/* top bar */}
       <div className="flex items-center gap-2.5 border-b border-[#EBE7E0] px-5 py-3">
-        <span className="flex items-center gap-1.5 text-[11.5px] font-semibold">
+        <span
+          data-t="all-sops"
+          className={`flex items-center gap-1.5 rounded px-1.5 py-0.5 text-[11.5px] font-semibold transition-all duration-200 ${
+            scene.hot === "all-sops"
+              ? "bg-[#FFF1E2] text-brand-orange-dark shadow-[0_0_0_3px_rgba(234,123,27,0.16)]"
+              : ""
+          }`}
+        >
           <ArrowLeft className="h-3.5 w-3.5" />
           All SOPs
         </span>
@@ -1165,9 +1898,9 @@ function EditorView({ scene }: { scene: Scene }) {
         </span>
       </div>
 
-      <div className="min-h-0 flex-1 px-6 py-4">
+      <div className="min-h-0 flex-1 overflow-hidden px-6 py-4">
         <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-brand-gray">SOP Title</p>
-        <h3 className="mt-0.5 text-[20px] font-extrabold tracking-tight">{NEW_TITLE}</h3>
+        <h3 className="mt-0.5 text-[20px] font-extrabold tracking-tight">{scene.title}</h3>
 
         <div className="mt-2 flex gap-2">
           <span className="flex items-center gap-1.5 rounded-full bg-[#F1EEE9] px-2.5 py-1 text-[10px] text-brand-charcoal">
@@ -1207,51 +1940,299 @@ function EditorView({ scene }: { scene: Scene }) {
           })}
         </div>
 
-        {scene.block > 0 && <TextBlock scene={scene} />}
+        {scene.doc === "rec" && <RecorderBlock scene={scene} />}
+        {scene.doc === "draft" && <DraftBlock scene={scene} />}
       </div>
     </div>
   );
 }
 
-// The one block the tour adds. Its toolbar is drawn flat, the way the editor
-// renders it, so the block reads as a real editing surface rather than a card.
-function TextBlock({ scene }: { scene: Scene }) {
+// The editor's rich-text toolbar, drawn flat the way the product renders it.
+// `active` highlights one control, which is how the draft shows H2 selected.
+function TextToolbar({ active }: { active?: string }) {
+  const on = (k: string) =>
+    active === k
+      ? "rounded bg-[#FFF1E2] px-1 font-bold text-brand-orange-dark"
+      : "";
   return (
-    <div className="sop-view mt-3 rounded-xl border border-[#EBE7E0] bg-white p-3">
-      <p className="mb-2 text-[8.5px] font-bold uppercase tracking-[0.12em] text-brand-gray">Text</p>
-      <div className="flex items-center gap-2.5 rounded-lg border border-[#EBE7E0] bg-[#FBFAF8] px-2.5 py-1.5 text-[10px] font-semibold text-brand-charcoal">
-        <span className="font-bold">B</span>
-        <span className="italic">I</span>
-        <span className="underline">U</span>
-        <span className="line-through">S</span>
-        <span className="h-3 w-px bg-[#E3E0DA]" />
-        <span>H1</span>
-        <span>H2</span>
-        <span>H3</span>
-        <span className="h-3 w-px bg-[#E3E0DA]" />
-        <ListGlyph className="h-3 w-3" />
-        <LinkGlyph className="h-3 w-3" />
-        <ImageGlyph className="h-3 w-3" />
-      </div>
-      <div className="px-1 pt-2.5">
-        {scene.block === 1 && scene.written.length === 0 ? (
-          <p className="text-[11.5px] text-brand-gray">
-            Write the step content...
-            <Caret />
-          </p>
-        ) : (
-          <>
-            <p className="text-[13px] font-bold">
-              {scene.written}
-              {scene.block === 1 && <Caret />}
-            </p>
-            {scene.block === 2 && (
-              <p className="sop-view mt-1 text-[11.5px] leading-relaxed text-[#2B2926]">
-                Open the client record and read the last two notes, so you are not asking what
-                they already told sales.
+    <div className="flex items-center gap-2.5 rounded-lg border border-[#EBE7E0] bg-[#FBFAF8] px-2.5 py-1.5 text-[10px] font-semibold text-brand-charcoal">
+      <span className="font-bold">B</span>
+      <span className="italic">I</span>
+      <span className="underline">U</span>
+      <span className="line-through">S</span>
+      <span className="h-3 w-px bg-[#E3E0DA]" />
+      <span className={on("h1")}>H1</span>
+      <span className={on("h2")}>H2</span>
+      <span className={on("h3")}>H3</span>
+      <span className="h-3 w-px bg-[#E3E0DA]" />
+      <ListGlyph className="h-3 w-3" />
+      <LinkGlyph className="h-3 w-3" />
+      <ImageGlyph className="h-3 w-3" />
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------- act two
+// The Screen Record block. Same three sources the product offers, the draggable
+// camera bubble, a live Duration, and the two capture checkboxes. The mic
+// warning the real recorder can show is left out on purpose: it is an error
+// state, and this is the hero.
+function RecorderBlock({ scene }: { scene: Scene }) {
+  const { recSrc, recOn, recSecs } = scene;
+  const hotStart = scene.hot === "rec-start";
+
+  return (
+    // Capped and centred: left to fill the stage, the preview came out at
+    // roughly 5:1 and the app inside it read as a stack of bars.
+    <div className="sop-view mx-auto mt-3 w-full max-w-[680px] rounded-xl border border-[#EBE7E0] bg-white p-3">
+      <p className="mb-2 flex items-center gap-1.5 text-[8.5px] font-bold uppercase tracking-[0.12em] text-brand-gray">
+        <ScreenGlyph className="h-3 w-3" />
+        Screen Record
+      </p>
+
+      <div className="flex gap-3">
+        {/* ---- the preview, and the source switch that sits on it ---- */}
+        <div className="relative h-[186px] flex-1 overflow-hidden rounded-lg bg-[#1B1A17]">
+          {/* The switch goes away once it rolls, and the REC light takes over.
+              Before then the preview is empty, as it is in the product. */}
+          {!recOn ? (
+            <span className="absolute left-1/2 top-2.5 z-20 flex -translate-x-1/2 items-center gap-0.5 rounded-lg bg-[#2E2C28] p-0.5">
+              {REC_SOURCES.map((s) => {
+                const Icon = s.icon;
+                const on = recSrc === s.key;
+                const hot = scene.hot === `src-${s.key}`;
+                return (
+                  <span
+                    key={s.key}
+                    data-t={`src-${s.key}`}
+                    className={`flex items-center gap-1.5 whitespace-nowrap rounded-[7px] px-2.5 py-1 text-[10px] transition-all duration-200 ${
+                      on ? "bg-white font-semibold text-brand-ink" : "font-medium text-[#C9C4BC]"
+                    } ${hot && !on ? "shadow-[0_0_0_2px_rgba(234,123,27,0.55)]" : ""}`}
+                  >
+                    <Icon className="h-3 w-3" />
+                    {s.label}
+                  </span>
+                );
+              })}
+            </span>
+          ) : (
+            /* right, not left: the captured window's URL chip lives top-left */
+            <span className="absolute right-4 top-4 z-20 flex items-center gap-1.5 rounded-full bg-black/60 px-2 py-1 text-[9px] font-semibold text-white backdrop-blur-sm">
+              <span className="sop-rec h-[6px] w-[6px] rounded-full bg-[#E8574A]" />
+              REC
+            </span>
+          )}
+
+          {!recOn ? (
+            <>
+              <p className="absolute inset-0 grid place-items-center text-[10.5px] text-[#B8B2AA]">
+                Click &ldquo;Start recording&rdquo; to begin
               </p>
+              {recSrc === "camera" && (
+                <span className="absolute inset-0 grid place-items-center pt-6">
+                  <span className="grid h-[72px] w-[72px] place-items-center rounded-full bg-[#2E2C28] text-[#8C8781]">
+                    <CameraGlyph className="h-7 w-7" />
+                  </span>
+                </span>
+              )}
+            </>
+          ) : recSrc !== "camera" ? (
+            /* the window being captured */
+            <div className="absolute inset-0 p-2.5">
+              <div className="flex h-full flex-col overflow-hidden rounded-md bg-[#F7F5F1]">
+                <div className="flex flex-none items-center gap-1 border-b border-[#E6E2DB] bg-white px-2 py-1">
+                  <span className="h-[5px] w-[5px] rounded-full bg-[#E8574A]" />
+                  <span className="h-[5px] w-[5px] rounded-full bg-[#F0B429]" />
+                  <span className="h-[5px] w-[5px] rounded-full bg-[#3BB273]" />
+                  <span className="ml-1.5 rounded bg-[#F1EEE9] px-1.5 py-px text-[7px] text-brand-gray">
+                    app.yourcrm.com
+                  </span>
+                </div>
+                {/* sidebar plus main, so a wide frame still reads as an app */}
+                <div className="flex min-h-0 flex-1">
+                  <div className="w-[62px] flex-none space-y-1 border-r border-[#E6E2DB] bg-white p-1.5">
+                    {[70, 52, 64, 44, 58].map((w, i) => (
+                      <div key={i} className="h-1.5 rounded bg-[#E6E2DB]" style={{ width: `${w}%` }} />
+                    ))}
+                  </div>
+                  <div className="min-w-0 flex-1 p-2">
+                    <div className="h-1.5 w-1/4 rounded bg-[#D3CDC2]" />
+                    <div className="mt-2 grid grid-cols-3 gap-1.5">
+                      {[0, 1, 2, 3, 4, 5].map((i) => (
+                        <div
+                          key={i}
+                          className="h-[26px] rounded bg-white p-1 ring-1 ring-[#E6E2DB]"
+                        >
+                          <div className="h-1 w-3/5 rounded bg-[#E6E2DB]" />
+                          <div className="mt-1 h-1 w-2/5 rounded bg-[#EFEBE4]" />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="absolute inset-0 grid place-items-center">
+              <span className="grid h-[86px] w-[86px] place-items-center rounded-full bg-[#2E2C28] text-[#8C8781]">
+                <CameraGlyph className="h-8 w-8" />
+              </span>
+            </div>
+          )}
+
+          {/* the draggable camera bubble, and where it can go */}
+          {recSrc === "both" && (
+            <>
+              <span className="absolute bottom-2.5 left-2.5 z-10 grid h-[46px] w-[46px] place-items-center rounded-full border-2 border-white/80 bg-[#2E2C28] px-1 text-center text-[7px] font-semibold leading-[1.15] text-white shadow-lg">
+                {recOn ? <CameraGlyph className="h-4 w-4 text-[#B8B2AA]" /> : "Video will render here"}
+              </span>
+              {!recOn && (
+                <span className="absolute bottom-2.5 right-2.5 grid h-[46px] w-[46px] place-items-center rounded-full border-2 border-dashed border-white/45 px-1 text-center text-[7px] font-medium leading-[1.15] text-white/70">
+                  Move here
+                </span>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* ---- the controls beside it ---- */}
+        <div className="w-[178px] flex-none">
+          <p className="text-[8.5px] font-bold uppercase tracking-[0.12em] text-brand-gray">Duration</p>
+          <p className="font-mono text-[19px] font-semibold tabular-nums leading-tight">
+            {clock(recSecs)}
+          </p>
+
+          <label className="mt-2.5 flex items-center gap-1.5 text-[10.5px] text-brand-charcoal">
+            <span className="grid h-3 w-3 flex-none place-items-center rounded-[3px] bg-[#2C6BA6] text-white">
+              <Check3 />
+            </span>
+            <Mic className="h-3 w-3 flex-none" />
+            Record microphone
+          </label>
+          <div className="mt-1.5 rounded-md border border-[#E6E2DB] bg-white px-2 py-1 text-[9.5px] text-brand-charcoal">
+            System default
+          </div>
+          {/* the level meter, alive only while it is actually recording */}
+          <span className="mt-1.5 flex h-2.5 items-end gap-[2px]">
+            {[6, 9, 5, 10, 7, 4, 8, 10, 6, 9, 5, 7].map((h, i) => (
+              <span
+                key={i}
+                className={`w-full rounded-full ${recOn ? "sop-lvl bg-[#8FBF9F]" : "bg-[#E3E0DA]"}`}
+                style={recOn ? { height: h, animationDelay: `${i * 70}ms` } : { height: h }}
+              />
+            ))}
+          </span>
+
+          <label className="mt-2 flex items-center gap-1.5 text-[10.5px] text-brand-charcoal">
+            <span className="grid h-3 w-3 flex-none place-items-center rounded-[3px] bg-[#2C6BA6] text-white">
+              <Check3 />
+            </span>
+            <CameraGlyph className="h-3 w-3 flex-none" />
+            Record me on camera
+          </label>
+
+          <span
+            data-t="rec-start"
+            className={`mt-2.5 flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-[11px] font-semibold text-white transition-shadow duration-200 ${
+              recOn ? "bg-[#E8574A]" : "bg-[#16233D]"
+            } ${hotStart ? "shadow-[0_0_0_3px_rgba(234,123,27,0.4)]" : ""}`}
+          >
+            {recOn ? (
+              <>
+                <span className="h-2 w-2 rounded-sm bg-white" />
+                Stop &amp; save
+              </>
+            ) : (
+              "Start recording"
             )}
-          </>
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// A checkbox tick, small enough that the stroke icon would turn to mush.
+function Check3() {
+  return (
+    <svg viewBox="0 0 12 12" className="h-2 w-2" fill="none" stroke="currentColor" strokeWidth={2.4}
+      strokeLinecap="round" strokeLinejoin="round">
+      <path d="M2.5 6.2l2.4 2.4L9.6 3.8" />
+    </svg>
+  );
+}
+
+// ---------------------------------------------------------------- act three
+// What the agent hands back: a Text block with a heading it wrote, prose with the
+// key terms bolded, and the screenshots it cut out of the recording. The
+// timestamps are the detail that proves where the images came from.
+function DraftBlock({ scene }: { scene: Scene }) {
+  const typing = scene.draftP < DRAFT_PROSE_LEN;
+
+  // Walk the chunks, handing each one only the characters typed so far.
+  let seen = 0;
+  const prose = DRAFT_PROSE.map((c, i) => {
+    const take = Math.max(0, Math.min(c.t.length, scene.draftP - seen));
+    seen += c.t.length;
+    if (take === 0) return null;
+    const text = c.t.slice(0, take);
+    return c.b ? (
+      <b key={i} className="font-bold text-brand-ink">
+        {text}
+      </b>
+    ) : (
+      <span key={i}>{text}</span>
+    );
+  });
+
+  return (
+    // Same cap as the recorder, so the two acts sit on the same measure and the
+    // screenshots keep an aspect that reads as a screenshot.
+    <div className="sop-view mx-auto mt-3 w-full max-w-[680px] rounded-xl border border-[#EBE7E0] bg-white p-3">
+      <p className="mb-2 text-[8.5px] font-bold uppercase tracking-[0.12em] text-brand-gray">Text</p>
+      <TextToolbar active="h2" />
+
+      <div className="px-1 pt-2.5">
+        <p className="text-[13px] font-bold">
+          {scene.draftH}
+          {scene.draftH.length > 0 && scene.draftH.length < DRAFT_HEADING.length && <Caret />}
+        </p>
+        {scene.draftP > 0 && (
+          <p className="mt-1 text-[11.5px] leading-relaxed text-[#2B2926]">
+            {prose}
+            {typing && <Caret />}
+          </p>
+        )}
+
+        {scene.shots > 0 && (
+          <div className="mt-2.5 flex gap-2.5">
+            {DRAFT_SHOTS.slice(0, scene.shots).map((at) => (
+              <span key={at} className="sop-pop block w-[186px] flex-none">
+                <span className="block overflow-hidden rounded-md border border-[#E6E2DB] bg-[#F7F5F1]">
+                  {/* the doc's chrome, so it reads as a capture and not a grey box */}
+                  <span className="flex items-center gap-1 border-b border-[#E6E2DB] bg-white px-1.5 py-[3px]">
+                    <span className="h-[6px] w-[6px] rounded-[1px] bg-[#4285F4]" />
+                    <span className="h-[3px] w-[38%] rounded bg-[#E0DAD1]" />
+                  </span>
+                  <span className="block h-[86px] bg-[#EFEDE8] px-2.5 py-2">
+                    {/* the page, inset the way a doc page sits on its canvas */}
+                    <span className="block h-full rounded-sm bg-white px-2 py-1.5">
+                      <span className="block h-1.5 w-1/2 rounded bg-[#C9C2B6]" />
+                      <span className="mt-1.5 block space-y-[3px]">
+                        {[96, 88, 92, 70, 84, 60].map((w, i) => (
+                          <span key={i} className="block h-[3px] rounded bg-[#E4DFD7]" style={{ width: `${w}%` }} />
+                        ))}
+                      </span>
+                    </span>
+                  </span>
+                </span>
+                <span className="mt-1 flex items-center gap-1 font-mono text-[8px] uppercase tracking-[0.08em] text-brand-gray">
+                  <CameraGlyph className="h-2.5 w-2.5" />
+                  {at}
+                </span>
+              </span>
+            ))}
+          </div>
         )}
       </div>
     </div>
@@ -1265,6 +2246,9 @@ function ModalLayer({ scene }: { scene: Scene }) {
       {scene.modal === "format" && <FormatModal scene={scene} />}
       {scene.modal === "start" && <StartModal scene={scene} />}
       {scene.modal === "title" && <TitleModal scene={scene} />}
+      {scene.modal === "mic" && <MicModal scene={scene} />}
+      {scene.modal === "picker" && <PickerModal scene={scene} />}
+      {scene.modal === "count" && <CountModal scene={scene} />}
     </div>
   );
 }
@@ -1389,6 +2373,143 @@ function StartModal({ scene }: { scene: Scene }) {
           );
         })}
       </div>
+    </div>
+  );
+}
+
+// Picking "Record a walkthrough" replaces the title modal with this: the mic
+// choice, and the promise of what the agent is about to do with the narration.
+function MicModal({ scene }: { scene: Scene }) {
+  const hot = scene.hot === "mic-go";
+  return (
+    <div className={modalCard("w-[500px]")}>
+      <h4 className="text-[16px] font-bold tracking-tight">New SOP</h4>
+      <p className="mt-1 text-[11.5px] leading-relaxed text-brand-charcoal">
+        Narrate as you go. The AI SOP Agent writes the SOP from what you say and what it sees on
+        screen, and pulls screenshots straight out of the recording. Next you pick a screen to
+        share, then a 3 second countdown before it starts. Keep it under ten minutes.
+      </p>
+
+      <p className="mt-3.5 text-[9px] font-bold uppercase tracking-[0.12em] text-brand-gray">
+        Microphone
+      </p>
+      <div className="mt-1.5 flex items-center gap-2 rounded-lg border border-[#E6E2DB] bg-white px-3 py-2 text-[11.5px] text-brand-ink">
+        <Mic className="h-3.5 w-3.5 flex-none text-brand-charcoal" />
+        System default
+        <span className="ml-auto text-brand-gray">&#9662;</span>
+      </div>
+      <p className="mt-1.5 text-[10px] text-brand-gray">
+        Your narration drives the draft, so make sure the right mic is picked.
+      </p>
+
+      <div className="mt-4 flex items-center justify-end gap-4">
+        <span className="text-[11.5px] font-semibold text-brand-charcoal">Back</span>
+        <span
+          data-t="mic-go"
+          className={`flex items-center gap-2 rounded-lg bg-[#16233D] px-4 py-2 text-[12px] font-semibold text-white transition-shadow duration-200 ${
+            hot ? "shadow-[0_0_0_3px_rgba(234,123,27,0.35)]" : ""
+          }`}
+        >
+          <ScreenGlyph className="h-3.5 w-3.5" />
+          Choose screen &amp; start
+        </span>
+      </div>
+    </div>
+  );
+}
+
+// The browser's own share sheet, not the product's. Worth showing: it is the
+// moment the reader realises this records their actual screen, not a mock-up of it.
+function PickerModal({ scene }: { scene: Scene }) {
+  const hotShare = scene.hot === "share-go";
+  return (
+    <div className="sop-view w-[560px] rounded-xl bg-[#292723] p-4 text-white shadow-[0_24px_60px_-18px_rgba(20,14,6,0.6)]">
+      <h4 className="text-[13.5px] font-semibold">Choose what to share with app.multiplyos.com</h4>
+      <p className="mt-1 text-[10.5px] text-[#B6B0A7]">
+        The site will be able to see the contents of your screen
+      </p>
+
+      <div className="mt-3 flex gap-5 border-b border-white/12 text-[11px]">
+        {[
+          { l: "Chrome Tab", i: TabGlyph, on: true },
+          { l: "Window", i: WindowGlyph, on: false },
+          { l: "Entire Screen", i: AllScreenGlyph, on: false },
+        ].map(({ l, i: Ico, on }) => (
+          <span
+            key={l}
+            className={`flex items-center gap-1.5 border-b-2 pb-1.5 ${
+              on ? "border-[#7CB2E8] font-semibold text-[#9CC7F2]" : "border-transparent text-[#B6B0A7]"
+            }`}
+          >
+            <Ico className="h-3 w-3" />
+            {l}
+          </span>
+        ))}
+      </div>
+
+      <div className="mt-3 grid grid-cols-[minmax(0,1fr)_150px] gap-3">
+        <div className="space-y-0.5 rounded-lg bg-[#1F1D1A] p-1.5">
+          {SHARE_TABS.map((t, i) => {
+            const sel = scene.picked && i === PICK_TAB;
+            const hot = scene.hot === `tab-${i}`;
+            return (
+              <span
+                key={t.title}
+                data-t={`tab-${i}`}
+                className={`flex items-center gap-2 rounded-md px-2 py-1.5 text-[10.5px] transition-all duration-200 ${
+                  sel ? "bg-[#3A4B63] font-medium text-white" : "text-[#C9C4BC]"
+                } ${hot && !sel ? "shadow-[0_0_0_2px_rgba(234,123,27,0.5)]" : ""}`}
+              >
+                <span className="h-2.5 w-2.5 flex-none rounded-full" style={{ background: t.dot }} />
+                <span className="truncate">{t.title}</span>
+              </span>
+            );
+          })}
+        </div>
+        <div className="grid place-items-center rounded-lg bg-[#3A3630] text-center text-[9.5px] text-[#B6B0A7]">
+          {scene.picked ? (
+            <span className="w-full px-2">
+              <span className="mx-auto block h-[42px] w-full rounded border border-white/15 bg-[#4A453D]" />
+              <span className="mt-1.5 block truncate">{SHARE_TABS[PICK_TAB].title}</span>
+            </span>
+          ) : (
+            "Select a tab to share"
+          )}
+        </div>
+      </div>
+
+      <div className="mt-3 flex items-center gap-2 border-t border-white/10 pt-2.5 text-[10.5px] text-[#C9C4BC]">
+        <SpeakerSmall className="h-3 w-3" />
+        Also share tab audio
+        <span className="ml-auto flex h-[15px] w-[26px] items-center rounded-full bg-[#5B8FD1] px-[2px]">
+          <span className="ml-auto h-[11px] w-[11px] rounded-full bg-white" />
+        </span>
+      </div>
+
+      <div className="mt-3 flex justify-end gap-2.5">
+        <span
+          data-t="share-go"
+          className={`rounded-lg px-4 py-1.5 text-[11.5px] font-semibold transition-shadow duration-200 ${
+            scene.picked ? "bg-[#4C89D6] text-white" : "bg-[#3A3630] text-[#8B857D]"
+          } ${hotShare ? "shadow-[0_0_0_3px_rgba(234,123,27,0.45)]" : ""}`}
+        >
+          Share
+        </span>
+        <span className="rounded-lg border border-white/18 px-4 py-1.5 text-[11.5px] font-semibold text-[#C9C4BC]">
+          Cancel
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function CountModal({ scene }: { scene: Scene }) {
+  return (
+    <div className="sop-view grid place-items-center rounded-2xl bg-[#1B1A17] px-12 py-9 text-center text-white shadow-[0_24px_60px_-18px_rgba(20,14,6,0.6)]">
+      <p key={scene.count} className="sop-pop font-mono text-[46px] font-bold leading-none tabular-nums">
+        {scene.count}
+      </p>
+      <p className="mt-3 text-[12px] text-white/75">Get ready. Recording starts in&hellip;</p>
     </div>
   );
 }
