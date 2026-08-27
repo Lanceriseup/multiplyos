@@ -23,7 +23,6 @@
 // cancels the in-flight tour rather than leaving orphaned timers behind.
 import { useEffect, useRef, useState } from "react";
 import { useInView, useReducedMotion } from "framer-motion";
-import ActZero, { runZero, type Zero } from "./ReplacesActZero";
 
 const MIN_W = 980;
 const STAGE_H = 500;
@@ -32,10 +31,6 @@ const EASE = "cubic-bezier(0.22,1,0.36,1)";
 // Both logos already exist for the Forms page, so this needed no new artwork.
 // Heights match the trims measured there: Jotform fills 76% of its canvas,
 // Google Forms 74%.
-const ZERO_ITEMS = [
-  { name: "Jotform", logo: "/replaces-jotform.png", h: 56 },
-  { name: "Google Forms", logo: "/replaces-google-forms.png", h: 58 },
-];
 
 // ---------------------------------------------------------------- icons
 const ico = {
@@ -298,8 +293,9 @@ const PICKS: ItemKind[] = ["check", "pass", "number"];
 type View = "library" | "editor" | "settings" | "run";
 
 type Scene = {
+  // The whole card faded out, so the loop restarts on a fade rather than a cut.
+  dim: boolean;
   view: View;
-  zero: Zero;
   hot: string;
   items: number; // how many of ITEMS exist
   cadence: string; // the reminder select's value
@@ -312,7 +308,8 @@ type Scene = {
 };
 
 const BLANK: Scene = {
-  view: "library", zero: "", hot: "", items: 0, cadence: "No reminder",
+  dim: false,
+  view: "library", hot: "", items: 0, cadence: "No reminder",
   ticked: false, passed: false, count: "", signed: "", complete: false,
 };
 
@@ -479,11 +476,22 @@ export default function ChecklistsHeroTour() {
 
     (async function loop() {
       setCursor(160, 46);
+      let first = true;
       while (alive()) {
-        setScene({ ...BLANK });
+        if (first) {
+          setScene({ ...BLANK });
+          first = false;
+        } else {
+          // Come back behind the fade the last pass ended on, then bring the card
+          // up rather than cutting to it.
+          setScene({ ...BLANK, dim: true });
+          await wait(90);
+          patch({ dim: false });
+          await wait(460);
+          if (!alive()) return;
+        }
 
-        // --- act zero
-        if (!(await runZero((z) => patch({ zero: z }), wait, alive, ZERO_ITEMS.length))) return;
+        // a beat before the library fades up, so the loop restarts on a breath
         await fade(1);
 
         // --- 1. the library: a worklist, with Run on every row
@@ -542,6 +550,8 @@ export default function ChecklistsHeroTour() {
         await wait(2900);
 
         if (!alive()) return;
+        // Fade the card out before the loop restarts, rather than cutting.
+        patch({ dim: true });
         await fade(0);
         await wait(520);
       }
@@ -568,14 +578,13 @@ export default function ChecklistsHeroTour() {
         >
           <div
             ref={cardRef}
-            className="relative overflow-hidden rounded-2xl border border-black/5 bg-[#FAF9F7] text-brand-ink shadow-[0_30px_60px_-30px_rgba(40,30,15,0.45),0_2px_6px_-3px_rgba(40,30,15,0.12)]"
-            style={{ height: STAGE_H }}
+            className="relative overflow-hidden rounded-2xl border border-black/5 bg-[#FAF9F7] text-brand-ink shadow-[0_30px_60px_-30px_rgba(40,30,15,0.45),0_2px_6px_-3px_rgba(40,30,15,0.12)] transition-opacity duration-[520ms] ease-out"
+            style={{ height: STAGE_H, opacity: scene.dim ? 0 : 1 }}
           >
             {scene.view === "library" && <LibraryView scene={scene} />}
             {(scene.view === "editor" || scene.view === "settings") && <EditorView scene={scene} />}
             {scene.view === "run" && <RunView scene={scene} />}
 
-            {scene.zero && <ActZero state={scene.zero} items={ZERO_ITEMS} bg="#FAF9F7" />}
 
             {/* Ask Multi AI, present on every screen in the product. Not in the
                 runner, which is a focused mode with its own chrome. */}

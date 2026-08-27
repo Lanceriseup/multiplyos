@@ -7,11 +7,13 @@
 // information, and show it building a chart. The loop is those three, in the
 // order that makes the third one land:
 //
-//   1. Claude and ChatGPT     crossed out
-//   2. the home screen        two coaches, and their prompts are different
-//   3. switch coach           the four suggestions swap, which proves the point
-//   4. an honest answer       named records, real numbers, an uncomfortable read
-//   5. build me a chart       it reads the ledger and draws the thing
+//   1. the home screen        two coaches, and their prompts are different
+//   2. switch coach           the four suggestions swap, which proves the point
+//   3. an honest answer       named records, real numbers, an uncomfortable read
+//   4. build me a chart       it reads the ledger and draws the thing
+//
+// The cross-out of Claude and ChatGPT used to open this loop. It is above the
+// panel now, as ReplacesChip, so the tour starts on the product.
 //
 // The answer beat holds longest. A chart is a party trick; the paragraph that
 // tells you your marketing team is too small to hit your own annual goal is the
@@ -27,16 +29,11 @@
 // docs/ai-coach-feature-notes.md section 6.
 import { useEffect, useRef, useState } from "react";
 import { useInView, useReducedMotion } from "framer-motion";
-import ActZero, { runZero, type Zero } from "./ReplacesActZero";
 
 const MIN_W = 980;
 const STAGE_H = 500;
 const EASE = "cubic-bezier(0.22,1,0.36,1)";
 
-const ZERO_ITEMS = [
-  { name: "Claude", logo: "/replaces-claude.png", h: 46 },
-  { name: "ChatGPT", logo: "/replaces-chatgpt.png", h: 44 },
-];
 
 const ASSISTANT = "#4B57C4";
 const COACH = "#1592AE";
@@ -212,7 +209,8 @@ const CPL_GOAL = 18;
 
 // ---------------------------------------------------------------- scene
 type Scene = {
-  zero: Zero;
+  // The whole card faded out, so the loop restarts on a fade rather than a cut.
+  dim: boolean;
   who: Which;
   view: "home" | "chat";
   // the Assistant's thread
@@ -229,7 +227,8 @@ type Scene = {
 };
 
 const BLANK: Scene = {
-  zero: "", who: "assistant", view: "home", aTool: false, aLines: 0,
+  dim: false,
+  who: "assistant", view: "home", aTool: false, aLines: 0,
   lead: "", points: 0, closed: false, typed: "", tool: false, chart: false, hot: "",
 };
 
@@ -403,10 +402,21 @@ export default function AiCoachHeroTour() {
 
     (async function loop() {
       setCursor(520, 44);
+      let first = true;
       while (alive()) {
-        setScene({ ...BLANK });
+        if (first) {
+          setScene({ ...BLANK });
+          first = false;
+        } else {
+          // Come back behind the fade the last pass ended on, then bring the card
+          // up rather than cutting to it.
+          setScene({ ...BLANK, dim: true });
+          await wait(90);
+          patch({ dim: false });
+          await wait(460);
+          if (!alive()) return;
+        }
 
-        if (!(await runZero((z) => patch({ zero: z }), wait, alive, ZERO_ITEMS.length))) return;
         await fade(1);
 
         // --- 1. the home screen, on the assistant
@@ -468,6 +478,8 @@ export default function AiCoachHeroTour() {
         await wait(4200);
 
         if (!alive()) return;
+        // Fade the card out before the loop restarts, rather than cutting.
+        patch({ dim: true });
         await fade(0);
         await wait(520);
       }
@@ -494,8 +506,8 @@ export default function AiCoachHeroTour() {
         >
           <div
             ref={cardRef}
-            className="relative flex overflow-hidden rounded-2xl border border-black/5 bg-white text-brand-ink shadow-[0_30px_60px_-30px_rgba(40,30,15,0.45),0_2px_6px_-3px_rgba(40,30,15,0.12)]"
-            style={{ height: STAGE_H }}
+            className="relative flex overflow-hidden rounded-2xl border border-black/5 bg-white text-brand-ink shadow-[0_30px_60px_-30px_rgba(40,30,15,0.45),0_2px_6px_-3px_rgba(40,30,15,0.12)] transition-opacity duration-[520ms] ease-out"
+            style={{ height: STAGE_H, opacity: scene.dim ? 0 : 1 }}
           >
             <Sidebar scene={scene} />
             <div className="flex min-w-0 flex-1 flex-col">
@@ -507,7 +519,6 @@ export default function AiCoachHeroTour() {
               )}
             </div>
 
-            {scene.zero && <ActZero state={scene.zero} items={ZERO_ITEMS} bg="#FFFFFF" />}
           </div>
 
           <span

@@ -30,13 +30,6 @@
 // height card, so it never resizes mid-tour.
 import { useEffect, useRef, useState } from "react";
 import { useInView, useReducedMotion } from "framer-motion";
-import ActZero, { runZero, type Zero } from "./ReplacesActZero";
-
-// The tools this page replaces, crossed out before the product appears.
-const ZERO_ITEMS = [
-  { name: "Asana", logo: "/replaces-asana.png", h: 72 },
-  { name: "Monday.com", logo: "/replaces-monday.png", h: 76 },
-];
 
 const MIN_W = 940; // narrower than this and the whole stage scales down
 const STAGE_H = 468; // card height, sized to the tallest view (the gallery)
@@ -278,10 +271,11 @@ export default function ProjectsTasksHeroTour() {
   const reduce = useReducedMotion() ?? false;
 
   const [view, setView] = useState<View>("gallery");
-  const [zero, setZero] = useState<Zero>("");
   const [ticked, setTicked] = useState(false);
   const [done, setDone] = useState(259);
   const [bump, setBump] = useState(false);
+  // The whole card faded out, so the loop restarts on a fade, not a cut.
+  const [dim, setDim] = useState(false);
 
   // ---- fluid stage with a MIN_W floor
   const [box, setBox] = useState({ w: MIN_W, scale: 1 });
@@ -414,6 +408,7 @@ export default function ProjectsTasksHeroTour() {
     };
 
     const run = async () => {
+      let first = true;
       for (;;) {
         // ---------------------------------------------- reset
         setView("gallery");
@@ -422,9 +417,16 @@ export default function ProjectsTasksHeroTour() {
         setBump(false);
         await fade(0, 0);
         setCursor(MIN_W / 2, STAGE_H + 70);
+        if (!first) {
+          // Come back behind the fade the last pass ended on, then bring the card
+          // up rather than cutting to it.
+          await wait(90);
+          setDim(false);
+          await wait(460);
+        }
+        first = false;
 
-        // ---------------------------------------------- ACT 0: the cross-out
-        if (!(await runZero(setZero, wait, alive, ZERO_ITEMS.length))) return;
+        // ---------------------------------------------- the opening fade
         await fade(1, 240);
 
         // ---------------------------------------------- ACT 1: the whole board
@@ -456,6 +458,8 @@ export default function ProjectsTasksHeroTour() {
         setBump(true);
         await wait(2000);
 
+        // Fade the card out before the loop restarts, rather than cutting.
+        setDim(true);
         await fade(0, 380);
         await wait(760);
       }
@@ -481,12 +485,13 @@ export default function ProjectsTasksHeroTour() {
     <div ref={wrapRef} className="w-full" style={{ height: STAGE_H * box.scale }}>
       <div
         ref={stageRef}
-        className="relative overflow-hidden rounded-[18px] border border-black/5 bg-white shadow-[0_28px_60px_-32px_rgba(40,30,15,0.5)]"
+        className="relative overflow-hidden rounded-[18px] border border-black/5 bg-white shadow-[0_28px_60px_-32px_rgba(40,30,15,0.5)] transition-opacity duration-[520ms] ease-out"
         style={{
           width: box.w,
           height: STAGE_H,
           transform: `scale(${box.scale})`,
           transformOrigin: "top left",
+          opacity: dim ? 0 : 1,
         }}
       >
         {shown === "gallery" ? (
@@ -506,7 +511,6 @@ export default function ProjectsTasksHeroTour() {
         )}
 
         {/* the tools this replaces, struck out before the board appears */}
-        {zero && <ActZero state={zero} items={ZERO_ITEMS} bg="#FFFFFF" />}
 
         {/* ---------------- cursor + ripple ----------------
             Same pointer the SOP HQ and Scoreboard tours use: white arrow with a

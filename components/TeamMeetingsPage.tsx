@@ -32,6 +32,7 @@ import Footer from "./Footer";
 import CTA from "./CTA";
 import Reveal from "./Reveal";
 import TeamMeetingsHeroTour from "./TeamMeetingsHeroTour";
+import { ReplacesChip, REPLACES } from "./ReplacesStrip";
 import MultiAiWired from "./MultiAiWired";
 import type { Row, Insight } from "./MultiAiWired";
 import { useDemo } from "./DemoModal";
@@ -1186,11 +1187,17 @@ export default function TeamMeetingsPage() {
           </Reveal>
 
           <Reveal delay={0.12} className="mt-6 sm:mt-12">
-            <div
-              className="overflow-hidden rounded-2xl p-2 sm:rounded-[30px] sm:p-8"
-              style={{ background: "linear-gradient(160deg, #EDF4FC, #D6E8F8)" }}
-            >
-              <TeamMeetingsHeroTour />
+            {/* The chip goes in a relative wrapper alongside the panel rather
+                than inside it: the panel clips to its rounded corners, and the
+                claim has to hang over its top edge. */}
+            <div className="relative">
+              <ReplacesChip names={REPLACES.teamMeetings} />
+              <div
+                className="overflow-hidden rounded-2xl p-2 sm:rounded-[30px] sm:p-8"
+                style={{ background: "linear-gradient(160deg, #EDF4FC, #D6E8F8)" }}
+              >
+                <TeamMeetingsHeroTour />
+              </div>
             </div>
           </Reveal>
 
