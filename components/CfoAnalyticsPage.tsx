@@ -2,30 +2,44 @@
 
 // Feature page: CFO Analytics, which the product calls Finance HQ.
 //
-// The product's own subtitle is the promise: "CFO-grade financial analytics
-// powered by QuickBooks." So the page's job is to make "CFO-grade" mean
-// something more than "we drew your revenue as a line".
+// The product's own subtitle is the promise: "CFO-Grade Analytics". So the
+// page's job is to make "CFO-grade" mean something more than "we drew your
+// revenue as a line".
 //
-// The spine is one arithmetic fact, carried by every mockup on the page: in July
-// this business booked its best profit ever and its cash still went down, because
-// the money is sitting in receivables. That is the product's own framing ("profit
-// and cash aren't the same thing") turned into numbers a reader can check.
+// Rewritten August 2026 against nine screenshots of the live, populated app.
+// Before those arrived the entire dashboard on this page was invented. It is
+// not any more: the tab set, the Big Six card anatomy with its goal footer, the
+// P&L hierarchy and its % of income column, the Balance Sheet's period-over-
+// period comparison, all seven Key Ratios and the Business Valuation wizard are
+// traced from the product, and the figures are the product's own sample ledger.
 //
-// Sections follow the client's running order exactly:
+// The spine is one fact carried by every mockup: July revenue fell 6.6% and the
+// business still cleared four of its six goals, because margin went up while
+// revenue went down. That is a real story the sample ledger tells, and it is
+// what a goal-measured dashboard is for.
 //
-//   2. connect        QuickBooks in two minutes, or CSV if you are not on it
-//   3. the Big 6      six tiles, and the deep dive underneath them
-//   4. the briefing   what a CFO would have told you, written out
-//   5. the statements Overview, P&L (last month and last six), Balance Sheet
-//   6. transactions   search the ledger without opening QuickBooks
-//   7. Multi AI       the coach, wired to the same numbers
+// Sections:
+//
+//   2. the lock       a second password, before any of it opens
+//   3. connect        QuickBooks in two minutes, or a CSV if you are not on it
+//   4. the Big Six    six tiles, each against a goal the owner set
+//   5. the briefing   what a CFO would have told you, written out
+//   6. the statements P&L, Balance Sheet, Key Ratios
+//   7. transactions   search the ledger without opening QuickBooks
+//   8. Multi AI       the coach, wired to the same numbers
+//
+// There is no catch-all section for the tabs the page does not visit. There was
+// one, and it was cut: a grid of one-sentence cards for Class, Business
+// Valuation, Overview, AI Insights and the header buttons read as a feature
+// list bolted onto a page that had spent seven sections showing rather than
+// telling. Business Valuation still gets its own beat in the hero tour, which
+// is where it earns its place.
 //
 // This is the first feature page with NO ReplacesStrip. Per the client, CFO
 // Analytics replaces nothing.
 //
-// See docs/cfo-analytics-feature-notes.md. Two rules from it are load-bearing:
-// only section 2 of those notes is confirmed by screenshots, and every number on
-// this page is invented but internally consistent. Change one, change them all.
+// See docs/cfo-analytics-feature-notes.md. Every figure here foots against
+// section 7 of that file. Change one, change them all.
 import { motion } from "framer-motion";
 import { useState } from "react";
 import Navbar from "./Navbar";
@@ -39,15 +53,24 @@ import { useDemo } from "./DemoModal";
 
 // ---------------------------------------------------------------- tokens
 const GREEN = "#0F7B4F"; // the product's own button green
+const EMERALD = "#12A870"; // the brighter green the live charts are drawn in
 const UP = "#1F7F4C";
 const DOWN = "#C0402B";
 const AMBER = "#C9832B";
+const ROSE = "#DB5A6B";
 const AI = "#4B3CC4";
+const BLUE = "#2D5FA8";
 const colTransition = { duration: 0.55, ease: [0.22, 1, 0.36, 1] as const };
 
-// Written out in full because Tailwind scans source for literal class names.
+// One height for every mockup on the page, and it is the same pair the other
+// feature pages use. Written out in full because Tailwind scans source for
+// literal class names.
+//
+// Nothing inside these cards scrolls. Where a list runs longer than the card,
+// it is clipped at the bottom edge on purpose: a statement that carries on past
+// the frame reads like a real window onto real data, and a scrollbar inside a
+// marketing mockup invites a reader to fight with it instead.
 const CARD_CLS = "h-[380px] sm:h-[430px]";
-const TALL_CLS = "h-[430px] sm:h-[486px]";
 
 // ---------------------------------------------------------------- icons
 const ico = {
@@ -82,9 +105,17 @@ const Shield = ({ className, style }: IconProps) => (
     <path d="M8.8 12l2.2 2.2 4.2-4.4" />
   </svg>
 );
-const Upload = ({ className, style }: IconProps) => (
+const Lock = ({ className, style }: IconProps) => (
   <svg className={className} style={style} {...ico}>
-    <path d="M12 16.4v-11M7.4 10l4.6-4.6L16.6 10M4.4 19.4h15.2" />
+    <rect x="4.6" y="10.4" width="14.8" height="10.2" rx="2.4" />
+    <path d="M8.2 10.4V7.6a3.8 3.8 0 0 1 7.6 0v2.8" />
+    <path d="M12 14.4v2.4" />
+  </svg>
+);
+const EyeOff = ({ className, style }: IconProps) => (
+  <svg className={className} style={style} {...ico}>
+    <path d="M4 4l16 16" />
+    <path d="M9.6 5.4A9.7 9.7 0 0 1 12 5.1c5 0 9 4.4 9 6.9a9.6 9.6 0 0 1-2.4 3.4M6.3 7.5C4.2 8.9 3 10.8 3 12c0 2.5 4 6.9 9 6.9a9.6 9.6 0 0 0 3.4-.6" />
   </svg>
 );
 const Search = ({ className, style }: IconProps) => (
@@ -98,10 +129,26 @@ const Spark = ({ className, style }: IconProps) => (
     <path d="M12 3l1.6 4L18 8.5 14 10l-2 4-2-4-4-1.5L10 7z" />
   </svg>
 );
-const Sheet = ({ className, style }: IconProps) => (
+const Target = ({ className, style }: IconProps) => (
   <svg className={className} style={style} {...ico}>
-    <rect x="4.4" y="3.4" width="15.2" height="17.2" rx="2" />
-    <path d="M4.4 9h15.2M4.4 14.6h15.2M10.2 3.4v17.2" />
+    <circle cx="12" cy="12" r="8.2" />
+    <circle cx="12" cy="12" r="3.4" />
+  </svg>
+);
+const Heart = ({ className, style }: IconProps) => (
+  <svg className={className} style={style} {...ico}>
+    <path d="M12 5.6l7.2 2.5v5.2c0 4-3 7.2-7.2 8.5-4.2-1.3-7.2-4.5-7.2-8.5V8.1z" />
+    <path d="M8.6 13.2h1.9l1-2.2 1.4 3.4 1-1.2h1.5" />
+  </svg>
+);
+const Upload = ({ className, style }: IconProps) => (
+  <svg className={className} style={style} {...ico}>
+    <path d="M12 16.4v-11M7.4 10l4.6-4.6L16.6 10M4.4 19.4h15.2" />
+  </svg>
+);
+const Download = ({ className, style }: IconProps) => (
+  <svg className={className} style={style} {...ico}>
+    <path d="M12 4.6v11M7.4 11l4.6 4.6L16.6 11M4.4 19.4h15.2" />
   </svg>
 );
 const RowsIcon = ({ className }: IconProps) => (
@@ -112,23 +159,143 @@ const RowsIcon = ({ className }: IconProps) => (
 );
 
 // ---------------------------------------------------------------- the numbers
-// One fictional services business, February to July 2026. Notes section 7.
-// Revenue less COGS is gross profit; gross profit less opex is net profit, on
-// every column. A finance buyer will check the arithmetic, so it has to hold.
-const MONTHS = ["Feb", "Mar", "Apr", "May", "Jun", "Jul"];
+// The product's own sample ledger, July 2026, read off the live screenshots.
+// Revenue less COGS is gross profit; gross profit less operating expenses is
+// net operating income; less the tax accrual is net income. It all foots, and a
+// finance buyer will check.
+const M6 = ["Feb", "Mar", "Apr", "May", "Jun", "Jul"];
 const SERIES = {
-  rev: [318400, 336900, 352100, 371500, 380700, 412800],
-  cogs: [136900, 142800, 148600, 155000, 158900, 170500],
-  gp: [181500, 194100, 203500, 216500, 221800, 242300],
-  opex: [141200, 148300, 152900, 161700, 166300, 186400],
-  np: [40300, 45800, 50600, 54800, 55500, 55900],
-  cash: [281200, 296800, 312500, 328900, 340500, 318400],
-  run: [8.2, 8.5, 8.8, 9.1, 8.0, 7.4],
+  rev: [172135, 209880, 202640, 197900, 191505, 178865],
+  np: [29951, 45964, 41744, 38393, 35620, 34017],
+  pm: [17.4, 21.9, 20.6, 19.4, 18.6, 19.0],
+  ocf: [28400, 44900, 39100, 36200, 34000, 32700],
+  gm: [68.4, 69.6, 69.1, 68.7, 68.9, 69.7],
+  opex: [79800, 88600, 87400, 85100, 86300, 81124],
 };
 
-const money = (n: number) => `$${n.toLocaleString("en-US")}`;
+function tone(dir: "up" | "down" | "warn") {
+  return dir === "up" ? UP : dir === "warn" ? AMBER : DOWN;
+}
 
-// ---------------------------------------------------------------- 2. connect
+// ---------------------------------------------------------------- 2. the lock
+type Gate = "gate" | "behind";
+
+const BEHIND = [
+  { l: "CFO View", s: "The Big Six, the briefing, warnings, what-if" },
+  { l: "Profit and Loss", s: "Every account, every month, to the cent" },
+  { l: "Balance Sheet", s: "What you own, owe, and have left" },
+  { l: "Key Ratios", s: "Seven ratios against seven targets" },
+  { l: "Transactions", s: "The whole ledger, searchable" },
+  { l: "Business Valuation", s: "What the company is worth today" },
+];
+
+function LockDemo() {
+  const [tab, setTab] = useState<Gate>("gate");
+
+  return (
+    <div className={`flex flex-col overflow-hidden rounded-2xl border border-black/5 bg-white shadow-[0_24px_50px_-28px_rgba(40,30,15,0.4)] ${CARD_CLS}`}>
+      <div className="flex flex-none items-center gap-1 border-b border-[#F1EEE9] px-3.5 py-2.5">
+        <span className="flex items-center gap-0.5 rounded-lg bg-[#F1EEE9] p-0.5">
+          {([
+            { k: "gate", l: "The gate" },
+            { k: "behind", l: "What is behind it" },
+          ] as const).map(({ k, l }) => (
+            <button
+              key={k}
+              type="button"
+              aria-pressed={tab === k}
+              onClick={() => setTab(k)}
+              className={`whitespace-nowrap rounded-[7px] px-2.5 py-[5px] text-[10px] transition-colors ${
+                tab === k ? "bg-brand-ink font-semibold text-white" : "font-medium text-brand-charcoal"
+              }`}
+            >
+              {l}
+            </button>
+          ))}
+        </span>
+      </div>
+
+      {tab === "gate" ? (
+        <div className="grid min-h-0 flex-1 place-items-center px-5">
+          <div className="w-full max-w-[300px] text-center">
+            <span
+              className="mx-auto grid h-[46px] w-[46px] place-items-center rounded-2xl text-white"
+              style={{
+                background: `linear-gradient(150deg, ${EMERALD}, ${GREEN})`,
+                boxShadow: "0 14px 26px -14px rgba(15,123,79,0.85)",
+              }}
+            >
+              <Lock className="h-[22px] w-[22px]" />
+            </span>
+            <h4 className="mt-3 text-[15px] font-extrabold tracking-tight">Finance HQ is locked</h4>
+            <p className="mt-1 text-[10.5px] leading-relaxed text-brand-charcoal">
+              Signed in to Multiply OS is not the same as signed in to the books.
+            </p>
+
+            <div className="mt-3 rounded-xl border border-[#E6E2DB] bg-[#FAF9F7] p-2.5 text-left">
+              <p className="text-[8px] font-bold uppercase tracking-[0.13em] text-brand-gray">
+                Finance HQ password
+              </p>
+              <span className="mt-1 flex items-center gap-2 rounded-lg border border-[#E6E2DB] bg-white px-2 py-1.5">
+                <Lock className="h-3 w-3 flex-none text-brand-gray" />
+                <span className="flex min-w-0 flex-1 items-center gap-[3px]">
+                  {Array.from({ length: 11 }).map((_, i) => (
+                    <span key={i} className="h-[5px] w-[5px] rounded-full bg-brand-ink" />
+                  ))}
+                </span>
+                <EyeOff className="h-3 w-3 flex-none text-brand-gray" />
+              </span>
+              <span
+                className="mt-2 flex items-center justify-center gap-1.5 rounded-lg py-1.5 text-[11px] font-semibold text-white"
+                style={{ background: GREEN }}
+              >
+                <Lock className="h-3 w-3" />
+                Unlock Finance HQ
+              </span>
+            </div>
+
+            <p className="mt-2.5 text-[9.5px] leading-snug text-brand-gray">
+              A second password, set apart from the one you use to sign in.
+            </p>
+          </div>
+        </div>
+      ) : (
+        <div className="min-h-0 flex-1 overflow-hidden px-3.5 py-3">
+          <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-brand-gray">
+            Shut until the password is entered
+          </p>
+          <div className="mt-1.5 space-y-1">
+            {BEHIND.map((b) => (
+              <div
+                key={b.l}
+                className="flex items-center gap-2.5 rounded-lg border border-[#EBE7E0] bg-[#FAF9F7] px-2.5 py-[7px]"
+              >
+                <Lock className="h-3.5 w-3.5 flex-none" style={{ color: GREEN }} />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[10.5px] font-semibold leading-tight">{b.l}</span>
+                  <span className="block truncate text-[9px] text-brand-gray">{b.s}</span>
+                </span>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-2.5 rounded-lg px-2.5 py-2" style={{ background: "#EAF5EF" }}>
+            <p className="flex items-center gap-1.5 text-[10px] font-bold" style={{ color: GREEN }}>
+              <Shield className="h-3 w-3" />
+              And the sync underneath it is read-only
+            </p>
+            <p className="mt-1 text-[9.5px] leading-snug text-brand-charcoal">
+              Tokens are encrypted at rest with AES-256-GCM. Nothing is ever written back to your
+              QuickBooks, and you can purge every trace of it in one click.
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------- 3. connect
 type Route = "qbo" | "manual";
 
 function ConnectDemo() {
@@ -158,7 +325,7 @@ function ConnectDemo() {
       </div>
 
       {route === "qbo" ? (
-        <div className="min-h-0 flex-1 overflow-y-auto px-3.5 py-3">
+        <div className="min-h-0 flex-1 overflow-hidden px-3.5 py-3">
           <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-brand-gray">
             What we sync
           </p>
@@ -194,129 +361,139 @@ function ConnectDemo() {
           </p>
           <div className="mt-1.5 space-y-1">
             {[
-              "Your dashboards build themselves: P&L, balance sheet, cash flow, KPIs",
+              "Nine tabs build themselves: CFO View, P&L, Balance Sheet, Key Ratios, and the rest",
               "Scoreboard metrics auto-populate from the accounts you map",
               "The AI briefing starts reading your books, not your spreadsheets",
             ].map((t) => (
-              <p key={t} className="flex items-start gap-2 text-[10px] leading-snug text-brand-charcoal">
-                <span className="mt-[5px] h-1 w-1 flex-none rounded-full" style={{ background: GREEN }} />
+              <p key={t} className="flex items-start gap-2 text-[9.5px] leading-snug text-brand-charcoal">
+                <Tick className="mt-[2px] h-2.5 w-2.5 flex-none" style={{ color: UP }} />
                 {t}
               </p>
             ))}
           </div>
         </div>
       ) : (
-        <div className="min-h-0 flex-1 overflow-y-auto px-3.5 py-3">
+        <div className="min-h-0 flex-1 overflow-hidden px-3.5 py-3">
           <p className="text-[10px] leading-relaxed text-brand-charcoal">
-            On Xero, on Sage, or working off a bookkeeper&rsquo;s spreadsheet? Upload the two
-            statements yourself and every part of this page works the same way.
+            On Xero, on Sage, or on a bookkeeper&rsquo;s spreadsheet? Upload the two statements a
+            month at a time and nothing else on this page changes.
           </p>
+
           <div className="mt-2.5 grid grid-cols-2 gap-2">
-            {["Profit and Loss", "Balance Sheet"].map((l) => (
-              <div key={l} className="rounded-lg border border-[#EBE7E0] bg-white p-2.5">
+            {[
+              { l: "Profit and Loss", s: "One CSV per month" },
+              { l: "Balance Sheet", s: "One CSV per month" },
+            ].map((c) => (
+              <div key={c.l} className="rounded-lg border border-[#EBE7E0] bg-[#FAF9F7] px-2.5 py-2">
                 <p className="flex items-center gap-1.5 text-[10.5px] font-bold">
-                  <span className="grid h-[20px] w-[20px] flex-none place-items-center rounded-md" style={{ background: "#EAF5EF", color: GREEN }}>
-                    <Sheet className="h-3 w-3" />
-                  </span>
-                  {l}
+                  <Upload className="h-3 w-3" style={{ color: GREEN }} />
+                  {c.l}
                 </p>
-                <p className="mt-1 text-[8.5px] text-brand-gray">One CSV per month.</p>
-                <p className="mt-2 text-[8px] font-bold uppercase tracking-[0.1em] text-brand-gray">Month</p>
-                <p className="mt-1 rounded-md border border-[#E6E2DB] bg-[#FAF9F7] px-2 py-1 text-[9.5px] font-medium">
-                  July 2026
+                <p className="mt-0.5 text-[9px] text-brand-gray">{c.s}</p>
+                <p className="mt-2 flex items-center gap-1 text-[9px] font-semibold" style={{ color: GREEN }}>
+                  <Download className="h-2.5 w-2.5" />
+                  Template
                 </p>
-                <p className="mt-2 flex items-center justify-center gap-1.5 rounded-md py-1.5 text-[9.5px] font-semibold text-white" style={{ background: "#7EBFA1" }}>
-                  <Upload className="h-2.5 w-2.5" />
-                  Upload
-                </p>
+                <span className="mt-1.5 block rounded-md border border-dashed border-[#D5D0C7] bg-white px-2 py-2 text-center text-[9px] text-brand-gray">
+                  Choose a file, or paste the CSV
+                </span>
               </div>
             ))}
           </div>
+
           <div className="mt-2.5 space-y-1">
             {[
-              "A template CSV for each statement, so the columns are never a guessing game",
-              "Re-uploading a month replaces it, rather than double-counting it",
-              "Paste the CSV straight in if downloading a file is more trouble than it is worth",
+              "Pick the month, upload, done. Re-uploading a month replaces it.",
+              "The Big Six, the ratios, and the briefing all work off it the same way",
+              "So the feature does not die because your books live somewhere else",
             ].map((t) => (
-              <p key={t} className="flex items-start gap-2 text-[10px] leading-snug text-brand-charcoal">
-                <span className="mt-[5px] h-1 w-1 flex-none rounded-full" style={{ background: GREEN }} />
+              <p key={t} className="flex items-start gap-2 text-[9.5px] leading-snug text-brand-charcoal">
+                <Tick className="mt-[2px] h-2.5 w-2.5 flex-none" style={{ color: UP }} />
                 {t}
               </p>
             ))}
           </div>
         </div>
       )}
-
-      <p className="flex-none border-t border-[#F1EEE9] px-3.5 py-2 text-[10px] leading-snug text-brand-gray">
-        {route === "qbo"
-          ? "One accounting system at a time, authorised through Intuit's own sign-in."
-          : "No accounting integration required. The dashboards do not know the difference."}
-      </p>
     </div>
   );
 }
 
-// ---------------------------------------------------------------- 3. the Big 6
+// ---------------------------------------------------------------- 4. the Big Six
 type Metric = keyof typeof SERIES;
 
 const TILES: {
   key: Metric;
   label: string;
   value: string;
-  sub: string;
+  goal: string;
   delta: string;
-  dir: "up" | "down" | "warn";
+  deltaGood: boolean;
+  verdict: string;
+  gap: string;
+  ok: boolean;
+  pct: boolean;
   read: string;
 }[] = [
   {
-    key: "rev", label: "Revenue", value: "$412,800", sub: "July 2026", delta: "+8.4%", dir: "up",
-    read: "Up 29.6% over six months, and July is the biggest month this business has had.",
+    key: "rev", label: "Revenue", value: "$178.9K", goal: "$175K",
+    delta: "-6.6% vs Jun", deltaGood: false, verdict: "Above goal", gap: "$3.9K", ok: true, pct: false,
+    read: "Down 6.6% on June and still $3,900 clear of the goal. March was the high water mark at $209,880.",
   },
   {
-    key: "gp", label: "Gross Profit", value: "$242,300", sub: "58.7% margin", delta: "+1.9 pts", dir: "up",
-    read: "Margin has climbed five months running, 57.0% to 58.7%. Delivery is getting cheaper, not pricing.",
+    key: "np", label: "Profit", value: "$34K", goal: "$32K",
+    delta: "-4.5% vs Jun", deltaGood: false, verdict: "Above goal", gap: "$2K", ok: true, pct: false,
+    read: "$34,017 against a $32,000 goal. Smaller than June in dollars, and still over the line.",
   },
   {
-    key: "opex", label: "Operating Expenses", value: "$186,400", sub: "45.2% of revenue", delta: "+12.1%", dir: "warn",
-    read: "Growing faster than revenue: 12.1% against 8.4%. This is the line that is eating the growth.",
+    key: "pm", label: "Profit Margin", value: "19.0%", goal: "18.0%",
+    delta: "+0.4 pts vs Jun", deltaGood: true, verdict: "Above goal", gap: "1.0 pts", ok: true, pct: true,
+    read: "The one Big Six number that improved in a month revenue fell. A point clear of goal, and up 0.4 on June.",
   },
   {
-    key: "np", label: "Net Profit", value: "$55,900", sub: "13.5% margin", delta: "-1.1 pts", dir: "down",
-    read: "A record dollar figure on a falling margin. It peaked at 14.8% in May and has been sliding since.",
+    key: "ocf", label: "Operating Cash Flow", value: "$32.7K", goal: "$30K",
+    delta: "-3.7% vs Jun", deltaGood: false, verdict: "Above goal", gap: "$2.7K", ok: true, pct: false,
+    read: "$2,700 over goal, and receivables fell $11,668 in the same month. Most of the cash came from collecting, not selling.",
   },
   {
-    key: "cash", label: "Cash on Hand", value: "$318,400", sub: "across 3 accounts", delta: "-$22,100", dir: "down",
-    read: "Down in the same month profit hit a record, because $55,800 of new revenue went to receivables.",
+    key: "gm", label: "Gross Margin", value: "69.7%", goal: "70.0%",
+    delta: "+0.8 pts vs Jun", deltaGood: true, verdict: "To goal", gap: "0.3 pts", ok: false, pct: true,
+    read: "Three tenths of a point short, and moving the right way at +0.8 on June. Amber, not red.",
   },
   {
-    key: "run", label: "Runway", value: "7.4 mo", sub: "at current burn", delta: "-0.6 mo", dir: "down",
-    read: "Two months ago this was 9.1. Nothing has broken yet, but the direction is the whole point.",
+    key: "opex", label: "Operating Expenses", value: "$81.1K", goal: "$72K",
+    delta: "-6.0% vs Jun", deltaGood: true, verdict: "Over budget", gap: "$9.1K", ok: false, pct: false,
+    read: "$9,124 over the goal you set, even after a 6.0% cut on June. This is the number the briefing opens with.",
   },
 ];
 
-function tone(dir: "up" | "down" | "warn") {
-  return dir === "up" ? UP : dir === "warn" ? AMBER : DOWN;
-}
-
 function BigSixDemo() {
-  const [sel, setSel] = useState<Metric>("cash");
+  const [sel, setSel] = useState<Metric>("opex");
   const tile = TILES.find((t) => t.key === sel)!;
   const vals = SERIES[sel];
 
   return (
     <div className={`flex flex-col overflow-hidden rounded-2xl border border-black/5 bg-white shadow-[0_24px_50px_-28px_rgba(40,30,15,0.4)] ${CARD_CLS}`}>
       <div className="flex flex-none items-center gap-2 border-b border-[#F1EEE9] px-3.5 py-2.5">
-        <b className="text-[12px]">Finance HQ</b>
-        <span className="ml-auto flex items-center gap-1.5 text-[9px] font-semibold" style={{ color: GREEN }}>
-          <span className="h-[6px] w-[6px] rounded-full" style={{ background: GREEN }} />
-          Synced 4m ago
+        <b className="text-[12px]">Big Picture</b>
+        <span className="font-mono text-[9px] text-brand-gray">Jul 2026</span>
+        <span className="ml-auto flex items-center gap-1.5">
+          <span className="flex items-center gap-1 rounded-md border border-[#CFE7DA] bg-[#F3FAF6] px-1.5 py-[3px]">
+            <Heart className="h-[11px] w-[11px]" style={{ color: GREEN }} />
+            <b className="text-[10px] tabular-nums">
+              79<span className="text-[8px] font-semibold text-brand-gray">/100</span>
+            </b>
+          </span>
+          <span className="rounded-md border border-[#E6E2DB] px-1.5 py-[3px] text-[9px] font-semibold text-brand-gray">
+            0 warnings
+          </span>
         </span>
       </div>
 
       <div className="grid flex-none grid-cols-3 gap-1.5 px-3.5 py-2.5">
         {TILES.map((t) => {
           const on = sel === t.key;
-          const c = tone(t.dir);
+          const c = t.ok ? GREEN : t.verdict === "Over budget" ? DOWN : AMBER;
           return (
             <button
               key={t.key}
@@ -326,7 +503,7 @@ function BigSixDemo() {
               className={`rounded-lg border px-2 py-1.5 text-left transition-colors ${
                 on ? "border-transparent bg-[#F7F5F1]" : "border-[#E6E2DB] hover:bg-[#FAF9F7]"
               }`}
-              style={on ? { boxShadow: `inset 0 0 0 1.5px ${c}55` } : undefined}
+              style={on ? { boxShadow: `inset 0 0 0 1.5px ${c}66` } : undefined}
             >
               <span className="block truncate text-[8px] font-bold uppercase tracking-[0.09em] text-brand-gray">
                 {t.label}
@@ -334,27 +511,42 @@ function BigSixDemo() {
               <span className="mt-0.5 block truncate text-[14px] font-extrabold leading-none tracking-tight tabular-nums">
                 {t.value}
               </span>
-              <span
-                className="mt-1 inline-block rounded-[4px] px-1 py-px text-[8px] font-bold tabular-nums"
-                style={{ background: `${c}18`, color: c }}
-              >
-                {t.delta}
+              <span className="mt-1 flex items-center gap-1">
+                <span
+                  className="rounded-[4px] px-1 py-px text-[7.5px] font-bold tabular-nums"
+                  style={{ background: `${c}18`, color: c }}
+                >
+                  {t.gap}
+                </span>
+                <span className="truncate text-[7.5px] font-semibold" style={{ color: c }}>
+                  {t.verdict}
+                </span>
               </span>
             </button>
           );
         })}
       </div>
 
-      {/* the deep dive, underneath the tiles, as the brief asks */}
       <div className="min-h-0 flex-1 border-t border-[#F1EEE9] bg-[#FAF9F7] px-3.5 py-2.5">
         <p className="flex items-center gap-2 text-[10.5px] font-bold">
           {tile.label}
+          <span
+            className="flex items-center gap-1 rounded-full px-1.5 py-px text-[8px] font-bold tabular-nums"
+            style={{ background: "rgba(75,60,196,0.09)", color: AI }}
+          >
+            <Target className="h-[8px] w-[8px]" />
+            Goal {tile.goal}
+          </span>
           <span className="ml-auto font-mono text-[8.5px] font-normal text-brand-gray">
             Feb to Jul 2026
           </span>
         </p>
         <div className="mt-1.5 h-[92px] sm:h-[112px]">
-          <Bars vals={vals} color={tone(tile.dir)} money={sel !== "run"} />
+          <Bars
+            vals={vals}
+            color={tile.ok ? EMERALD : tile.verdict === "Over budget" ? ROSE : AMBER}
+            pct={tile.pct}
+          />
         </div>
         <p className="mt-1.5 text-[10px] leading-snug text-brand-charcoal">{tile.read}</p>
       </div>
@@ -363,12 +555,11 @@ function BigSixDemo() {
 }
 
 // A bar per month, each labelled, scaled inside its own range so a series that
-// moves 10% does not read as a flat line.
-function Bars({ vals, color, money: asMoney }: { vals: number[]; color: string; money: boolean }) {
-  const lo = Math.min(...vals) * 0.86;
+// moves two points does not read as a flat line.
+function Bars({ vals, color, pct }: { vals: number[]; color: string; pct: boolean }) {
+  const lo = Math.min(...vals) * (pct ? 0.97 : 0.86);
   const hi = Math.max(...vals);
-  const fmt = (v: number) =>
-    asMoney ? `${Math.round(v / 1000)}k` : v.toFixed(1);
+  const fmt = (v: number) => (pct ? `${v.toFixed(1)}%` : `${Math.round(v / 1000)}k`);
 
   return (
     <div className="flex h-full items-end gap-1.5">
@@ -376,7 +567,7 @@ function Bars({ vals, color, money: asMoney }: { vals: number[]; color: string; 
         const h = ((v - lo) / (hi - lo)) * 100;
         const last = i === vals.length - 1;
         return (
-          <div key={MONTHS[i]} className="flex h-full min-w-0 flex-1 flex-col justify-end">
+          <div key={M6[i]} className="flex h-full min-w-0 flex-1 flex-col justify-end">
             <span className="mb-0.5 text-center font-mono text-[7.5px] tabular-nums text-brand-gray">
               {fmt(v)}
             </span>
@@ -384,7 +575,7 @@ function Bars({ vals, color, money: asMoney }: { vals: number[]; color: string; 
               className="w-full rounded-t-[3px] transition-all duration-500"
               style={{ height: `${Math.max(6, h)}%`, background: last ? color : `${color}44` }}
             />
-            <span className="mt-1 text-center font-mono text-[7.5px] text-brand-gray">{MONTHS[i]}</span>
+            <span className="mt-1 text-center font-mono text-[7.5px] text-brand-gray">{M6[i]}</span>
           </div>
         );
       })}
@@ -392,7 +583,7 @@ function Bars({ vals, color, money: asMoney }: { vals: number[]; color: string; 
   );
 }
 
-// ---------------------------------------------------------------- 4. the briefing
+// ---------------------------------------------------------------- 5. the briefing
 const FINDINGS: {
   tag: string;
   color: string;
@@ -401,42 +592,44 @@ const FINDINGS: {
   rows: { l: string; v: string }[];
 }[] = [
   {
-    tag: "Cash",
-    color: DOWN,
-    head: "Your best profit month, and cash still went down",
-    body: "July netted $55,900 and the bank balance fell $22,100. Receivables grew $55,800 in the same month, and $68,400 of what is owed to you is now more than sixty days old. The profit is real. It is sitting in somebody else's account.",
-    rows: [
-      { l: "Net profit, July", v: "+$55,900" },
-      { l: "Change in cash", v: "-$22,100" },
-      { l: "Change in receivables", v: "+$55,800" },
-      { l: "Over 60 days", v: "$68,400" },
-    ],
-  },
-  {
-    tag: "Risk",
+    tag: "Watch",
     color: AMBER,
-    head: "Operating expenses are outrunning revenue",
-    body: "Revenue grew 8.4% last month. Operating expenses grew 12.1%, led by payroll at 11.0% and marketing at 17.5%. Net margin peaked at 14.8% in May and is now 13.5%. Hold that spread for two more quarters and a record top line earns you nothing.",
+    head: "Revenue slipped, and your margin still went up",
+    body: "July closed at $178,865, down 6.6% on June, and net margin rose to 19.0% anyway. Gross margin did the work: 69.7%, up 0.8 points. The catch is underneath it. Operating expenses came in at $81,124 against the $72,000 goal you set, so 45.4 cents of every dollar went out the door in a month that earned less.",
     rows: [
-      { l: "Revenue growth", v: "+8.4%" },
-      { l: "Opex growth", v: "+12.1%" },
-      { l: "Net margin, May", v: "14.8%" },
-      { l: "Net margin, July", v: "13.5%" },
+      { l: "Revenue, July", v: "$178,865" },
+      { l: "Change on June", v: "-6.6%" },
+      { l: "OpEx against goal", v: "$9,124 over" },
+      { l: "OpEx as % of revenue", v: "45.4%" },
     ],
   },
   {
     tag: "Working",
     color: UP,
-    head: "Delivery is genuinely getting more efficient",
-    body: "Over six months revenue grew 29.6% while cost of goods grew 24.5%, so gross margin went from 57.0% to 58.7%. That is five consecutive months of improvement, and it is the reason there is any profit to argue about at all.",
+    head: "Collections turned a slower month into a cash month",
+    body: "Receivables fell $11,668 and the bank accounts went up $7,036, so the business took in cash on lower sales. Operating cash flow was $32,700 against a $30,000 goal. That is what a good collections month looks like on the statements, and it is the reason the current ratio is 10.68x rather than something worth worrying about.",
     rows: [
-      { l: "Revenue, 6 months", v: "+29.6%" },
-      { l: "Cost of goods, 6 months", v: "+24.5%" },
-      { l: "Gross margin, February", v: "57.0%" },
-      { l: "Gross margin, July", v: "58.7%" },
+      { l: "Accounts receivable", v: "-$11,668" },
+      { l: "Bank accounts", v: "+$7,036" },
+      { l: "Operating cash flow", v: "$32,700" },
+      { l: "Current ratio", v: "10.68x" },
+    ],
+  },
+  {
+    tag: "Close",
+    color: BLUE,
+    head: "Gross margin is three tenths of a point off goal",
+    body: "69.7% against a 70.0% goal, and up 0.8 points on June. Direct labour is $25,396 of the $54,129 cost of goods, so the gap closes with one pricing decision or one scheduling change rather than a project. Four of the Big Six cleared their goals this month. This one is the near miss, and it is moving the right way.",
+    rows: [
+      { l: "Gross margin, July", v: "69.7%" },
+      { l: "Goal", v: "70.0%" },
+      { l: "Change on June", v: "+0.8 pts" },
+      { l: "Health score", v: "79/100" },
     ],
   },
 ];
+
+const SUB_TABS = ["AI Briefing", "Big Picture", "Key Numbers", "Expenses", "CCC", "What-If", "Warnings", "Trends"];
 
 function BriefingDemo() {
   const [open, setOpen] = useState(0);
@@ -448,7 +641,7 @@ function BriefingDemo() {
           <Spark className="h-3.5 w-3.5" />
         </span>
         <span className="min-w-0 flex-1">
-          <p className="text-[12px] font-bold leading-tight">AI CFO Briefing</p>
+          <p className="text-[12px] font-bold leading-tight">AI Briefing</p>
           <p className="text-[9px] text-brand-gray">July 2026 close &middot; generated from your books</p>
         </span>
         <span className="flex-none rounded-full border border-[#E6E2DB] px-2 py-[3px] font-mono text-[8px] text-brand-gray">
@@ -456,7 +649,22 @@ function BriefingDemo() {
         </span>
       </div>
 
-      <div className="min-h-0 flex-1 space-y-1.5 overflow-y-auto px-3.5 py-2.5">
+      {/* The CFO View's own strip, so it is clear the briefing is one of eight.
+          Desktop only: on mobile it truncates mid-word, and nothing in this card
+          scrolls, so the height it costs would push the third finding out. */}
+      <div className="hidden flex-none gap-2.5 border-b border-[#F1EEE9] px-3.5 py-1.5 sm:flex">
+        {SUB_TABS.map((s, i) => (
+          <span
+            key={s}
+            className={`whitespace-nowrap text-[9px] ${i === 0 ? "font-bold" : "font-medium text-brand-gray"}`}
+            style={i === 0 ? { color: GREEN } : undefined}
+          >
+            {s}
+          </span>
+        ))}
+      </div>
+
+      <div className="min-h-0 flex-1 space-y-1.5 overflow-hidden px-3.5 py-2.5">
         {FINDINGS.map((f, i) => {
           const on = open === i;
           return (
@@ -503,62 +711,107 @@ function BriefingDemo() {
       </div>
 
       <p className="flex-none border-t border-[#F1EEE9] px-3.5 py-2 text-[10px] leading-snug text-brand-gray">
-        Written by Anthropic Claude against your own ledger. Your data is not retained for training.
+        <span className="sm:hidden">Written by Claude. Never used for training.</span>
+        <span className="hidden sm:inline">
+          Written by Anthropic Claude against your own ledger. Your data is not retained for
+          training.
+        </span>
       </p>
     </div>
   );
 }
 
-// ---------------------------------------------------------------- 5. the statements
-type Tab = "over" | "pl" | "bs";
+// ---------------------------------------------------------------- 6. the statements
+type Tab = "pl" | "bs" | "kr";
 
-const PL_MONTH = [
-  { l: "Revenue", a: "412,800", b: "380,700", d: "+8.4%", dir: "up" as const, bold: true },
-  { l: "Cost of goods sold", a: "170,500", b: "158,900", d: "+7.3%", dir: "flat" as const },
-  { l: "Gross profit", a: "242,300", b: "221,800", d: "+9.2%", dir: "up" as const, bold: true },
-  { l: "Payroll", a: "112,600", b: "101,400", d: "+11.0%", dir: "warn" as const },
-  { l: "Marketing", a: "38,900", b: "33,100", d: "+17.5%", dir: "warn" as const },
-  { l: "Software & hosting", a: "12,400", b: "11,900", d: "+4.2%", dir: "flat" as const },
-  { l: "Rent & facilities", a: "8,900", b: "8,900", d: "0.0%", dir: "flat" as const },
-  { l: "Other operating", a: "13,600", b: "11,000", d: "+23.6%", dir: "warn" as const },
-  { l: "Total operating expenses", a: "186,400", b: "166,300", d: "+12.1%", dir: "warn" as const, bold: true },
-  { l: "Net profit", a: "55,900", b: "55,500", d: "+0.7%", dir: "down" as const, bold: true },
+// The Profit and Loss tab, July 2026, accrual basis, exactly as the product
+// renders it: nested accounts, running totals, and a % of income column.
+type PlRow = { k: "grp" | "acct" | "tot" | "key"; l: string; v?: string; p?: string; star?: boolean };
+
+const PL: PlRow[] = [
+  { k: "grp", l: "Income" },
+  { k: "acct", l: "Services Revenue", v: "98,068.00", p: "54.83 %" },
+  { k: "acct", l: "Recurring Subscriptions", v: "46,102.00", p: "25.77 %" },
+  { k: "acct", l: "Product Sales", v: "20,752.00", p: "11.60 %" },
+  { k: "acct", l: "Training & Workshops", v: "13,943.00", p: "7.80 %" },
+  { k: "tot", l: "Total Income", v: "$178,865.00", p: "100.00 %" },
+  { k: "grp", l: "Cost of Goods Sold" },
+  { k: "acct", l: "Direct Labor", v: "25,396.00", p: "14.20 %" },
+  { k: "acct", l: "Materials", v: "16,371.00", p: "9.15 %" },
+  { k: "acct", l: "Subcontractors", v: "8,128.00", p: "4.54 %" },
+  { k: "acct", l: "Shipping & Freight", v: "4,234.00", p: "2.37 %" },
+  { k: "tot", l: "Total Cost of Goods Sold", v: "54,129.00", p: "30.26 %" },
+  { k: "key", l: "GROSS PROFIT", v: "$124,736.00", p: "69.74 %", star: true },
+  { k: "grp", l: "Expenses" },
+  { k: "acct", l: "Salaries & Wages", v: "30,398.00", p: "16.99 %" },
+  { k: "acct", l: "Payroll Taxes & Benefits", v: "8,171.00", p: "4.57 %" },
+  { k: "acct", l: "Marketing", v: "7,529.00", p: "4.21 %" },
+  { k: "acct", l: "Rent", v: "6,861.00", p: "3.84 %" },
+  { k: "acct", l: "Software & Subscriptions", v: "5,862.00", p: "3.28 %" },
+  { k: "acct", l: "Depreciation", v: "4,200.00", p: "2.35 %" },
+  { k: "acct", l: "Professional Fees", v: "3,714.00", p: "2.08 %" },
+  { k: "acct", l: "Travel & Meals", v: "3,271.00", p: "1.83 %" },
+  { k: "acct", l: "Insurance", v: "2,950.00", p: "1.65 %" },
+  { k: "acct", l: "Utilities", v: "1,925.00", p: "1.08 %" },
+  { k: "acct", l: "Interest Expense", v: "1,850.00", p: "1.03 %" },
+  { k: "acct", l: "Bank & Merchant Fees", v: "1,578.00", p: "0.88 %" },
+  { k: "acct", l: "Repairs & Maintenance", v: "1,452.00", p: "0.81 %" },
+  { k: "acct", l: "Office Supplies", v: "1,363.00", p: "0.76 %" },
+  { k: "tot", l: "Total Expenses", v: "81,124.00", p: "45.35 %", star: true },
+  { k: "key", l: "NET OPERATING INCOME", v: "$43,612.00", p: "24.38 %" },
 ];
 
-const PL_SIX: { l: string; vals: number[]; bold?: boolean }[] = [
-  { l: "Revenue", vals: SERIES.rev, bold: true },
-  { l: "Cost of goods sold", vals: SERIES.cogs },
-  { l: "Gross profit", vals: SERIES.gp, bold: true },
-  { l: "Operating expenses", vals: SERIES.opex },
-  { l: "Net profit", vals: SERIES.np, bold: true },
+// The Compare view: July against June, at the level the product totals to.
+const PL_CMP = [
+  { l: "Total Income", a: "178,865.00", b: "191,505.00", d: "-6.6%", dir: "down" as const, bold: true },
+  { l: "Total Cost of Goods Sold", a: "54,129.00", b: "59,558.00", d: "-9.1%", dir: "up" as const },
+  { l: "Gross Profit", a: "124,736.00", b: "131,947.00", d: "-5.5%", dir: "down" as const, bold: true },
+  { l: "Total Expenses", a: "81,124.00", b: "86,302.00", d: "-6.0%", dir: "up" as const },
+  { l: "Net Operating Income", a: "43,612.00", b: "45,645.00", d: "-4.5%", dir: "down" as const, bold: true },
+  { l: "Gross margin", a: "69.74 %", b: "68.90 %", d: "+0.8 pts", dir: "up" as const },
+  { l: "OpEx as % of income", a: "45.35 %", b: "45.07 %", d: "+0.3 pts", dir: "warn" as const },
 ];
 
-const BS = {
-  assets: [
-    { l: "Cash and equivalents", v: "318,400" },
-    { l: "Accounts receivable", v: "241,800" },
-    { l: "Other current assets", v: "34,600" },
-    { l: "Fixed assets, net", v: "96,200" },
-  ],
-  liabilities: [
-    { l: "Accounts payable", v: "128,400" },
-    { l: "Credit cards", v: "31,900" },
-    { l: "Accrued liabilities", v: "42,700" },
-    { l: "Long-term debt", v: "148,000" },
-  ],
-};
+// The Balance Sheet tab, as of Jul 31 2026, against the prior period.
+const BS: { l: string; a: string; b: string; d: string; lvl: 0 | 1 | 2; bold?: boolean }[] = [
+  { l: "ASSETS", a: "", b: "", d: "", lvl: 0, bold: true },
+  { l: "Operating Checking", a: "339,087.00", b: "334,162.00", d: "+4,925.00", lvl: 2 },
+  { l: "Savings", a: "145,323.00", b: "143,212.00", d: "+2,111.00", lvl: 2 },
+  { l: "Total Bank Accounts", a: "484,410.00", b: "477,374.00", d: "+7,036.00", lvl: 1, bold: true },
+  { l: "Accounts Receivable (A/R)", a: "164,556.00", b: "176,224.00", d: "-11,668.00", lvl: 2 },
+  { l: "Inventory Asset", a: "21,652.00", b: "23,832.00", d: "-2,180.00", lvl: 2 },
+  { l: "Total Current Assets", a: "670,618.00", b: "677,430.00", d: "-6,812.00", lvl: 1, bold: true },
+  { l: "Total Fixed Assets", a: "180,000.00", b: "180,000.00", d: "0.00", lvl: 1, bold: true },
+  { l: "TOTAL ASSETS", a: "850,618.00", b: "857,430.00", d: "-6,812.00", lvl: 0, bold: true },
+  { l: "LIABILITIES AND EQUITY", a: "", b: "", d: "", lvl: 0, bold: true },
+  { l: "Accounts Payable (A/P)", a: "35,184.00", b: "38,726.00", d: "-3,542.00", lvl: 2 },
+  { l: "Visa Credit Card", a: "12,000.00", b: "12,000.00", d: "0.00", lvl: 2 },
+  { l: "Total Current Liabilities", a: "62,796.00", b: "66,338.00", d: "-3,542.00", lvl: 1, bold: true },
+  { l: "TOTAL LIABILITIES", a: "139,779.00", b: "143,321.00", d: "-3,542.00", lvl: 0, bold: true },
+  { l: "TOTAL EQUITY", a: "710,839.00", b: "714,109.00", d: "-3,270.00", lvl: 0, bold: true },
+];
+
+const RATIOS: { l: string; v: string; d: string; t: string; ok: boolean }[] = [
+  { l: "Gross Margin", v: "69.7%", d: "Revenue minus cost of goods sold, divided by revenue", t: "Target: > 50%", ok: true },
+  { l: "Net Profit Margin", v: "19.0%", d: "Net income divided by total revenue", t: "Target: > 10%", ok: true },
+  { l: "Revenue per Employee", v: "$441,765", d: "Trailing 12-month revenue divided by headcount", t: "Higher is better", ok: true },
+  { l: "Current Ratio", v: "10.68x", d: "Current assets divided by current liabilities", t: "Target: 1.5x to 3.0x", ok: true },
+  { l: "Debt-to-Equity", v: "0.20x", d: "Total liabilities divided by total equity", t: "Target: < 2.0x", ok: true },
+  { l: "OpEx Ratio", v: "45.4%", d: "Operating expenses excluding COGS, divided by revenue", t: "Lower is better", ok: false },
+  { l: "Return on Assets", v: "4.0%", d: "Net income divided by total assets", t: "Target: > 5%", ok: false },
+];
 
 function StatementsDemo() {
   const [tab, setTab] = useState<Tab>("pl");
-  const [span, setSpan] = useState<"month" | "six">("month");
+  const [cmp, setCmp] = useState(false);
 
   return (
-    <div className={`flex flex-col overflow-hidden rounded-2xl border border-black/5 bg-white shadow-[0_24px_50px_-28px_rgba(40,30,15,0.4)] ${TALL_CLS}`}>
+    <div className={`flex flex-col overflow-hidden rounded-2xl border border-black/5 bg-white shadow-[0_24px_50px_-28px_rgba(40,30,15,0.4)] ${CARD_CLS}`}>
       <div className="scrollbar-none flex flex-none items-center gap-1 overflow-x-auto border-b border-[#EBE7E0] px-3 pt-1.5">
         {([
-          { k: "over", l: "Overview" },
-          { k: "pl", l: "Profit & Loss" },
+          { k: "pl", l: "Profit and Loss" },
           { k: "bs", l: "Balance Sheet" },
+          { k: "kr", l: "Key Ratios" },
         ] as const).map(({ k, l }) => (
           <button
             key={k}
@@ -575,105 +828,105 @@ function StatementsDemo() {
         ))}
       </div>
 
-      {tab === "over" && (
-        <div className="min-h-0 flex-1 overflow-y-auto px-3.5 py-3">
-          <div className="grid grid-cols-3 gap-1.5">
-            {[
-              { l: "Revenue", v: "$412,800", d: "+8.4%", dir: "up" as const },
-              { l: "Net profit", v: "$55,900", d: "13.5% margin", dir: "down" as const },
-              { l: "Cash", v: "$318,400", d: "-$22,100", dir: "down" as const },
-            ].map((c) => (
-              <div key={c.l} className="rounded-lg border border-[#EBE7E0] px-2.5 py-2">
-                <p className="truncate text-[8px] font-bold uppercase tracking-[0.09em] text-brand-gray">{c.l}</p>
-                <p className="mt-0.5 text-[15px] font-extrabold leading-none tracking-tight tabular-nums">{c.v}</p>
-                <p className="mt-1 text-[8.5px] font-bold tabular-nums" style={{ color: tone(c.dir) }}>{c.d}</p>
-              </div>
-            ))}
-          </div>
-
-          <p className="mt-3 text-[9px] font-bold uppercase tracking-[0.12em] text-brand-gray">
-            Where the money went, July
-          </p>
-          <div className="mt-1.5 space-y-1">
-            {[
-              { l: "Cost of delivery", v: 170500, c: "#7A9CB8" },
-              { l: "Payroll", v: 112600, c: "#5B47A8" },
-              { l: "Marketing", v: 38900, c: "#EA7B1B" },
-              { l: "Everything else", v: 34900, c: "#8A857D" },
-              { l: "Left as profit", v: 55900, c: GREEN },
-            ].map((r) => (
-              <div key={r.l} className="flex items-center gap-2">
-                <span className="w-[86px] flex-none truncate text-[9.5px] text-brand-charcoal">{r.l}</span>
-                <span className="h-[13px] min-w-0 flex-1 overflow-hidden rounded-[3px] bg-[#F4F1EC]">
-                  <span
-                    className="block h-full rounded-[3px]"
-                    style={{ width: `${(r.v / 412800) * 100}%`, background: r.c }}
-                  />
-                </span>
-                <span className="w-[54px] flex-none text-right font-mono text-[9px] tabular-nums text-brand-charcoal">
-                  {money(r.v)}
-                </span>
-              </div>
-            ))}
-          </div>
-
-          <p className="mt-2.5 rounded-lg bg-[#FAF9F7] px-2.5 py-2 text-[9.5px] leading-snug text-brand-charcoal">
-            Four of those five bars grew faster than revenue last month. That is the whole story of
-            July in one picture, and it is why net margin fell on record sales.
-          </p>
-        </div>
-      )}
-
       {tab === "pl" && (
         <>
           <div className="flex flex-none items-center gap-2 border-b border-[#F1EEE9] px-3.5 py-2">
             <span className="flex items-center gap-0.5 rounded-lg bg-[#F1EEE9] p-0.5">
               {([
-                { k: "month", l: "Last month" },
-                { k: "six", l: "Last 6 months" },
+                { k: false, l: "July 2026" },
+                { k: true, l: "Compare to June" },
               ] as const).map(({ k, l }) => (
                 <button
-                  key={k}
+                  key={l}
                   type="button"
-                  aria-pressed={span === k}
-                  onClick={() => setSpan(k)}
+                  aria-pressed={cmp === k}
+                  onClick={() => setCmp(k)}
                   className={`whitespace-nowrap rounded-[7px] px-2.5 py-[4px] text-[9.5px] transition-colors ${
-                    span === k ? "bg-brand-ink font-semibold text-white" : "font-medium text-brand-charcoal"
+                    cmp === k ? "bg-brand-ink font-semibold text-white" : "font-medium text-brand-charcoal"
                   }`}
                 >
                   {l}
                 </button>
               ))}
             </span>
-            <span className="ml-auto truncate font-mono text-[8.5px] text-brand-gray">
-              {span === "month" ? "Jul vs Jun 2026" : "Feb to Jul 2026"}
+            <span className="ml-auto truncate font-mono text-[8.5px]" style={{ color: GREEN }}>
+              Accrual basis
             </span>
           </div>
 
-          <div className="min-h-0 flex-1 overflow-auto">
-            {span === "month" ? (
+          <div className="min-h-0 flex-1 overflow-hidden">
+            {!cmp ? (
+              <>
+                <div className="flex items-center gap-2 border-b border-[#F1EEE9] bg-[#FAF9F7] px-3 py-1.5">
+                  <span className="min-w-0 flex-1 text-[8px] font-bold uppercase tracking-[0.1em] text-brand-gray">
+                    Account
+                  </span>
+                  <span className="w-[86px] flex-none text-right text-[8px] font-bold uppercase tracking-[0.1em] text-brand-gray">
+                    Total
+                  </span>
+                  <span className="w-[52px] flex-none text-right text-[8px] font-bold uppercase tracking-[0.1em] text-brand-gray">
+                    % Inc
+                  </span>
+                </div>
+                {PL.map((r) => {
+                  const grp = r.k === "grp";
+                  const tot = r.k === "tot";
+                  const key = r.k === "key";
+                  return (
+                    <div
+                      key={r.l}
+                      className="flex items-center gap-2 border-b border-[#F7F4EF] px-3 py-[3px]"
+                      style={tot || key ? { background: "#FAF9F7" } : undefined}
+                    >
+                      <span
+                        className={`min-w-0 flex-1 truncate ${
+                          key
+                            ? "text-[10px] font-extrabold"
+                            : tot || grp
+                              ? "text-[10px] font-bold"
+                              : "pl-3 text-[10px] text-brand-charcoal"
+                        }`}
+                      >
+                        {r.l}
+                      </span>
+                      <span
+                        className={`w-[86px] flex-none text-right tabular-nums ${
+                          key ? "text-[10px] font-extrabold" : tot ? "text-[10px] font-bold" : "text-[10px]"
+                        }`}
+                      >
+                        {r.v}
+                      </span>
+                      <span className="flex w-[52px] flex-none items-center justify-end gap-1 text-[9px] tabular-nums text-brand-charcoal">
+                        {r.star && <span style={{ color: "#E0A32E" }}>&#9733;</span>}
+                        <span className={key || tot ? "font-bold" : ""}>{r.p}</span>
+                      </span>
+                    </div>
+                  );
+                })}
+              </>
+            ) : (
               <table className="w-full text-left">
                 <thead>
                   <tr className="bg-[#FAF9F7] text-[8px] uppercase tracking-[0.1em] text-brand-gray">
-                    <th className="px-3 py-1.5 font-bold">Account</th>
-                    <th className="px-3 py-1.5 text-right font-bold">Jul</th>
-                    <th className="px-3 py-1.5 text-right font-bold">Jun</th>
+                    <th className="px-3 py-1.5 font-bold">Line</th>
+                    <th className="px-3 py-1.5 text-right font-bold">Jul 2026</th>
+                    <th className="px-3 py-1.5 text-right font-bold">Jun 2026</th>
                     <th className="px-3 py-1.5 text-right font-bold">Change</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {PL_MONTH.map((r) => {
-                    const c = r.dir === "flat" ? "#8A857D" : tone(r.dir);
+                  {PL_CMP.map((r) => {
+                    const c = tone(r.dir);
                     return (
                       <tr key={r.l} className="border-t border-[#F5F2ED]" style={r.bold ? { background: "#FAF9F7" } : undefined}>
-                        <td className={`px-3 py-[5px] text-[10px] ${r.bold ? "font-bold" : "pl-5 text-brand-charcoal"}`}>
+                        <td className={`px-3 py-[7px] text-[10px] ${r.bold ? "font-bold" : "pl-5 text-brand-charcoal"}`}>
                           {r.l}
                         </td>
-                        <td className={`px-3 py-[5px] text-right text-[10px] tabular-nums ${r.bold ? "font-bold" : ""}`}>
+                        <td className={`px-3 py-[7px] text-right text-[10px] tabular-nums ${r.bold ? "font-bold" : ""}`}>
                           {r.a}
                         </td>
-                        <td className="px-3 py-[5px] text-right text-[10px] tabular-nums text-brand-gray">{r.b}</td>
-                        <td className="px-3 py-[5px] text-right">
+                        <td className="px-3 py-[7px] text-right text-[10px] tabular-nums text-brand-gray">{r.b}</td>
+                        <td className="px-3 py-[7px] text-right">
                           <span className="rounded-[4px] px-1.5 py-px text-[8.5px] font-bold tabular-nums" style={{ background: `${c}16`, color: c }}>
                             {r.d}
                           </span>
@@ -683,109 +936,130 @@ function StatementsDemo() {
                   })}
                 </tbody>
               </table>
-            ) : (
-              <table className="w-full text-left">
-                <thead>
-                  <tr className="bg-[#FAF9F7] text-[8px] uppercase tracking-[0.1em] text-brand-gray">
-                    <th className="px-3 py-1.5 font-bold">Account</th>
-                    {MONTHS.map((m) => (
-                      <th key={m} className="px-2 py-1.5 text-right font-bold">{m}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {PL_SIX.map((r) => (
-                    <tr key={r.l} className="border-t border-[#F5F2ED]" style={r.bold ? { background: "#FAF9F7" } : undefined}>
-                      <td className={`px-3 py-[6px] text-[10px] ${r.bold ? "font-bold" : "pl-5 text-brand-charcoal"}`}>
-                        {r.l}
-                      </td>
-                      {r.vals.map((v, i) => (
-                        <td
-                          key={MONTHS[i]}
-                          className={`px-2 py-[6px] text-right font-mono text-[9px] tabular-nums ${
-                            r.bold ? "font-bold" : "text-brand-charcoal"
-                          }`}
-                        >
-                          {Math.round(v / 1000)}k
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
-                  <tr className="border-t border-[#F5F2ED]">
-                    <td className="px-3 py-[6px] pl-5 text-[10px] text-brand-charcoal">Net margin</td>
-                    {["12.7%", "13.6%", "14.4%", "14.8%", "14.6%", "13.5%"].map((m, i) => (
-                      <td
-                        key={MONTHS[i]}
-                        className="px-2 py-[6px] text-right font-mono text-[9px] tabular-nums"
-                        style={{ color: i >= 4 ? DOWN : UP }}
-                      >
-                        {m}
-                      </td>
-                    ))}
-                  </tr>
-                </tbody>
-              </table>
             )}
           </div>
 
           <p className="flex-none border-t border-[#F1EEE9] px-3.5 py-2 text-[10px] leading-snug text-brand-gray">
-            {span === "month"
-              ? "Last month against the one before it, every line, with the change already worked out."
-              : "Six months side by side is where the trend shows up. Net margin peaked in May."}
+            {cmp
+              ? "Every total against the month before. Costs fell faster than revenue, which is why margin went up on a smaller month."
+              : "Twenty-eight accounts, each as a share of income, each traceable back to the QuickBooks account behind it."}
           </p>
         </>
       )}
 
       {tab === "bs" && (
-        <div className="min-h-0 flex-1 overflow-y-auto px-3.5 py-3">
-          <div className="grid grid-cols-2 gap-2.5">
-            <div>
-              <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-brand-gray">Assets</p>
-              <div className="mt-1.5 space-y-1">
-                {BS.assets.map((r) => (
-                  <p key={r.l} className="flex items-center gap-2 text-[10px]">
-                    <span className="min-w-0 flex-1 truncate text-brand-charcoal">{r.l}</span>
-                    <b className="flex-none font-mono tabular-nums">{r.v}</b>
-                  </p>
-                ))}
-              </div>
-              <p className="mt-1.5 flex items-center gap-2 border-t border-[#EBE7E0] pt-1.5 text-[10.5px] font-bold">
-                <span className="min-w-0 flex-1">Total assets</span>
-                <span className="flex-none font-mono tabular-nums">691,000</span>
-              </p>
-            </div>
-
-            <div>
-              <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-brand-gray">
-                Liabilities
-              </p>
-              <div className="mt-1.5 space-y-1">
-                {BS.liabilities.map((r) => (
-                  <p key={r.l} className="flex items-center gap-2 text-[10px]">
-                    <span className="min-w-0 flex-1 truncate text-brand-charcoal">{r.l}</span>
-                    <b className="flex-none font-mono tabular-nums">{r.v}</b>
-                  </p>
-                ))}
-              </div>
-              <p className="mt-1.5 flex items-center gap-2 border-t border-[#EBE7E0] pt-1.5 text-[10.5px] font-bold">
-                <span className="min-w-0 flex-1">Total liabilities</span>
-                <span className="flex-none font-mono tabular-nums">351,000</span>
-              </p>
-              <p className="mt-1 flex items-center gap-2 text-[10.5px] font-bold" style={{ color: GREEN }}>
-                <span className="min-w-0 flex-1">Equity</span>
-                <span className="flex-none font-mono tabular-nums">340,000</span>
-              </p>
-            </div>
+        <>
+          <div className="flex flex-none items-center gap-2 border-b border-[#F1EEE9] px-3.5 py-2">
+            <b className="text-[10.5px]">Balance Sheet</b>
+            <span className="font-mono text-[8.5px] text-brand-gray">As of Jul 31, 2026</span>
+            <span className="ml-auto rounded-md border border-[#E6E2DB] px-2 py-[3px] font-mono text-[8.5px] text-brand-charcoal">
+              vs Jun 30, 2026
+            </span>
           </div>
 
-          <div className="mt-3 rounded-lg px-2.5 py-2" style={{ background: "#FBEEEB" }}>
-            <p className="text-[10px] font-bold" style={{ color: DOWN }}>
-              Receivables are now 35% of everything you own.
-            </p>
-            <p className="mt-0.5 text-[9.5px] leading-snug text-brand-charcoal">
-              $241,800 owed to you against $318,400 in the bank, and $68,400 of it is over sixty days
-              old. This is the line the cash finding on the briefing came from.
-            </p>
+          <div className="grid flex-none grid-cols-3 gap-1.5 px-3.5 py-2.5">
+            {[
+              { l: "Total assets", v: "$850,618", c: UP },
+              { l: "Total liabilities", v: "$139,779", c: DOWN },
+              { l: "Total equity", v: "$710,839", c: BLUE },
+            ].map((c) => (
+              <div key={c.l} className="rounded-lg border border-[#EBE7E0] px-2.5 py-1.5">
+                <p className="truncate text-[8px] font-bold uppercase tracking-[0.09em] text-brand-gray">{c.l}</p>
+                <p className="mt-0.5 text-[14px] font-extrabold leading-none tracking-tight tabular-nums" style={{ color: c.c }}>
+                  {c.v}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          <div className="min-h-0 flex-1 overflow-hidden border-t border-[#F1EEE9]">
+            <div className="flex items-center gap-2 border-b border-[#F1EEE9] bg-[#FAF9F7] px-3 py-1.5">
+              <span className="min-w-0 flex-1 text-[8px] font-bold uppercase tracking-[0.1em] text-brand-gray">
+                Account
+              </span>
+              <span className="w-[74px] flex-none text-right text-[8px] font-bold uppercase tracking-[0.1em] text-brand-gray">
+                Jul 31
+              </span>
+              <span className="w-[74px] flex-none text-right text-[8px] font-bold uppercase tracking-[0.1em] text-brand-gray">
+                Jun 30
+              </span>
+              <span className="w-[72px] flex-none text-right text-[8px] font-bold uppercase tracking-[0.1em] text-brand-gray">
+                Change
+              </span>
+            </div>
+            {BS.map((r) => {
+              const neg = r.d.startsWith("-");
+              const zero = r.d === "0.00" || r.d === "";
+              return (
+                <div
+                  key={r.l}
+                  className="flex items-center gap-2 border-b border-[#F7F4EF] px-3 py-[3.5px]"
+                  style={r.lvl === 0 ? { background: "#FAF9F7" } : undefined}
+                >
+                  <span
+                    className={`min-w-0 flex-1 truncate text-[10px] ${r.bold ? "font-bold" : "text-brand-charcoal"}`}
+                    style={{ paddingLeft: r.lvl * 8 }}
+                  >
+                    {r.l}
+                  </span>
+                  <span className={`w-[74px] flex-none text-right text-[10px] tabular-nums ${r.bold ? "font-bold" : ""}`}>
+                    {r.a}
+                  </span>
+                  <span className="w-[74px] flex-none text-right text-[10px] tabular-nums text-brand-gray">{r.b}</span>
+                  <span
+                    className="w-[72px] flex-none text-right text-[9.5px] font-semibold tabular-nums"
+                    style={{ color: zero ? "#A6A6A6" : neg ? DOWN : UP }}
+                  >
+                    {r.d}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+
+          <p className="flex-none border-t border-[#F1EEE9] px-3.5 py-2 text-[10px] leading-snug text-brand-gray">
+            Every line against the same line a month ago, so a balance sheet stops being a snapshot
+            and starts being a direction.
+          </p>
+        </>
+      )}
+
+      {tab === "kr" && (
+        <div className="min-h-0 flex-1 overflow-hidden px-3.5 py-3">
+          <div className="grid grid-cols-2 gap-1.5">
+            {RATIOS.map((r) => (
+              <div
+                key={r.l}
+                className="rounded-lg border px-2.5 py-2"
+                style={
+                  r.ok
+                    ? { borderColor: "rgba(18,168,112,0.3)", background: "#F4FBF7" }
+                    : { borderColor: "rgba(201,131,43,0.34)", background: "#FEFAF1" }
+                }
+              >
+                <p className="flex items-center gap-1.5">
+                  <span className="h-[6px] w-[6px] flex-none rounded-full" style={{ background: r.ok ? EMERALD : AMBER }} />
+                  <span className="min-w-0 truncate text-[8px] font-bold uppercase tracking-[0.09em] text-brand-charcoal">
+                    {r.l}
+                  </span>
+                </p>
+                <p className="mt-0.5 text-[17px] font-extrabold leading-none tracking-tight tabular-nums">{r.v}</p>
+                <p className="mt-1 text-[8.5px] leading-snug text-brand-charcoal">{r.d}</p>
+                <p className="mt-0.5 text-[8px] font-semibold text-brand-gray">{r.t}</p>
+              </div>
+            ))}
+
+            {/* the eighth cell, so the grid closes instead of trailing off */}
+            <div className="flex flex-col justify-center rounded-lg border border-dashed border-[#DDD8CF] px-2.5 py-2">
+              <p className="flex items-center gap-1.5 text-[8.5px] font-bold" style={{ color: GREEN }}>
+                <Target className="h-3 w-3" />
+                Five green, two amber
+              </p>
+              <p className="mt-1 text-[8.5px] leading-snug text-brand-charcoal">
+                Nobody on the team has to remember what a healthy current ratio is, because the target
+                is printed on the card next to the number.
+              </p>
+            </div>
           </div>
         </div>
       )}
@@ -793,54 +1067,69 @@ function StatementsDemo() {
   );
 }
 
-// ---------------------------------------------------------------- 6. transactions
-type Tx = { d: string; who: string; acct: string; amt: number };
+// ---------------------------------------------------------------- 7. transactions
+type Tx = { d: string; type: string; who: string; acct: string; off: string; memo: string; doc: string; amt: number };
 
+// Twelve July rows off the sample ledger, in the product's own column order.
 const TX: Tx[] = [
-  { d: "Jul 28", who: "Amazon Web Services", acct: "Software & Hosting", amt: -4182.4 },
-  { d: "Jul 26", who: "Gusto Payroll", acct: "Payroll", amt: -68940 },
-  { d: "Jul 24", who: "Meta Ads", acct: "Marketing", amt: -9850 },
-  { d: "Jul 22", who: "Northwind Group", acct: "Revenue", amt: 48000 },
-  { d: "Jul 19", who: "Adobe Creative Cloud", acct: "Software & Hosting", amt: -1079.88 },
-  { d: "Jul 18", who: "Delta Air Lines", acct: "Travel", amt: -1462.3 },
-  { d: "Jul 15", who: "Figma", acct: "Software & Hosting", amt: -684 },
-  { d: "Jul 12", who: "Harborline LLC", acct: "Revenue", amt: 26500 },
-  { d: "Jul 09", who: "State Farm", acct: "Insurance", amt: -2240 },
-  { d: "Jul 05", who: "WeWork", acct: "Rent & Facilities", amt: -8900 },
+  { d: "Jul 31", type: "Journal Entry", who: "", acct: "Income Tax Expense", off: "Income Taxes Payable", memo: "Income tax accrual", doc: "JE-2026-07-TAX", amt: 9595 },
+  { d: "Jul 31", type: "Journal Entry", who: "", acct: "Depreciation", off: "Accumulated Depreciation", memo: "Monthly depreciation", doc: "JE-2026-07-DEP", amt: 4200 },
+  { d: "Jul 31", type: "Check", who: "Summit Benefits Group", acct: "Payroll Taxes & Benefits", off: "Operating Checking", memo: "Employer taxes and benefits", doc: "10831", amt: 3326 },
+  { d: "Jul 31", type: "Check", who: "Beacon Payroll Co.", acct: "Salaries & Wages", off: "Operating Checking", memo: "Payroll run", doc: "10830", amt: 10142 },
+  { d: "Jul 28", type: "Sales Receipt", who: "Halstead Manufacturing", acct: "Operating Checking", off: "Recurring Subscriptions", memo: "Recurring plan, auto-charged", doc: "SR-3480", amt: 5285 },
+  { d: "Jul 28", type: "Invoice", who: "Fairmount Auto Group", acct: "Accounts Receivable (A/R)", off: "Services Revenue", memo: "Professional services, custom development", doc: "INV-1307", amt: 21852 },
+  { d: "Jul 27", type: "Expense", who: "Vantage Analytics", acct: "Software & Subscriptions", off: "Visa Credit Card", memo: "Monthly subscription", doc: "", amt: 2062 },
+  { d: "Jul 27", type: "Invoice", who: "Orchard Lane Dental", acct: "Accounts Receivable (A/R)", off: "Product Sales", memo: "Product order, sensor module", doc: "INV-1310", amt: 8644 },
+  { d: "Jul 26", type: "Payment", who: "Ironbridge Security", acct: "Operating Checking", off: "Accounts Receivable (A/R)", memo: "Payment received, INV-1300", doc: "", amt: 10037 },
+  { d: "Jul 25", type: "Payment", who: "Verdant Home Services", acct: "Operating Checking", off: "Accounts Receivable (A/R)", memo: "Payment received, INV-1292", doc: "", amt: 12993 },
+  { d: "Jul 25", type: "Bill", who: "Ashford & Lane LLP", acct: "Professional Fees", off: "Accounts Payable (A/P)", memo: "Professional services", doc: "BILL-2666", amt: 1751 },
+  { d: "Jul 25", type: "Expense", who: "Quill Software Inc", acct: "Software & Subscriptions", off: "Visa Credit Card", memo: "Monthly subscription", doc: "", amt: 1437 },
 ];
 
-const CHIPS = ["software", "payroll", "revenue", "ads"];
+const CHIPS = ["software", "payroll", "invoice", "payment"];
 
 function TxDemo() {
-  const [q, setQ] = useState("software");
+  // Opens on the whole ledger rather than a filter, so the reader sees the
+  // volume first and the search second.
+  const [q, setQ] = useState("");
   const term = q.trim().toLowerCase();
   const rows = term
-    ? TX.filter((t) => `${t.who} ${t.acct}`.toLowerCase().includes(term))
+    ? TX.filter((t) => `${t.who} ${t.acct} ${t.off} ${t.memo} ${t.type} ${t.doc}`.toLowerCase().includes(term))
     : TX;
   const total = rows.reduce((s, t) => s + t.amt, 0);
 
   return (
     <div className={`flex flex-col overflow-hidden rounded-2xl border border-black/5 bg-white shadow-[0_24px_50px_-28px_rgba(40,30,15,0.4)] ${CARD_CLS}`}>
       <div className="flex-none border-b border-[#F1EEE9] px-3.5 py-2.5">
-        <label className="flex items-center gap-2 rounded-lg border border-[#E6E2DB] bg-[#FAF9F7] px-2.5 py-1.5 focus-within:border-brand-orange/60 focus-within:bg-white">
-          <Search className="h-3.5 w-3.5 flex-none text-brand-gray" />
-          <input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Search every transaction"
-            aria-label="Search transactions"
-            className="min-w-0 flex-1 bg-transparent text-[11px] font-medium outline-none placeholder:font-normal placeholder:text-brand-gray"
-          />
-          {q && (
-            <button
-              type="button"
-              onClick={() => setQ("")}
-              className="flex-none text-[9px] font-semibold text-brand-gray hover:text-brand-charcoal"
-            >
-              Clear
-            </button>
-          )}
-        </label>
+        <p className="mb-1.5 text-[9px] text-brand-gray">
+          Sample ledger &middot; 4,430 posting lines across 24 months &middot; every row here foots to the
+          Profit and Loss.
+        </p>
+        <div className="flex items-center gap-1.5">
+          <label className="flex min-w-0 flex-1 items-center gap-2 rounded-lg border border-[#E6E2DB] bg-[#FAF9F7] px-2.5 py-1.5 focus-within:border-brand-orange/60 focus-within:bg-white">
+            <Search className="h-3.5 w-3.5 flex-none text-brand-gray" />
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Vendor, customer, memo, doc #..."
+              aria-label="Search transactions"
+              className="min-w-0 flex-1 bg-transparent text-[11px] font-medium outline-none placeholder:font-normal placeholder:text-brand-gray"
+            />
+            {q && (
+              <button
+                type="button"
+                onClick={() => setQ("")}
+                className="flex-none text-[9px] font-semibold text-brand-gray hover:text-brand-charcoal"
+              >
+                Clear
+              </button>
+            )}
+          </label>
+          <span className="flex flex-none items-center gap-1 rounded-lg border border-[#E6E2DB] bg-white px-2 py-1.5 text-[9.5px] font-semibold text-brand-charcoal">
+            <Download className="h-3 w-3" />
+            Export CSV
+          </span>
+        </div>
         <div className="mt-1.5 flex flex-wrap gap-1">
           {CHIPS.map((c) => (
             <button
@@ -859,7 +1148,7 @@ function TxDemo() {
         </div>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto">
+      <div className="min-h-0 flex-1 overflow-hidden">
         {rows.length === 0 && (
           <p className="px-3.5 pt-12 text-center text-[10.5px] leading-relaxed text-brand-gray">
             Nothing matches &ldquo;{q}&rdquo; in July.
@@ -868,61 +1157,68 @@ function TxDemo() {
           </p>
         )}
         {rows.map((t) => (
-          <div key={`${t.d}-${t.who}`} className="flex items-center gap-2.5 border-b border-[#F5F2ED] px-3.5 py-[7px]">
+          <div key={`${t.d}-${t.acct}-${t.amt}`} className="flex items-center gap-2 border-b border-[#F5F2ED] px-3.5 py-[6px]">
             <span className="w-[38px] flex-none font-mono text-[9px] text-brand-gray">{t.d}</span>
-            <span className="min-w-0 flex-1">
-              <span className="block truncate text-[10.5px] font-semibold leading-tight">{t.who}</span>
-              <span className="text-[8.5px] text-brand-gray">{t.acct}</span>
+            <span className="w-[74px] flex-none truncate text-[9px] font-semibold" style={{ color: GREEN }}>
+              {t.type}
             </span>
-            <span
-              className="flex-none font-mono text-[10px] font-bold tabular-nums"
-              style={{ color: t.amt > 0 ? UP : "#33302C" }}
-            >
-              {t.amt > 0 ? "+" : "-"}
-              {Math.abs(t.amt).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-[10.5px] font-semibold leading-tight">
+                {t.who || t.acct}
+              </span>
+              <span className="block truncate text-[8.5px] text-brand-gray">
+                {t.acct} &#8596; {t.off}
+              </span>
+            </span>
+            <span className="hidden w-[128px] flex-none sm:block">
+              <span className="block truncate text-[9px] text-brand-charcoal">{t.memo}</span>
+              <span className="block truncate font-mono text-[8px] text-brand-gray">{t.doc}</span>
+            </span>
+            <span className="flex-none font-mono text-[10px] font-bold tabular-nums">
+              ${t.amt.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </span>
           </div>
         ))}
       </div>
 
       <div className="flex flex-none items-center gap-2 border-t border-[#F1EEE9] bg-[#FAF9F7] px-3.5 py-2">
+        {/* not "shown": the list is clipped by the card, so this counts matches */}
         <span className="text-[10px] text-brand-gray">
-          {rows.length} of {TX.length} transactions
+          {term ? `${rows.length} of ${TX.length} rows match` : `${TX.length} rows from July`}
         </span>
-        <span className="ml-auto font-mono text-[10.5px] font-bold tabular-nums" style={{ color: total >= 0 ? UP : "#33302C" }}>
-          {total >= 0 ? "+" : "-"}
-          {Math.abs(total).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+        <span className="ml-auto font-mono text-[10.5px] font-bold tabular-nums">
+          Total ${total.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
         </span>
       </div>
     </div>
   );
 }
 
-// ---------------------------------------------------------------- 7. Multi AI
+// ---------------------------------------------------------------- 8. Multi AI
 const AI_ROWS: Row[] = [
-  { name: "Cash on Hand", value: "$318,400", hit: false, tone: "red" },
-  { name: "Operating Expenses", value: "+12.1%", hit: false, tone: "amber" },
-  { name: "Gross Margin", value: "58.7%", hit: true },
+  { name: "Operating Expenses", value: "$9,124 over goal", hit: false, tone: "amber" },
+  { name: "Operating Cash Flow", value: "$32,700", hit: true },
+  { name: "Bank Accounts", value: "$484,410", hit: true },
 ];
 
 const AI_INSIGHTS: Insight[] = [
   {
     tag: "Answer",
-    color: DOWN,
-    source: "Cash on Hand",
-    text: "You can cover payroll, but not comfortably. Cash is $318,400 and it fell $22,100 in your best profit month, because $55,800 of July's revenue is still sitting in receivables. Collect the $68,400 that is over sixty days and the question stops being a question.",
+    color: UP,
+    source: "Bank Accounts",
+    text: "Yes, and comfortably. You are holding $484,410 across two accounts against $62,796 of current liabilities, and July still generated $32,700 of operating cash on a month when revenue fell 6.6%. Two hires at market do not threaten that.",
   },
   {
-    tag: "Because",
+    tag: "But",
     color: AMBER,
     source: "Operating Expenses",
-    text: "Operating expenses grew 12.1% against 8.4% revenue growth, led by payroll and marketing. That spread is what turned a record month into a falling net margin, 14.8% in May down to 13.5% now.",
+    text: "Operating expenses are already $9,124 over the $72,000 goal you set, and salaries and wages are $30,398 of the $81,124. Two more people move OpEx further from the target it is missing, not closer.",
   },
   {
-    tag: "Keep doing",
-    color: UP,
-    source: "Gross Margin",
-    text: "Gross margin has improved five months running, 57.0% to 58.7%. Whatever changed in delivery this spring is working, and it is the only reason the opex problem has not shown up in the bank yet.",
+    tag: "So",
+    color: BLUE,
+    source: "Operating Cash Flow",
+    text: "Raise the OpEx goal deliberately, or hire one now and one after gross margin clears 70.0%. Either is fine. Drifting past the goal without deciding to is the version that ends badly.",
   },
 ];
 
@@ -1040,12 +1336,12 @@ export default function CfoAnalyticsPage() {
             <p className="mx-auto mt-3.5 max-w-2xl text-[14.5px] leading-relaxed text-brand-charcoal sm:mt-7 sm:text-xl">
               <span className="sm:hidden">
                 Two minutes of setup turns your books into a finance department that reads them for
-                you.
+                you, behind a password of its own.
               </span>
               <span className="hidden sm:inline">
-                Finance HQ pulls six months of your books in one read-only sync, then does what a
-                good CFO does with them: tells you that your record profit month was also the month
-                your cash went down, and exactly why.
+                Finance HQ locks your books behind a second password, then does what a good CFO does
+                with them: measures all six headline numbers against the goals you set, and writes up
+                what moved and why.
               </span>
             </p>
           </Reveal>
@@ -1078,7 +1374,23 @@ export default function CfoAnalyticsPage() {
         <hr className="border-t border-brand-gray/20" />
       </div>
 
-      {/* ------------------------------------------------ 2. connect */}
+      {/* ------------------------------------------------ 2. the lock */}
+      <Section
+        id="locked"
+        eyebrow="Locked by default"
+        title="Being logged in is not"
+        swash="enough."
+        body="Finance HQ asks for a second password of its own before it renders a single number. Somebody sitting at an open Multiply OS session still does not get your payroll, your bank balance, or what the company is worth. The books are the one part of the operating system that stays shut until you say otherwise."
+        points={[
+          "A separate Finance HQ password, on top of your account login",
+          "Every tab behind it stays closed until that password is entered",
+          "Read-only QuickBooks sync underneath, tokens encrypted at rest",
+        ]}
+        visual={<LockDemo />}
+        panel="linear-gradient(160deg, #ECF4F0, #DBE9E2)"
+      />
+
+      {/* ------------------------------------------------ 3. connect */}
       <Section
         id="connect"
         eyebrow="Two minutes, once"
@@ -1091,76 +1403,77 @@ export default function CfoAnalyticsPage() {
           "Not on QuickBooks? A CSV per month does the same job",
         ]}
         visual={<ConnectDemo />}
+        flip
         panel="linear-gradient(160deg, #EDF6F1, #DEEDE5)"
       />
 
-      {/* ------------------------------------------------ 3. the Big 6 */}
+      {/* ------------------------------------------------ 4. the Big Six */}
       <Section
         id="big-six"
-        eyebrow="The Big 6"
-        title="Six numbers that tell you whether"
-        swash="you are fine."
-        body="Revenue, gross profit, operating expenses, net profit, cash, and runway. The whole company on one row, each with the direction it is moving, and a six-month history underneath so you can tell a bad month from a bad trend."
+        eyebrow="The Big Six"
+        title="Six numbers, and the goal you set"
+        swash="for each one."
+        body="Revenue, profit, profit margin, operating cash flow, gross margin, and operating expenses. Every card carries the number, the trend, and the distance to the target you set yourself, so nobody has to decide in the meeting whether $178,865 was a good month. It was $3,900 over goal. That is the whole conversation."
         points={[
-          "Every tile carries its change, not just its value",
-          "Click any of the six to open its trend below",
-          "Profit and cash sit side by side, because they disagree more often than owners expect",
+          "Above goal, to goal, or over budget, printed on every card",
+          "A health score out of 100 and a live warning count on the same screen",
+          "Click any of the six to open its six-month history underneath",
         ]}
         visual={<BigSixDemo />}
-        flip
         panel="linear-gradient(160deg, #FFF7EA, #FDECD4)"
       />
 
-      {/* ------------------------------------------------ 4. the briefing */}
+      {/* ------------------------------------------------ 5. the briefing */}
       <Section
         id="briefing"
-        eyebrow="The AI CFO Briefing"
+        eyebrow="The AI Briefing"
         title="A chart shows you the drop. This tells"
         swash="you why."
         body="Every month it reads your ledger and writes up what a CFO would have walked into your office to say. Not a summary of the numbers you already saw, but the connection between them, with the arithmetic attached so you can check it."
         points={[
           "Written against your real accounts, with the figures cited",
-          "Says what is going wrong, what is going right, and what is about to",
+          "One of eight views under CFO View, next to Warnings, What-If, and CCC",
           "Generated by Anthropic Claude, and your data is never used for training",
         ]}
         visual={<BriefingDemo />}
+        flip
         panel="linear-gradient(160deg, #F3F0FA, #E9E4F6)"
       />
 
-      {/* ------------------------------------------------ 5. the statements */}
+      {/* ------------------------------------------------ 6. the statements */}
       <Section
         id="statements"
-        eyebrow="Overview, P&amp;L, Balance Sheet"
+        eyebrow="P&amp;L, Balance Sheet, Key Ratios"
         title="Run the entire P&L here, not"
         swash="in QuickBooks."
-        body="Last month against the month before, every line with the change already worked out. Or six months side by side, which is the view that shows you net margin peaked in May while everybody was celebrating the revenue. The balance sheet sits one tab across."
+        body="Every account, nested the way your accountant nests them, with each line as a share of income and a compare column against last month. The balance sheet sits one tab across, already differenced against the prior period, and the ratios tab does the arithmetic nobody remembers the targets for."
         points={[
-          "Last month and last six months, on the same statement",
-          "Overview, Profit & Loss, Balance Sheet, and Cash Flow",
-          "Every line traces back to the accounts it came from",
+          "Twenty-eight accounts on the P&L, each with its % of income",
+          "A balance sheet that shows the change, not just the closing figure",
+          "Seven key ratios, each printed next to the target it has to clear",
         ]}
         visual={<StatementsDemo />}
-        flip
         panel="linear-gradient(160deg, #EEF4FB, #E2ECF8)"
       />
 
-      {/* ------------------------------------------------ 6. transactions */}
+      {/* ------------------------------------------------ 7. transactions */}
       <Section
         id="transactions"
         eyebrow="Transactions"
         title="Find any charge without opening"
         swash="QuickBooks."
-        body="Search the whole ledger by vendor, by account, by anything. Ask what you actually spent on software last month and get the answer and the subtotal in the same second, instead of logging into a second system to go looking for it."
+        body="The whole posting ledger, searchable by vendor, customer, memo, or document number, with the account and the offsetting account on every row. Ask what you actually spent on software last month and get the answer and the subtotal in the same second, instead of logging into a second system to go looking."
         points={[
-          "Search every transaction, not just the ones on a report",
-          "Filter to an account and the subtotal comes with it",
+          "Every posting line, not just the ones that made it onto a report",
+          "Filter, subtotal, and export to CSV without leaving the page",
           "One fewer login for everybody who is not the bookkeeper",
         ]}
         visual={<TxDemo />}
+        flip
         panel="linear-gradient(160deg, #FAF6EE, #F2EADC)"
       />
 
-      {/* ------------------------------------------------ 7. Multi AI (always last) */}
+      {/* ------------------------------------------------ 8. Multi AI (always last) */}
       <MultiAiWired
         heading="And your coach can read"
         swash="the books too."

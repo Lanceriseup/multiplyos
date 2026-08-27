@@ -2,20 +2,36 @@
 
 Reference notes for the `/features/cfo-analytics` marketing page. Sources, August 2026:
 
-1. Five screenshots of the live app: the Finance HQ disconnected state, the Addons & Integrations
-   card, the QuickBooks consent modal, the Intuit sign-in hand-off, and the Manual Financial Data
-   uploader.
-2. The client's brief on what the page must show, in order.
-3. The product's own description of Finance HQ, relayed through Multi AI.
+1. Five screenshots of the connection flow: the Finance HQ disconnected state, the Addons &
+   Integrations card, the QuickBooks consent modal, the Intuit sign-in hand-off, and the Manual
+   Financial Data uploader.
+2. **Ten screenshots of the populated app** (added later, and they replace most of what used to be
+   guesswork here): CFO View / Big Picture, Overview, Profit and Loss, Balance Sheet, Key Ratios,
+   Transactions, Class, AI Insights, two steps of the Business Valuation wizard, and the valuation
+   result screen. See sections 9 and 10.
+3. The client's brief on what the page must show, in order.
+4. The product's own description of Finance HQ, relayed through Multi AI.
 
 House rules: **no em dashes** in site copy. Quoted UI strings below are verbatim, so several carry
 the product's own em dashes and curly apostrophes. Do not copy that punctuation onto the page.
 
-> **The load-bearing caveat.** The screenshots stop at the Intuit sign-in. **Nobody has seen the
-> populated dashboard.** Every number, tile, chart, tab, and briefing on the marketing page is
-> invented. It is invented to be *internally consistent* (see section 7) rather than accurate, and
-> it must be checked against a real connected account before this page ships. What is *real* is
-> listed in section 2. Everything else is a mockup and should be treated as one.
+> **What is still invented.** The populated screenshots settled the layout, the tab set, the card
+> anatomy and the figures. Three things on the marketing page are still ours:
+>
+> 1. **The Finance HQ password gate.** The client says the feature requires a second password on top
+>    of the account login. Nobody has screenshotted that screen, so the lock in the hero tour and in
+>    section 2 of the page is our rendering of a real requirement. Claim the requirement, not the
+>    pixels, and do **not** claim a per-member permission model on top of it.
+> 2. **The AI briefing prose.** The AI Insights tab ships empty until an account is connected, and
+>    the product's own copy points at the CFO View for sample insights. So the briefing text is
+>    written by us, against figures that appear elsewhere on the page.
+> 3. **The QuickBooks sync screen.** The connection flow is screenshotted up to the Intuit hand-off
+>    and picks up again at a populated dashboard. What the app shows *between* those two is unseen,
+>    so the progress screen in the hero tour is ours. Its five line items are not: they are the
+>    consent modal's own scope plus the Transactions tab's own line count.
+>
+> Everything else on the Business Valuation beat, including the $1.37M headline, is now read off a
+> real result screen. See section 10.
 
 ---
 
@@ -31,6 +47,9 @@ integration that powers it **CFO Dashboard**. All three names are live at once, 
 The product's own subtitle is the positioning line, and it is a good one:
 
 > CFO-grade financial analytics powered by QuickBooks.
+
+**But the connected app shortens it to `CFO-Grade Analytics`.** The hero tour uses the short form,
+because that is what a customer with data actually sees; the long form is still fine in prose.
 
 ---
 
@@ -121,8 +140,11 @@ And the argument, which is the best sentence in the whole brief:
 > Profit and cash aren't the same thing. You can be profitable on paper but short on cash if money
 > is tied up in unpaid invoices or inventory.
 
-That is the page's emotional core. The mockup numbers in section 7 are built to *demonstrate* it
-rather than assert it: a record profit month where cash still went down.
+That framing survives, but the sample ledger tells a different and better version of it. July
+revenue fell 6.6% and net margin still went up, because gross margin improved and receivables came
+in. Same lesson, opposite direction: the headline number moving down is not the same as the business
+getting worse. The page is built on that, and the figures in section 7 demonstrate it rather than
+assert it.
 
 ---
 
@@ -141,35 +163,62 @@ Mapped onto sections:
 
 | Client's ask | Section |
 | --- | --- |
-| quick connection to QuickBooks | 2. Connect it once |
-| the BIG 6 | 3. The Big 6, tiles |
-| trends and deep dive charts at the bottom | 3. same section, chart under the tiles |
-| AI CFO Briefing example | 4. The briefing |
-| overview page, then P&L with last month / last 6 months | 5. The statements, three tabs |
-| transactions tab, search instead of QuickBooks | 6. Transactions |
-| Multi AI Coach connected, with an example prompt | 7. the MultiAiWired closer |
+| the second password on top of the account login | 2. Locked by default |
+| quick connection to QuickBooks | 3. Connect it once |
+| the BIG 6 | 4. The Big Six, tiles |
+| trends and deep dive charts at the bottom | 4. same section, chart under the tiles |
+| AI CFO Briefing example | 5. The briefing |
+| overview page, then P&L | 6. The statements, plus Balance Sheet and Key Ratios |
+| transactions tab, search instead of QuickBooks | 7. Transactions |
+| show the Business Valuation somewhere | beat 7 of the hero tour |
+| Multi AI Coach connected, with an example prompt | 8. the MultiAiWired closer |
+
+Three departures from the letter of that brief, all deliberate:
+
+- The client asked for a **last month / last 6 months** toggle on the P&L. The shipped tab has a
+  **Compare** control instead, so the page shows July against June rather than six columns.
+- The **Overview** tab does not get a section. Its four KPI cards duplicate the Big Six, and a third
+  mockup of the same numbers earns nothing.
+- **There is no catch-all section** for the tabs the page does not visit. One existed briefly, a
+  grid of one-sentence cards headed "Four more tabs nobody opens a second app for", covering Class,
+  Business Valuation, Overview, AI Insights, Ask CFO Coach, Shared P&Ls and Set Goals. It was cut:
+  after seven sections of showing, a feature list reads like telling. **Do not add it back.** If one
+  of those tabs deserves the page's attention, it deserves a section with a working mockup, the way
+  the other seven have one. Business Valuation already has beat 7 of the hero tour.
 
 **Replaces nothing.** The client was explicit. So this is the first feature page with **no
 `ReplacesStrip` and no `ActZero` opening beat** in its hero tour. Do not add one.
 
 ---
 
-## 5. The "Big 6"
+## 5. The Big Six
 
-The client named it but did not enumerate it. Six chosen to cover the product's own three pillars
-(P&L, balance sheet, cash) with two tiles each:
+**Confirmed by the Big Picture screenshot.** The client named it, the screenshot enumerated it, and
+the enumeration is not what we had guessed. The real six, in the order the app lays them out:
 
-| # | Tile | Comes from |
-| --- | --- | --- |
-| 1 | Revenue | P&L |
-| 2 | Gross Profit, with margin | P&L |
-| 3 | Operating Expenses | P&L |
-| 4 | Net Profit, with margin | P&L |
-| 5 | Cash on Hand | Balance Sheet |
-| 6 | Runway | Cash divided by average monthly burn |
+| # | Card | Jul 2026 | Goal | Verdict |
+| --- | --- | --- | --- | --- |
+| 1 | Revenue | $178.9K | $175K | Above goal, $3.9K |
+| 2 | Profit | $34K | $32K | Above goal, $2K |
+| 3 | Profit Margin | 19.0% | 18.0% | Above goal, 1.0 pts |
+| 4 | Operating Cash Flow | $32.7K | $30K | Above goal, $2.7K |
+| 5 | Gross Margin | 69.7% | 70.0% | To goal, 0.3 pts |
+| 6 | Operating Expenses (OpEx) | $81.1K | $72K | Over budget, $9.1K |
 
-**Runway is the only derived one.** If the real product does not compute it, swap the tile for
-Accounts Receivable, which the mockup already carries numbers for.
+**Runway is not one of them.** Neither is Cash on Hand. Do not put either back.
+
+The card anatomy is the important part, and it is the page's best argument:
+
+- a **goal chip** top right, showing the target the owner set
+- the month, the value, and a delta chip against the prior month
+- a filled six-month sparkline
+- a **goal footer**: the goal on the left, and on the right `ABOVE GOAL` / `TO GOAL` / `OVER BUDGET`
+  with the distance to it
+
+So every number arrives pre-judged. The subtitle in the app is "The Big Six — every metric measured
+against your own goal." Recast without the em dash when quoting it.
+
+Alongside them: a **HEALTH SCORE** of `79/100` and an **ACTIVE WARNINGS** count of `0`.
 
 ---
 
@@ -183,57 +232,139 @@ Accounts Receivable, which the mockup already carries numbers for.
 - **Anthropic Claude is named by the product**, in the consent modal, along with the no-training
   commitment. The page may say the briefings are generated by Claude, because the product already
   tells the customer that at the point of authorisation.
-- **Business Valuation is a real button** and nobody has seen what is behind it. Mention it as
-  existing, do not describe what it does.
+- **The password gate is a real requirement with an invented screen.** Claim that Finance HQ needs a
+  second password on top of the account login. Do not claim who can grant it, that it re-locks on
+  sign-out, or anything else about how it is administered.
+- **Business Valuation is fully screenshotted now**, wizard and result. Section 10 has the figures.
+  Note that its result screen says **B2B SaaS**, while the Step 1 screenshot from a different
+  session had Marketing / Creative Agency selected. The page uses B2B SaaS, because that is what the
+  screen showing the number says.
 - **`Included with Multiply Scale Bundle`** is a packaging claim on the integrations card. The page
   does not repeat it, because pricing lives on the pricing page and may differ by plan.
 
 ---
 
-## 7. The invented numbers, and why they hang together
+## 7. The numbers, and why they hang together
 
-One fictional services business, July 2026, carried across every mockup on the page so the sections
-corroborate each other instead of contradicting each other. If any number changes, change it
-everywhere.
+These are the product's **own sample ledger**, read off the screenshots, not invented. That is worth
+saying twice: a prospect who starts a trial sees these exact figures before connecting anything, so
+the page and the product agree. July 2026 is the last closed month throughout.
 
-**Six months, February to July 2026:**
+**Twelve months of revenue**, Aug 2025 to Jul 2026, because Revenue per Employee is a trailing
+twelve-month figure and has to reconcile:
 
-| | Feb | Mar | Apr | May | Jun | Jul |
-| --- | --- | --- | --- | --- | --- | --- |
-| Revenue | 318,400 | 336,900 | 352,100 | 371,500 | 380,700 | 412,800 |
-| COGS | 136,900 | 142,800 | 148,600 | 155,000 | 158,900 | 170,500 |
-| Gross profit | 181,500 | 194,100 | 203,500 | 216,500 | 221,800 | 242,300 |
-| Operating expenses | 141,200 | 148,300 | 152,900 | 161,700 | 166,300 | 186,400 |
-| Net profit | 40,300 | 45,800 | 50,600 | 54,800 | 55,500 | 55,900 |
-| Gross margin | 57.0% | 57.6% | 57.8% | 58.3% | 58.3% | 58.7% |
-| Net margin | 12.7% | 13.6% | 14.4% | 14.8% | 14.6% | 13.5% |
-| Cash | 281,200 | 296,800 | 312,500 | 328,900 | 340,500 | 318,400 |
+| Aug 25 | Sep 25 | Oct 25 | Nov 25 | Dec 25 | Jan 26 |
+| --- | --- | --- | --- | --- | --- |
+| 152,900 | 166,400 | 178,200 | 198,760 | 173,100 | 186,540 |
 
-Revenue less COGS equals gross profit on every column. Gross profit less operating expenses equals
-net profit on every column. That arithmetic is the whole point: a finance buyer will check it.
+| Feb 26 | Mar 26 | Apr 26 | May 26 | Jun 26 | Jul 26 |
+| --- | --- | --- | --- | --- | --- |
+| 172,135 | 209,880 | 202,640 | 197,900 | 191,505 | 178,865 |
 
-**The three stories the numbers are built to tell**, which are also the three AI briefing findings:
+Sum: **2,208,825**. Divided by the 5-person headcount in the Key Ratios card: **$441,765**, which is
+the figure the screenshot shows. That is the constraint that fixes the whole series.
 
-1. **Gross margin is improving**, 57.0% to 58.7% over five months. Revenue grew 29.6% while COGS
-   grew 24.5%, so delivery is getting more efficient. This is the good news.
-2. **Operating expenses are outrunning revenue.** July: opex +12.1%, revenue +8.4%. Net margin
-   peaked at 14.8% in May and has fallen to 13.5% on a *record* top line. This is the warning.
-3. **Profit went up and cash went down.** July net profit 55,900, cash down 22,100. Receivables
-   grew 55,800 to 241,800, and 68,400 of that is over sixty days. This is the payoff, and it is the
-   product's own "profit and cash aren't the same thing" made arithmetical.
+**July 2026, the P&L**, verbatim off the Profit and Loss tab:
 
-**July balance sheet**, which balances:
+| Line | Amount | % of income |
+| --- | --- | --- |
+| Services Revenue | 98,068.00 | 54.83% |
+| Recurring Subscriptions | 46,102.00 | 25.77% |
+| Product Sales | 20,752.00 | 11.60% |
+| Training & Workshops | 13,943.00 | 7.80% |
+| **Total Income** | **178,865.00** | 100.00% |
+| Direct Labor | 25,396.00 | 14.20% |
+| Materials | 16,371.00 | 9.15% |
+| Subcontractors | 8,128.00 | 4.54% |
+| Shipping & Freight | 4,234.00 | 2.37% |
+| **Total Cost of Goods Sold** | **54,129.00** | 30.26% |
+| **GROSS PROFIT** | **124,736.00** | 69.74% |
+| Salaries & Wages | 30,398.00 | 16.99% |
+| Payroll Taxes & Benefits | 8,171.00 | 4.57% |
+| Marketing | 7,529.00 | 4.21% |
+| Rent | 6,861.00 | 3.84% |
+| Software & Subscriptions | 5,862.00 | 3.28% |
+| Depreciation | 4,200.00 | 2.35% |
+| Professional Fees | 3,714.00 | 2.08% |
+| Travel & Meals | 3,271.00 | 1.83% |
+| Insurance | 2,950.00 | 1.65% |
+| Utilities | 1,925.00 | 1.08% |
+| Interest Expense | 1,850.00 | 1.03% |
+| Bank & Merchant Fees | 1,578.00 | 0.88% |
+| Repairs & Maintenance | 1,452.00 | 0.81% |
+| Office Supplies | 1,363.00 | 0.76% |
+| **Total Expenses** | **81,124.00** | 45.35% |
+| **NET OPERATING INCOME** | **43,612.00** | 24.38% |
 
-- Assets: cash 318,400 + receivables 241,800 + other current 34,600 + fixed assets net 96,200 = **691,000**
-- Liabilities: payables 128,400 + credit cards 31,900 + accrued 42,700 + loan 148,000 = **351,000**
-- Equity: **340,000**, and 351,000 + 340,000 = 691,000
+Then the July income tax accrual of **9,595** (journal `JE-2026-07-TAX` on the Transactions tab)
+takes net operating income to **net income 34,017**, which is 19.0% of revenue. That is the Overview
+tab's Net Income card, and the Big Six Profit and Profit Margin cards. It all foots.
 
-**Runway**: 318,400 cash against roughly 43,000 average monthly burn gives 7.4 months. Burn here is
-the cash decline, not the P&L loss, since the business is profitable.
+**Where the hero tour trims.** The tour's P&L leaves Cost of Goods Sold collapsed and rolls the
+eight smallest expense accounts into one `8 more expense accounts` row at 18,103.00 (10.12%), purely
+so eighteen rows fit the stage. The page's own statement shows all twenty-eight.
 
-**Transactions** are ten July rows across seven accounts. Three are `Software & Hosting` (AWS
-4,182.40, Adobe 1,079.88, Figma 684.00) so that searching "software" in the mockup returns a real
-subtotal of 5,946.28 rather than a hand-waved one.
+**June 2026**, derived so the compare column and every delta chip agree:
+
+- Revenue **191,505** (July is -6.6%)
+- Gross margin **68.9%**, so gross profit **131,947** and COGS **59,558** (July is +0.8 pts)
+- Total expenses **86,302** (July is -6.0%)
+- Net operating income **45,645** (July is -4.5%)
+- Net income **35,620**, an 18.6% margin (July is +0.4 pts)
+
+**Balance Sheet, as of Jul 31 2026** against Jun 30, verbatim where the screenshot shows it and
+derived where it does not:
+
+| Line | Jul 31 | Jun 30 | Change |
+| --- | --- | --- | --- |
+| Operating Checking | 339,087 | 334,162 | +4,925 |
+| Savings | 145,323 | 143,212 | +2,111 |
+| **Total Bank Accounts** | **484,410** | **477,374** | **+7,036** |
+| Accounts Receivable | 164,556 | 176,224 | -11,668 |
+| Inventory Asset | 21,652 | 23,832 | -2,180 |
+| **Total Current Assets** | **670,618** | **677,430** | **-6,812** |
+| Equipment | 108,000 | 108,000 | 0 |
+| Furniture & Fixtures | 72,000 | 72,000 | 0 |
+| **TOTAL ASSETS** | **850,618** | **857,430** | **-6,812** |
+| Accounts Payable | 35,184 | 38,726 | -3,542 |
+| Visa Credit Card | 12,000 | 12,000 | 0 |
+| **Total Current Liabilities** | **62,796** | **66,338** | **-3,542** |
+| **TOTAL LIABILITIES** | **139,779** | **143,321** | **-3,542** |
+| **TOTAL EQUITY** | **710,839** | **714,109** | **-3,270** |
+
+Liabilities plus equity equals total assets on both columns. Current liabilities of 62,796 is the
+figure that makes the Key Ratios current ratio come out at **10.68x**, so it is fixed, not free.
+
+**Key Ratios**, all seven verbatim, each with its shipped target:
+
+| Ratio | Value | Target | State |
+| --- | --- | --- | --- |
+| Gross Margin | 69.7% | > 50% | green |
+| Net Profit Margin | 19.0% | > 10% | green |
+| Revenue per Employee | $441,765 | higher is better | green |
+| Current Ratio | 10.68x | 1.5x to 3.0x | green |
+| Debt-to-Equity | 0.20x | < 2.0x | green |
+| OpEx Ratio | 45.4% | lower is better | amber |
+| Return on Assets | 4.0% | > 5% | amber |
+
+**Class**, off that tab: top class by revenue **Consulting, $1,003,073**; highest gross margin
+**Consulting, 75.1%**; **4** active classes in the twelve-month window; **$109,085** untagged
+revenue. The page splits the remaining twelve-month revenue as Managed Services 662,400, Products
+251,300, Training 182,967, which sums with Consulting and the untagged figure to the 2,208,825 above.
+
+**Transactions**: the tab says `4,430 posting lines across 24 months, Aug 1 2024 to Jul 31 2026`.
+Twelve July rows are reproduced on the page, in the product's own column order (Date, Type, Name,
+Account with its offset, Memo, Doc #, Amount). The product's memos use em dashes; the page recasts
+them with commas.
+
+**The story the numbers tell**, which is what the briefing is written against:
+
+1. **Revenue fell 6.6% and net margin still rose**, to 19.0%, because gross margin went up 0.8
+   points to 69.7%.
+2. **OpEx is the problem.** $81,124 against a $72,000 goal, $9,124 over, in a month that earned
+   less. It is the only one of the Big Six flagged `OVER BUDGET`.
+3. **Collections were the quiet win.** Receivables fell $11,668 and the bank rose $7,036, so a
+   slower month still added cash.
 
 ---
 
@@ -241,13 +372,133 @@ subtotal of 5,946.28 rather than a hand-waved one.
 
 - Route `/features/cfo-analytics`, nav label `CFO Analytics`, tile colour `#A16207` from the navbar.
   The page's own accent is the QuickBooks-ish green `#0F7B4F`, which is where the product's own
-  buttons sit.
-- **First feature page with no Replaces strip.** Client says it replaces nothing.
-- **The entire populated dashboard is invented.** See the caveat at the top and the numbers in
-  section 7. Screenshots of a connected account are the single most valuable thing anyone could add
-  to this file.
-- Unverified and therefore not claimed anywhere on the page: what Business Valuation produces, what
-  the Cash Flow dashboard looks like, whether a Transactions tab exists at all in the shipped
-  product, and whether Runway is computed. **Transactions is in the client's brief but not in any
-  screenshot**, so it is described from the brief's own words: search transactions without going to
-  QuickBooks.
+  buttons sit; charts use the brighter `#12A870` the live app draws with.
+- **No Replaces strip.** Client says it replaces nothing.
+- **Every mockup card is `h-[380px] sm:h-[430px]`**, the same pair seven of the other feature pages
+  use. There is no taller variant on this page any more; the P&L card used to have one and it made
+  this page the odd one out at both breakpoints.
+- **Nothing inside a mockup card scrolls.** Lists that run past the frame are clipped by the card,
+  on purpose. Do not put `overflow-y-auto` back: a scrollbar inside a marketing mockup invites the
+  reader to fight with it, and a statement that carries on past the edge is what a real window onto
+  real data looks like. Two consequences to keep in mind when editing:
+  - Any card whose height depends on what the reader clicked has to fit in **380px** in *every*
+    state, not just its opening one. That is why the AI Briefing card hides the CFO View sub-tab
+    strip below `sm` and shortens its Claude footnote there.
+  - Counts in a card footer must not say "shown", because the reader cannot see them all. The
+    Transactions card says "12 rows from July", or "N of 12 rows match" while a search is active.
+- **The hero tour is 560px tall**, not the 500px the other eight tours use, because this screen
+  carries nine tabs plus a sub-tab strip plus a period-control row. It also reserves a 46px band at
+  the bottom of the card so the floating `Ask Multi AI` pill never covers a number. Both are
+  deliberate; do not "fix" them back.
+- **Hero tour running order**: the password gate, the QuickBooks sync, CFO View / Big Picture,
+  CFO View / AI Briefing, Profit and Loss, Key Ratios, Business Valuation. The gate leads on
+  purpose, and the sync follows it so the connection is something the reader watches happen. The
+  cursor fades out for the sync beat, because nothing on that screen is clickable.
+- **The Business Valuation beat scrolls.** It is three screens: the headline and 4-P scorecard, then
+  the eleven-axis radar and the value trajectory, then the executive summary with strengths,
+  opportunities and risks. They are absolutely positioned siblings translated by whole multiples of
+  their own height, so it is a real vertical scroll rather than a cross-fade, with a slim position
+  indicator on the right edge.
+- **The loop ends on a fade, not a cut**, and this is now house-wide rather than specific to this
+  page. All twelve hero tours carry a `dim` flag that drops the card element itself to zero opacity
+  over 520ms; the scene resets while it is invisible, then it fades back up. The pattern is:
+  `let first = true` outside the `while`, the reset branch does
+  `setScene({ ...BLANK, dim: true })` then `patch({ dim: false })`, and the tail sets
+  `dim: true` immediately before the existing `fade(0)`. The two tours that keep one `useState` per
+  thing rather than a `Scene` object (Projects & Tasks, Team Meetings) use a `dim` state and put the
+  opacity on their scaled stage. One full pass of this tour is about **41 seconds**, which is long
+  next to the others (~25s). If that needs to come down, the valuation holds are the place to take
+  it from, not the beats before it.
+- Still unverified, and therefore claimed carefully or not at all: what the password gate looks
+  like, what the valuation output actually says, what the AI Insights tab renders once connected,
+  and what the CCC, What-If, Warnings and Trends sub-tabs contain. The page names those four
+  sub-tabs and describes none of them.
+
+---
+
+## 9. What the populated screenshots showed
+
+Kept as an index of what is now settled, so nobody re-invents it:
+
+| Screenshot | What it fixed |
+| --- | --- |
+| CFO View / Big Picture | The Big Six, the goal footers, health score 79/100, 0 warnings, the eight CFO View sub-tabs |
+| Overview | Four KPI cards, twelve-month revenue chart with Revenue / Gross Margin / Net Margin / Net Profit toggles, revenue vs COGS vs OpEx bars |
+| Profit and Loss | Nested accounts, `% INC` column, `Hide $0`, `Compare`, `Collapse all` / `Expand all`, accrual basis |
+| Balance Sheet | Three summary cards, current assets vs current liabilities chart, period-over-period table with a change column |
+| Key Ratios | All seven ratios, their targets, and the green / amber states |
+| Transactions | Column order, the offset-account line, doc numbers, `Export CSV`, the 4,430-line sample ledger |
+| Class | Revenue and gross margin per class, By Class / By Item, the four summary cards |
+| AI Insights | That it ships **empty** until connected, and points at the CFO View for samples |
+| Business Valuation | Step 1's questions, the four quadrants scored 0 to 5, the radar chart, and that the pillars are excluded from the multiple and feed a 12-month roadmap |
+
+Also fixed by these: the header carries `Set Goals`, `Share`, `Shared P&Ls`, `Settings`, a
+`REPORT TIMEFRAME` selector, a locked `LAST CLOSED MONTH` selector, and an orange `Ask CFO Coach`
+button. The subtitle is `CFO-Grade Analytics`, not the older `CFO-grade financial analytics powered
+by QuickBooks.` from the disconnected state.
+
+---
+
+## 10. Business Valuation, off the result screen
+
+A tenth screenshot arrived after the other nine: the Business Valuation **result**, not the wizard.
+It replaces everything this file used to guess about that tab.
+
+**The headline band** (silver gradient, dark buttons top right):
+
+| Field | Value |
+| --- | --- |
+| Your business is worth | **$1.37M**, tagged `ESTIMATED` |
+| Range | $715K to $1.97M |
+| Industry | B2B SaaS |
+| Multiple | 4.3x SDE |
+| Computed | 8/27/2026 |
+| Asset sale | $206K |
+| Liquidation | $113K |
+| Buttons | `Recalculate Valuation`, `Edit Evaluation` |
+
+So the product quotes **three** numbers, not one: a going-concern estimate, an asset-sale figure and
+a liquidation figure. That is worth keeping on the page, because it is what makes it read as a
+valuation rather than a revenue multiple.
+
+**The 12-month goal band** (cream gradient): target `$2.06M` with an editable `$ 2,057,550` field and
+a `Save target` button, a slider, `Required lift $686K (50%)`, and a `Build 3-Year Roadmap` button.
+
+**The 2-Day CEO 4-P Scorecard**, headed "Where you stand across the four quadrants". Four tinted
+cards, each scored out of 5.0, each with its sub-categories:
+
+| Quadrant | Score | Tint | Sub-categories |
+| --- | --- | --- | --- |
+| People | 3.0 | orange `#EA7A1F` | Leadership Team 2.3, Culture & Growth 3.3, Team Accountability 3.3 |
+| Process | 3.2 | violet `#8B5CF6` | Standard Operating Procedures 4.0, Training & Development Processes 3.0, Business Software & Oversight 2.7 |
+| Product | 3.2 | blue `#2F6BD8` | Core Customer & Marketing 3.3, Product / Core Strategy 3.0 |
+| Plan | 3.3 | green `#10A870` | One Page Plan 3.7, Metrics & KPIs 3.0, Financials 3.3 |
+
+The lowest-scoring quadrant gets a different line from the other three: "PEOPLE is the
+highest-impact area to improve", where the rest say "is workable; targeted upgrades will lift
+value." The hero tour keeps the first line and drops the repeated one, purely for space.
+
+Below the fold on that screen: a "Comparative self-evaluation / 11 Sub-categories at a glance"
+radar, a "Trajectory / Value over time" chart that "re-runs monthly when QuickBooks syncs, plus
+every manual refresh and override", an executive summary with a Refresh button, three columns of
+Strengths / Opportunities / Risks, and a "How we got to this number" panel holding the EBITDA and
+SDE build-up. **The tour scrolls through all of that except the last one.**
+
+> **Why the EBITDA panel is left out, and the problem it points at.** That panel shows the
+> arithmetic: revenue, less COGS, less operating expenses, plus D&A, equals EBITDA, plus owner
+> add-backs, equals SDE, times the multiple. Putting it on the page would expose a contradiction we
+> have not resolved: **the $1.37M headline does not reconcile with this page's own ledger.** At
+> 4.3x SDE, $1.37M implies SDE of about $319K. The sample ledger in section 7 runs at $2.21M
+> trailing revenue and roughly $574K of EBITDA before any owner add-back, which at the same multiple
+> would be nearer $2.5M. The two figures come from different demo accounts: the valuation screenshot
+> is a three-year-old B2B SaaS business whose own EBITDA panel shows $300,000 of revenue.
+>
+> The page currently keeps the screenshot's numbers, because they are what the real product output
+> says. **Whoever picks this up next has to choose one:** re-base the valuation off the section 7
+> ledger and lose the match with the screenshot, or leave it and accept that a finance reader who
+> does the division will notice. Do not add the EBITDA panel without settling that first.
+
+**What the tour does with all this.** Beat 7 renders the headline band, the goal band and the four
+quadrant cards, in that order. `valued` reveals the headline and the two floor figures; `pillars`
+then fills the goal slider and every sub-category bar. The radar that used to be in this beat is
+gone, along with the wizard step rail, because the result screen has neither.
