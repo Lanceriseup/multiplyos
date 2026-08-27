@@ -4,11 +4,11 @@ import CfoAnalyticsPage from "@/components/CfoAnalyticsPage";
 export const metadata: Metadata = {
   title: "CFO Analytics · Multiply OS",
   description:
-    "Connect QuickBooks in two minutes and Finance HQ turns six months of your books into CFO-grade analytics: the Big 6, a full profit and loss, a balance sheet, searchable transactions, and a monthly AI briefing that tells you why the numbers moved.",
+    "Finance HQ locks your books behind a second password, then turns a read-only QuickBooks sync into CFO-grade analytics: the Big Six against goals you set, a full profit and loss, a balance sheet differenced against last month, seven key ratios, a searchable ledger, a business valuation, and a monthly AI briefing that tells you why the numbers moved.",
   openGraph: {
     title: "CFO Analytics · Multiply OS",
     description:
-      "Connect QuickBooks. Get a CFO. Read-only sync, the Big 6 on one screen, the whole P&L, and an AI briefing that catches the month your profit went up and your cash went down.",
+      "Connect QuickBooks. Get a CFO. A second password on the books, the Big Six measured against your own goals, the whole P&L, and an AI briefing that catches the month your revenue fell and your margin went up.",
     url: "https://www.multiplyos.com/features/cfo-analytics",
     siteName: "Multiply OS",
     type: "website",
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "CFO Analytics · Multiply OS",
     description:
-      "Connect QuickBooks. Get a CFO. The Big 6, the whole P&L, and an AI briefing that reads your ledger.",
+      "Connect QuickBooks. Get a CFO. Password-locked books, the Big Six against your goals, and an AI briefing that reads your ledger.",
     images: ["/og-image.png"],
   },
 };

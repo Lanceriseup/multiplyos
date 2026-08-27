@@ -23,7 +23,6 @@
 // live rects and divided by the scale, so both modes stay in sync.
 import { useEffect, useRef, useState } from "react";
 import { useInView, useReducedMotion } from "framer-motion";
-import ActZero, { runZero, type Zero } from "./ReplacesActZero";
 
 const MIN_W = 960; // narrower than this and the whole stage scales down
 const EASE = "cubic-bezier(0.22,1,0.36,1)";
@@ -148,11 +147,9 @@ const hit = (r: Row, v: number) => (r.lower ? v <= r.gv : v >= r.gv);
 
 // ---------------------------------------------------------------- scene
 type Draft = { name: string; goal: string; goalEditing: boolean };
-// The tool this page replaces, crossed out before the product appears.
-const ZERO_ITEMS = [{ name: "ninety.io", logo: "/replaces-ninety.png" }];
-
 type Scene = {
-  zero: Zero;
+  // The whole card faded out, so the loop restarts on a fade rather than a cut.
+  dim: boolean;
   board: number;
   dropOpen: boolean;
   dropHover: number;
@@ -176,7 +173,8 @@ type Scene = {
 };
 
 const BLANK: Scene = {
-  zero: "", board: 0, dropOpen: false, dropHover: -1, switchHot: false, addGlow: false,
+  dim: false,
+  board: 0, dropOpen: false, dropHover: -1, switchHot: false, addGlow: false,
   draft: null, extra: null, flash: false, chart: null, chartDraw: false,
   glyphHot: false, glyphLive: false,
   ownerHot: false, ownerPick: null, ownerHover: -1, assigned: null, ownerLanded: false,
@@ -674,9 +672,20 @@ export default function ScoreboardHeroTour() {
 
     (async function loop() {
       setCursor(120, 40);
+      let first = true;
       while (alive()) {
-        setScene({ ...BLANK });
-        if (!(await runZero((z) => setScene((s) => ({ ...s, zero: z })), wait, alive, ZERO_ITEMS.length))) return;
+        if (first) {
+          setScene({ ...BLANK });
+          first = false;
+        } else {
+          // Come back behind the fade the last pass ended on, then bring the
+          // card up rather than cutting to it.
+          setScene({ ...BLANK, dim: true });
+          await wait(90);
+          patch({ dim: false });
+          await wait(460);
+          if (!alive()) return;
+        }
         await act1();
         if (!alive()) return;
         await act2();
@@ -685,6 +694,8 @@ export default function ScoreboardHeroTour() {
         if (!alive()) return;
         await act3();
         if (!alive()) return;
+        // Fade the card out before the loop restarts, rather than cutting.
+        patch({ dim: true });
         await fade(0);
         await wait(500);
       }
@@ -716,7 +727,10 @@ export default function ScoreboardHeroTour() {
           }}
         >
           {/* ---------------- the board ---------------- */}
-          <div className="relative rounded-2xl border border-black/5 bg-white text-[12px] text-brand-ink shadow-[0_30px_60px_-30px_rgba(40,30,15,0.45),0_2px_6px_-3px_rgba(40,30,15,0.12)]">
+          <div
+            className="relative rounded-2xl border border-black/5 bg-white text-[12px] text-brand-ink shadow-[0_30px_60px_-30px_rgba(40,30,15,0.45),0_2px_6px_-3px_rgba(40,30,15,0.12)] transition-opacity duration-[520ms] ease-out"
+            style={{ opacity: scene.dim ? 0 : 1 }}
+          >
             {/* title bar */}
             <div className="flex items-center gap-2.5 border-b border-[#F1EEE9] px-4 py-3">
               <span className="h-2 w-2 flex-none rounded-full bg-brand-orange" />
@@ -973,7 +987,6 @@ export default function ScoreboardHeroTour() {
           )}
 
           {/* the tool this replaces, struck out before the boards appear */}
-          {scene.zero && <ActZero state={scene.zero} items={ZERO_ITEMS} bg="#FFFFFF" />}
 
           {/* ---------------- cursor + ripple ---------------- */}
           <span

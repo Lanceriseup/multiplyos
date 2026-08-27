@@ -6,12 +6,14 @@
 // the list view, show DISC being switched on, and never open a person's detail.
 // Adding somebody was asked for afterwards and slots in as the fourth beat:
 //
-//   1. ninety.io               crossed out
-//   2. the chart, collapsed    the CEO and three reports
-//   3. Expand All              the whole company fans out, open seats included
-//   4. + New User/Role         the chooser, the form, and a card landing
-//   5. Show DISC               the legend lands and every face gets a badge
-//   6. the list view           the same org, as rows, new hire included
+//   1. the chart, collapsed    the CEO and three reports
+//   2. Expand All              the whole company fans out, open seats included
+//   3. + New User/Role         the chooser, the form, and a card landing
+//   4. Show DISC               the legend lands and every face gets a badge
+//   5. the list view           the same org, as rows, new hire included
+//
+// The cross-out of ninety.io used to open this loop. It is above the panel now,
+// as ReplacesChip, so the tour starts on the product.
 //
 // The new hire is deliberately unassessed, so when DISC comes on a beat later
 // they are the grey dash. That is the coverage-gap argument arriving by itself.
@@ -26,13 +28,11 @@
 // docs/org-chart-feature-notes.md section 5.
 import { useEffect, useRef, useState } from "react";
 import { useInView, useReducedMotion } from "framer-motion";
-import ActZero, { runZero, type Zero } from "./ReplacesActZero";
 
 const MIN_W = 980;
 const STAGE_H = 500;
 const EASE = "cubic-bezier(0.22,1,0.36,1)";
 
-const ZERO_ITEMS = [{ name: "ninety.io", logo: "/replaces-ninety.png", h: 54 }];
 
 const LINE = "#DCD7CE";
 
@@ -202,7 +202,8 @@ const FORM = [
 
 // ---------------------------------------------------------------- scene
 type Scene = {
-  zero: Zero;
+  // The whole card faded out, so the loop restarts on a fade rather than a cut.
+  dim: boolean;
   view: "chart" | "list";
   expanded: boolean;
   disc: boolean;
@@ -214,7 +215,8 @@ type Scene = {
 };
 
 const BLANK: Scene = {
-  zero: "", view: "chart", expanded: false, disc: false,
+  dim: false,
+  view: "chart", expanded: false, disc: false,
   modal: "", typed: "", filled: 0, added: false, hot: "",
 };
 
@@ -378,10 +380,21 @@ export default function OrgChartHeroTour() {
 
     (async function loop() {
       setCursor(200, 44);
+      let first = true;
       while (alive()) {
-        setScene({ ...BLANK });
+        if (first) {
+          setScene({ ...BLANK });
+          first = false;
+        } else {
+          // Come back behind the fade the last pass ended on, then bring the card
+          // up rather than cutting to it.
+          setScene({ ...BLANK, dim: true });
+          await wait(90);
+          patch({ dim: false });
+          await wait(460);
+          if (!alive()) return;
+        }
 
-        if (!(await runZero((z) => patch({ zero: z }), wait, alive, ZERO_ITEMS.length))) return;
         await fade(1);
 
         // --- 1. the top of the house
@@ -430,6 +443,8 @@ export default function OrgChartHeroTour() {
         await wait(3600);
 
         if (!alive()) return;
+        // Fade the card out before the loop restarts, rather than cutting.
+        patch({ dim: true });
         await fade(0);
         await wait(520);
       }
@@ -456,8 +471,8 @@ export default function OrgChartHeroTour() {
         >
           <div
             ref={cardRef}
-            className="relative overflow-hidden rounded-2xl border border-black/5 bg-[#FAF9F7] text-brand-ink shadow-[0_30px_60px_-30px_rgba(40,30,15,0.45),0_2px_6px_-3px_rgba(40,30,15,0.12)]"
-            style={{ height: STAGE_H }}
+            className="relative overflow-hidden rounded-2xl border border-black/5 bg-[#FAF9F7] text-brand-ink shadow-[0_30px_60px_-30px_rgba(40,30,15,0.45),0_2px_6px_-3px_rgba(40,30,15,0.12)] transition-opacity duration-[520ms] ease-out"
+            style={{ height: STAGE_H, opacity: scene.dim ? 0 : 1 }}
           >
             <div className="flex h-full flex-col px-6 pb-5 pt-5">
               <Chrome scene={scene} />
@@ -469,7 +484,6 @@ export default function OrgChartHeroTour() {
             {scene.modal === "choose" && <ChooserModal scene={scene} />}
             {scene.modal === "form" && <AddMemberModal scene={scene} />}
 
-            {scene.zero && <ActZero state={scene.zero} items={ZERO_ITEMS} bg="#FAF9F7" />}
 
             <span className="pointer-events-none absolute bottom-4 right-5 z-[50] flex items-center gap-1.5 rounded-full border border-[#F7D8B4] bg-white px-3 py-1.5 text-[11px] font-semibold text-brand-ink shadow-[0_10px_22px_-10px_rgba(40,30,15,0.5)]">
               <span className="grid h-[18px] w-[18px] place-items-center rounded-full bg-gradient-to-br from-[#F49230] to-[#DE6F14] text-white">

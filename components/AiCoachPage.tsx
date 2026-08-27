@@ -32,6 +32,7 @@ import Footer from "./Footer";
 import CTA from "./CTA";
 import Reveal from "./Reveal";
 import AiCoachHeroTour from "./AiCoachHeroTour";
+import { ReplacesChip, REPLACES } from "./ReplacesStrip";
 import { useDemo } from "./DemoModal";
 
 // ---------------------------------------------------------------- tokens
@@ -816,11 +817,17 @@ export default function AiCoachPage() {
           </Reveal>
 
           <Reveal delay={0.12} className="mt-6 sm:mt-12">
-            <div
-              className="overflow-hidden rounded-2xl p-2 sm:rounded-[30px] sm:p-8"
-              style={{ background: "linear-gradient(160deg, #EFEDFA, #E1DDF5)" }}
-            >
-              <AiCoachHeroTour />
+            {/* The chip goes in a relative wrapper alongside the panel rather
+                than inside it: the panel clips to its rounded corners, and the
+                claim has to hang over its top edge. */}
+            <div className="relative">
+              <ReplacesChip names={REPLACES.aiCoach} />
+              <div
+                className="overflow-hidden rounded-2xl p-2 sm:rounded-[30px] sm:p-8"
+                style={{ background: "linear-gradient(160deg, #EFEDFA, #E1DDF5)" }}
+              >
+                <AiCoachHeroTour />
+              </div>
             </div>
           </Reveal>
 

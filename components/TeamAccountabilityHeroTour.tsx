@@ -10,14 +10,16 @@
 // August 2026 added an act in FRONT of it, once screenshots of "My 12 Week Year"
 // turned up and proved the weekly tier exists:
 //
-//   1. ninety.io and EOS One    crossed out
-//   2. My 12 Week Year          this week's priorities, ticked one at a time
-//   3. the pull-back            the rail is revealed, two destinations sharpen
-//   4. the plan, scrolling      why we exist, values, vision, SWOT, the goals
-//   5. open a quarterly goal    its parent chain, its owner, its department
-//   6. tick a milestone         2 of 5 becomes 3 of 5
-//   7. Goal Updates             the week's written check-in
-//   8. save                     the chip flips At Risk to On Track
+//   1. My 12 Week Year          this week's priorities, ticked one at a time
+//   2. the pull-back            the rail is revealed, two destinations sharpen
+//   3. the plan, scrolling      why we exist, values, vision, SWOT, the goals
+//   4. open a quarterly goal    its parent chain, its owner, its department
+//   5. tick a milestone         2 of 5 becomes 3 of 5
+//   6. Goal Updates             the week's written check-in
+//   7. save                     the chip flips At Risk to On Track
+//
+// The cross-out of ninety.io and EOS One used to open this loop. It is above the
+// panel now, as ReplacesChip, so the tour starts on the product.
 //
 // The pull-back is the join. A weekly checklist on its own is a to-do list; a
 // weekly checklist you can watch ladder into the company plan is the product.
@@ -37,17 +39,12 @@
 // public site. See docs/team-accountability-feature-notes.md section 8.
 import { useEffect, useRef, useState } from "react";
 import { useInView, useReducedMotion } from "framer-motion";
-import ActZero, { runZero, type Zero } from "./ReplacesActZero";
 
 const MIN_W = 980;
 const STAGE_H = 500;
 const EASE = "cubic-bezier(0.22,1,0.36,1)";
 
 // Both wordmarks are wide, so they render shorter than the single-logo pages do.
-const ZERO_ITEMS = [
-  { name: "ninety.io", logo: "/replaces-ninety.png", h: 46 },
-  { name: "EOS One", logo: "/replaces-eosone.png", h: 46 },
-];
 
 // The rail's width and the zoom together decide how far the plate must travel:
 // its left edge has to clear the rail, its right edge has to stay on the stage.
@@ -353,7 +350,8 @@ const NAV = [
 
 // ---------------------------------------------------------------- scene
 type Scene = {
-  zero: Zero;
+  // The whole card faded out, so the loop restarts on a fade rather than a cut.
+  dim: boolean;
   view: "twelve" | "plan";
   // act one
   ticked: number; // this week's priorities completed
@@ -370,7 +368,8 @@ type Scene = {
 };
 
 const BLANK: Scene = {
-  zero: "", view: "twelve", ticked: 0, zoomed: false, racked: false,
+  dim: false,
+  view: "twelve", ticked: 0, zoomed: false, racked: false,
   scrolled: false, modal: false, tab: "details", msTicked: false,
   posted: false, flipped: false, hot: "",
 };
@@ -530,10 +529,21 @@ export default function TeamAccountabilityHeroTour() {
 
     (async function loop() {
       setCursor(480, 44);
+      let first = true;
       while (alive()) {
-        setScene({ ...BLANK });
+        if (first) {
+          setScene({ ...BLANK });
+          first = false;
+        } else {
+          // Come back behind the fade the last pass ended on, then bring the card
+          // up rather than cutting to it.
+          setScene({ ...BLANK, dim: true });
+          await wait(90);
+          patch({ dim: false });
+          await wait(460);
+          if (!alive()) return;
+        }
 
-        if (!(await runZero((z) => patch({ zero: z }), wait, alive, ZERO_ITEMS.length))) return;
         await fade(1);
 
         // --- 1. this is what a week looks like
@@ -588,6 +598,8 @@ export default function TeamAccountabilityHeroTour() {
         await wait(2400);
 
         if (!alive()) return;
+        // Fade the card out before the loop restarts, rather than cutting.
+        patch({ dim: true });
         await fade(0);
         await wait(520);
       }
@@ -614,8 +626,8 @@ export default function TeamAccountabilityHeroTour() {
         >
           <div
             ref={cardRef}
-            className="relative overflow-hidden rounded-2xl border border-black/5 bg-[#F3F1ED] text-brand-ink shadow-[0_30px_60px_-30px_rgba(40,30,15,0.45),0_2px_6px_-3px_rgba(40,30,15,0.12)]"
-            style={{ height: STAGE_H }}
+            className="relative overflow-hidden rounded-2xl border border-black/5 bg-[#F3F1ED] text-brand-ink shadow-[0_30px_60px_-30px_rgba(40,30,15,0.45),0_2px_6px_-3px_rgba(40,30,15,0.12)] transition-opacity duration-[520ms] ease-out"
+            style={{ height: STAGE_H, opacity: scene.dim ? 0 : 1 }}
           >
             {/* Behind the plate and never scaled, so it is invisible until the
                 pull-back uncovers it, and so the one cursor target used while
@@ -639,7 +651,6 @@ export default function TeamAccountabilityHeroTour() {
 
             {scene.modal && <GoalModal scene={scene} />}
 
-            {scene.zero && <ActZero state={scene.zero} items={ZERO_ITEMS} bg="#FAF9F7" />}
 
             <span className="pointer-events-none absolute bottom-4 right-5 z-[50] flex items-center gap-1.5 rounded-full border border-[#F7D8B4] bg-white px-3 py-1.5 text-[11px] font-semibold text-brand-ink shadow-[0_10px_22px_-10px_rgba(40,30,15,0.5)]">
               <span className="grid h-[18px] w-[18px] place-items-center rounded-full bg-gradient-to-br from-[#F49230] to-[#DE6F14] text-white">

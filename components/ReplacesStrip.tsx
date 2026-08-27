@@ -84,17 +84,20 @@ const EASE = [0.22, 1, 0.36, 1] as const;
 // Monday.com" reads as two deliberate strokes instead of one flicker.
 const STAGGER = 0.42;
 
-function Strike({ delay, reduce }: { delay: number; reduce: boolean }) {
+// still renders the mark already drawn, with nothing to animate. Two callers
+// want that: anything under prefers-reduced-motion, and ReplacesChip, which is
+// a static element by design.
+function Strike({ delay, still }: { delay: number; still: boolean }) {
   const draw = (d: string, at: number, width: number, opacity: number) => (
     <motion.path
       d={d}
       strokeWidth={width}
       strokeLinecap="round"
-      initial={reduce ? undefined : { pathLength: 0 }}
-      whileInView={reduce ? undefined : { pathLength: 1 }}
+      initial={still ? undefined : { pathLength: 0 }}
+      whileInView={still ? undefined : { pathLength: 1 }}
       viewport={{ once: true, margin: "-40px" }}
       transition={{ duration: 0.42, delay: at, ease: EASE }}
-      style={{ opacity, pathLength: reduce ? 1 : undefined }}
+      style={{ opacity, pathLength: still ? 1 : undefined }}
     />
   );
 
@@ -132,7 +135,7 @@ function Mark({ item, delay, reduce }: { item: { name: string; logo: string }; d
       {/* 24px, not 20: it is a script face with tall flourishes, so at 20 the
           letters read smaller than the sans text beside them. */}
       <ReplacedLogo src={item.logo} name={item.name} className="h-[19px] w-auto sm:h-[24px]" />
-      <Strike delay={delay} reduce={reduce} />
+      <Strike delay={delay} still={reduce} />
     </motion.span>
   );
 }
@@ -167,3 +170,139 @@ export default function ReplacesStrip({
     </p>
   );
 }
+
+// The same claim as a single pill that straddles the top edge of a hero tour's
+// gradient panel. Direction 2 in design/replaces-above-tour-options.html.
+//
+// This is where the cross-out went when it came out of the tour animation. It
+// used to run as ActZero, an overlay held across the tour card for ZERO_MS
+// before dissolving into the product. The client wanted it stated above the
+// container instead, so it is now stated once, it does not move, and every tour
+// opens on the app rather than on a competitor.
+//
+// The difference from ReplacesStrip above: there, each name carries its own
+// pill. Here the pill IS the container, so the wordmarks sit bare inside it.
+// One pill, one claim.
+//
+// It does not animate. Nothing draws on, nothing fades: it renders struck and
+// stays struck, which is why there is no useReducedMotion here and no motion
+// component below. It is an element, not a beat.
+//
+// Two sizing rules are load-bearing, and both were learned the hard way:
+//
+//   1. The wordmark renders at 26px, not 18px. Every file in public/ is a
+//      320x80 canvas, so 18px is a 4.4x downscale, and several of these marks
+//      carry a tagline under the logotype that lands about 3px tall at that
+//      size. Three pixels is not small text, it is noise. 26px is the floor
+//      where they resolve. See design/replaces-chip-and-mark-options.html.
+//   2. The wrapper around each mark is inline-FLEX, not inline. The strike is
+//      absolutely positioned at w-[110%], and an absolutely positioned child of
+//      an inline box measures that box's line fragments rather than the image
+//      inside it, so as a plain span the stroke ran far past the letters.
+//
+// Logos share one height rather than carrying the per-item trim ActZero needed.
+// The trims genuinely differ, but at 26px the difference is a fraction of a
+// pixel. Add a per-item height to REPLACES if a wordmark ever looks wrong
+// beside its neighbours.
+//
+// Positioned, so its parent has to be relative AND must not clip: the hero
+// panels all carry overflow-hidden for their rounded corners, so the chip goes
+// in a wrapper alongside the panel, never inside it.
+export function ReplacesChip({
+  names,
+  label = "This replaces",
+}: {
+  names: Replaced[];
+  label?: string;
+}) {
+  const items = names.map(asItem);
+  const last = items.length - 1;
+
+  return (
+    <div className="pointer-events-none absolute left-1/2 top-0 z-10 w-full -translate-x-1/2 -translate-y-1/2 px-4">
+      {/* wraps rather than overflowing: Agreements names three tools, which is
+          wider than a phone at one line */}
+      <p className="mx-auto flex w-fit max-w-full flex-wrap items-center justify-center gap-x-3 gap-y-1.5 rounded-[20px] border border-[#F0E4D3] bg-white px-4 py-2 shadow-[0_8px_20px_-12px_rgba(40,30,15,0.5)] sm:gap-x-3.5 sm:rounded-full sm:px-5 sm:py-2.5">
+        {/* ink rather than grey: at this size, in caps, on white, brand-gray
+            read as a watermark next to the wordmark it introduces */}
+        <span className="text-[9.5px] font-bold uppercase tracking-[0.15em] text-brand-ink sm:text-[11px]">
+          {label}
+        </span>
+
+        {items.map((item, i) => (
+          <span key={item.name} className="flex items-center gap-x-3 sm:gap-x-3.5">
+            <span
+              // inline-flex, not inline: see note 2 above.
+              //
+              // The type size is for the fallback: with no artwork, the name
+              // has to carry the weight the logo will. An <img> ignores it.
+              className="relative inline-flex items-center whitespace-nowrap text-[15px] font-[650] tracking-[-0.01em] text-brand-charcoal sm:text-[19px]"
+            >
+              <ReplacedLogo
+                src={item.logo}
+                name={item.name}
+                className="h-[20px] w-auto sm:h-[26px]"
+              />
+              <Strike delay={0} still />
+            </span>
+
+            {/* Two names take an ampersand. Three or more read as a list, so
+                everything but the last join is a comma. */}
+            {i < last && (
+              <span className="text-[12px] font-medium text-brand-gray sm:text-[14px]">
+                {last > 1 && i < last - 1 ? "," : "&"}
+              </span>
+            )}
+          </span>
+        ))}
+      </p>
+    </div>
+  );
+}
+
+// The client's mapping of feature to the tools it replaces.
+//
+// One place, because it is a business fact rather than a per-page styling
+// choice. It used to live as a ZERO_ITEMS const inside each of the ten hero
+// tours, which meant the answer to "what does this replace" was copied ten
+// times and could drift ten ways.
+//
+// The per-item render heights those copies carried are gone: they existed to
+// even out the artwork trims at ActZero's 64px, and ReplacesChip sets one
+// height for everything. Add them back here if a wordmark ever looks wrong
+// beside its neighbours.
+//
+// CFO Analytics and DISC are deliberately absent. Per the client, neither
+// replaces anything, so neither page carries the claim.
+export const REPLACES = {
+  agreements: [
+    { name: "DocuSign", logo: "/replaces-docusign.png" },
+    { name: "PandaDoc", logo: "/replaces-pandadoc.png" },
+    { name: "Adobe Sign", logo: "/replaces-adobe-sign.png" },
+  ],
+  aiCoach: [
+    { name: "Claude", logo: "/replaces-claude.png" },
+    { name: "ChatGPT", logo: "/replaces-chatgpt.png" },
+  ],
+  checklists: [
+    { name: "Jotform", logo: "/replaces-jotform.png" },
+    { name: "Google Forms", logo: "/replaces-google-forms.png" },
+  ],
+  forms: [
+    { name: "Jotform", logo: "/replaces-jotform.png" },
+    { name: "Google Forms", logo: "/replaces-google-forms.png" },
+    { name: "Typeform", logo: "/replaces-typeform.png" },
+  ],
+  orgChart: [{ name: "ninety.io", logo: "/replaces-ninety.png" }],
+  projectsTasks: [
+    { name: "Asana", logo: "/replaces-asana.png" },
+    { name: "Monday.com", logo: "/replaces-monday.png" },
+  ],
+  scoreboard: [{ name: "ninety.io", logo: "/replaces-ninety.png" }],
+  sopHq: [{ name: "Trainual", logo: "/replaces-trainual.png" }],
+  teamAccountability: [
+    { name: "ninety.io", logo: "/replaces-ninety.png" },
+    { name: "EOS One", logo: "/replaces-eosone.png" },
+  ],
+  teamMeetings: [{ name: "ninety.io", logo: "/replaces-ninety.png" }],
+} satisfies Record<string, Replaced[]>;

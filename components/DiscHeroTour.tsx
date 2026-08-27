@@ -171,6 +171,8 @@ const primary = (p: Person) => {
 
 // ---------------------------------------------------------------- scene
 type Scene = {
+  // The whole card faded out, so the loop restarts on a fade rather than a cut.
+  dim: boolean;
   view: "disc" | "team";
   sent: boolean;
   modal: boolean;
@@ -178,11 +180,11 @@ type Scene = {
   hot: string;
 };
 
-const BLANK: Scene = { view: "disc", sent: false, modal: false, bars: false, hot: "" };
+const BLANK: Scene = { view: "disc", sent: false, modal: false, bars: false, hot: "", dim: false };
 
 // Under prefers-reduced-motion: the profile open with its bars drawn, which is
 // the client's actual ask and the frame that shows what a credit buys.
-const STILL: Scene = { view: "team", sent: true, modal: true, bars: true, hot: "" };
+const STILL: Scene = { view: "team", sent: true, modal: true, bars: true, hot: "", dim: false };
 
 // ---------------------------------------------------------------- component
 export default function DiscHeroTour() {
@@ -332,8 +334,20 @@ export default function DiscHeroTour() {
 
     (async function loop() {
       setCursor(240, 44);
+      let first = true;
       while (alive()) {
-        setScene({ ...BLANK });
+        if (first) {
+          setScene({ ...BLANK });
+          first = false;
+        } else {
+          // Come back behind the fade the last pass ended on, then bring the card
+          // up rather than cutting to it.
+          setScene({ ...BLANK, dim: true });
+          await wait(90);
+          patch({ dim: false });
+          await wait(460);
+          if (!alive()) return;
+        }
         await fade(1);
 
         // --- 1. who has taken it, and who has not
@@ -357,6 +371,8 @@ export default function DiscHeroTour() {
         await wait(5000);
 
         if (!alive()) return;
+        // Fade the card out before the loop restarts, rather than cutting.
+        patch({ dim: true });
         await fade(0);
         await wait(520);
       }
@@ -383,8 +399,8 @@ export default function DiscHeroTour() {
         >
           <div
             ref={cardRef}
-            className="relative overflow-hidden rounded-2xl border border-black/5 bg-[#FAF9F7] text-brand-ink shadow-[0_30px_60px_-30px_rgba(40,30,15,0.45),0_2px_6px_-3px_rgba(40,30,15,0.12)]"
-            style={{ height: STAGE_H }}
+            className="relative overflow-hidden rounded-2xl border border-black/5 bg-[#FAF9F7] text-brand-ink shadow-[0_30px_60px_-30px_rgba(40,30,15,0.45),0_2px_6px_-3px_rgba(40,30,15,0.12)] transition-opacity duration-[520ms] ease-out"
+            style={{ height: STAGE_H, opacity: scene.dim ? 0 : 1 }}
           >
             <div className="flex h-full flex-col px-6 pb-5 pt-4">
               <Tabs scene={scene} />

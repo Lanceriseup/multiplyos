@@ -21,6 +21,7 @@ import Footer from "./Footer";
 import CTA from "./CTA";
 import Reveal from "./Reveal";
 import SopHqHeroTour from "./SopHqHeroTour";
+import { ReplacesChip, REPLACES } from "./ReplacesStrip";
 import MultiAiWired from "./MultiAiWired";
 import type { Row, Insight } from "./MultiAiWired";
 import { useDemo } from "./DemoModal";
@@ -1005,16 +1006,23 @@ export default function SopHqPage() {
           </Reveal>
 
           <Reveal delay={0.12} className="mt-6 sm:mt-12">
-            <div
-              className="overflow-hidden rounded-2xl p-2 sm:rounded-[30px] sm:p-8"
-              style={{ background: "linear-gradient(160deg, #FFF1E2, #FFE7D2)" }}
-            >
-              {/* The cross-out is not here any more: it is the tour's opening
-                  beat, so the mark and the product it replaces share one motion
-                  rather than sitting in separate boxes. See ActZero in
-                  SopHqHeroTour. ReplacesStrip is still what the other three
-                  feature pages will use. */}
-              <SopHqHeroTour />
+            {/* The cross-out has moved twice. It began here as ReplacesStrip,
+                went into the tour as ActZero so the mark and the product would
+                share one motion, and came back out in August 2026 because the
+                client wanted it stated above the container instead. It is now
+                ReplacesChip, and the tour opens on the product.
+
+                The chip goes in a relative wrapper alongside the panel rather
+                than inside it: the panel clips to its rounded corners, and the
+                claim has to hang over its top edge. */}
+            <div className="relative">
+              <ReplacesChip names={REPLACES.sopHq} />
+              <div
+                className="overflow-hidden rounded-2xl p-2 sm:rounded-[30px] sm:p-8"
+                style={{ background: "linear-gradient(160deg, #FFF1E2, #FFE7D2)" }}
+              >
+                <SopHqHeroTour />
+              </div>
             </div>
           </Reveal>
 

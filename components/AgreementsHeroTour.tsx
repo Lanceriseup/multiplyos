@@ -21,7 +21,6 @@
 // the in-flight tour rather than leaving orphaned timers behind.
 import { useEffect, useRef, useState } from "react";
 import { useInView, useReducedMotion } from "framer-motion";
-import ActZero, { runZero, type Zero } from "./ReplacesActZero";
 
 const MIN_W = 980;
 const STAGE_H = 500;
@@ -30,11 +29,6 @@ const EASE = "cubic-bezier(0.22,1,0.36,1)";
 // Three wide wordmarks, so they render shorter than the single-logo pages do.
 // Heights get re-tuned per logo once the artwork lands, the way the Forms three
 // were, because the exports never share a trim.
-const ZERO_ITEMS = [
-  { name: "DocuSign", logo: "/replaces-docusign.png", h: 48 },
-  { name: "PandaDoc", logo: "/replaces-pandadoc.png", h: 42 },
-  { name: "Adobe Sign", logo: "/replaces-adobe-sign.png", h: 46 },
-];
 
 // ---------------------------------------------------------------- icons
 const ico = {
@@ -257,8 +251,9 @@ const STATE_META = {
 type View = "list" | "builder" | "sign";
 
 type Scene = {
+  // The whole card faded out, so the loop restarts on a fade rather than a cut.
+  dim: boolean;
   view: View;
-  zero: Zero;
   modal: "" | "new";
   hot: string;
   typed: string;
@@ -274,7 +269,8 @@ type Scene = {
 };
 
 const BLANK: Scene = {
-  view: "list", zero: "", modal: "", hot: "", typed: "", caret: false, agree: false,
+  dim: false,
+  view: "list", modal: "", hot: "", typed: "", caret: false, agree: false,
   built: 0, mode: "draw", drawn: 0, consent: false, submitted: false, landed: false,
 };
 
@@ -438,10 +434,21 @@ export default function AgreementsHeroTour() {
 
     (async function loop() {
       setCursor(160, 46);
+      let first = true;
       while (alive()) {
-        setScene({ ...BLANK });
+        if (first) {
+          setScene({ ...BLANK });
+          first = false;
+        } else {
+          // Come back behind the fade the last pass ended on, then bring the card
+          // up rather than cutting to it.
+          setScene({ ...BLANK, dim: true });
+          await wait(90);
+          patch({ dim: false });
+          await wait(460);
+          if (!alive()) return;
+        }
 
-        if (!(await runZero((z) => patch({ zero: z }), wait, alive, ZERO_ITEMS.length))) return;
         await fade(1);
 
         // --- 1. what is signed, and what is waiting on whom
@@ -507,6 +514,8 @@ export default function AgreementsHeroTour() {
         await wait(3000);
 
         if (!alive()) return;
+        // Fade the card out before the loop restarts, rather than cutting.
+        patch({ dim: true });
         await fade(0);
         await wait(520);
       }
@@ -533,8 +542,8 @@ export default function AgreementsHeroTour() {
         >
           <div
             ref={cardRef}
-            className="relative overflow-hidden rounded-2xl border border-black/5 bg-[#FAF9F7] text-brand-ink shadow-[0_30px_60px_-30px_rgba(40,30,15,0.45),0_2px_6px_-3px_rgba(40,30,15,0.12)]"
-            style={{ height: STAGE_H }}
+            className="relative overflow-hidden rounded-2xl border border-black/5 bg-[#FAF9F7] text-brand-ink shadow-[0_30px_60px_-30px_rgba(40,30,15,0.45),0_2px_6px_-3px_rgba(40,30,15,0.12)] transition-opacity duration-[520ms] ease-out"
+            style={{ height: STAGE_H, opacity: scene.dim ? 0 : 1 }}
           >
             {scene.view === "list" && <ListView scene={scene} />}
             {scene.view === "builder" && <BuilderView scene={scene} />}
@@ -542,7 +551,6 @@ export default function AgreementsHeroTour() {
 
             {scene.modal === "new" && <NewAgreementModal scene={scene} />}
 
-            {scene.zero && <ActZero state={scene.zero} items={ZERO_ITEMS} bg="#FAF9F7" />}
 
             {/* Ask Multi AI, present on every screen in the product. Not on the
                 signer's view, which is a stranger's browser. */}

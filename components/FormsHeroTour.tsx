@@ -24,7 +24,6 @@
 // cancels the in-flight tour rather than leaving orphaned timers behind.
 import { useEffect, useRef, useState } from "react";
 import { useInView, useReducedMotion } from "framer-motion";
-import ActZero, { runZero, type Zero } from "./ReplacesActZero";
 
 const MIN_W = 980; // narrower than this and the whole stage scales down
 const STAGE_H = 500;
@@ -35,11 +34,6 @@ const EASE = "cubic-bezier(0.22,1,0.36,1)";
 // close to 850px inside a 980px stage. Heights get re-tuned per logo once the
 // artwork lands, the way Asana and Monday.com were, because the exports do not
 // share a trim.
-const ZERO_ITEMS: { name: string; logo: string; h?: number }[] = [
-  { name: "Jotform", logo: "/replaces-jotform.png", h: 53 },
-  { name: "Google Forms", logo: "/replaces-google-forms.png", h: 54 },
-  { name: "Typeform", logo: "/replaces-typeform.png", h: 59 },
-];
 
 // ---------------------------------------------------------------- icons
 const ico = {
@@ -355,8 +349,9 @@ const DROPS = ["A referral", "Search", "Social"];
 type View = "library" | "builder" | "preview" | "published";
 
 type Scene = {
+  // The whole card faded out, so the loop restarts on a fade rather than a cut.
+  dim: boolean;
   view: View;
-  zero: Zero;
   modal: "" | "new" | "qr";
   hot: string;
   typed: string; // the form name being entered
@@ -368,7 +363,8 @@ type Scene = {
 };
 
 const BLANK: Scene = {
-  view: "library", zero: "", modal: "", hot: "", typed: "", caret: false,
+  dim: false,
+  view: "library", modal: "", hot: "", typed: "", caret: false,
   fields: 0, selected: -1, share: false, live: false,
 };
 
@@ -538,15 +534,25 @@ export default function FormsHeroTour() {
 
     (async function loop() {
       setCursor(160, 46);
+      let first = true;
       while (alive()) {
-        setScene({ ...BLANK });
-
-        // --- act zero, only once somebody decides what this replaces
-        if (ZERO_ITEMS.length) {
-          if (!(await runZero((z) => patch({ zero: z }), wait, alive, ZERO_ITEMS.length))) return;
+        if (first) {
+          setScene({ ...BLANK });
+          first = false;
         } else {
-          await wait(340);
+          // Come back behind the fade the last pass ended on, then bring the card
+          // up rather than cutting to it.
+          setScene({ ...BLANK, dim: true });
+          await wait(90);
+          patch({ dim: false });
+          await wait(460);
+          if (!alive()) return;
         }
+
+        // A beat before the library fades up, so the loop restarts on a breath
+        // rather than a cut. This is what is left of the cross-out that used to
+        // open here; it lives above the panel now, as ReplacesChip.
+        await wait(340);
         if (!alive()) return;
         await fade(1);
 
@@ -607,6 +613,8 @@ export default function FormsHeroTour() {
         await wait(2600);
 
         if (!alive()) return;
+        // Fade the card out before the loop restarts, rather than cutting.
+        patch({ dim: true });
         await fade(0);
         await wait(520);
       }
@@ -634,8 +642,8 @@ export default function FormsHeroTour() {
         >
           <div
             ref={cardRef}
-            className="relative overflow-hidden rounded-2xl border border-black/5 bg-[#FAF9F7] text-brand-ink shadow-[0_30px_60px_-30px_rgba(40,30,15,0.45),0_2px_6px_-3px_rgba(40,30,15,0.12)]"
-            style={{ height: STAGE_H }}
+            className="relative overflow-hidden rounded-2xl border border-black/5 bg-[#FAF9F7] text-brand-ink shadow-[0_30px_60px_-30px_rgba(40,30,15,0.45),0_2px_6px_-3px_rgba(40,30,15,0.12)] transition-opacity duration-[520ms] ease-out"
+            style={{ height: STAGE_H, opacity: scene.dim ? 0 : 1 }}
           >
             {scene.view === "library" && <LibraryView scene={scene} />}
             {scene.view === "builder" && <BuilderView scene={scene} />}
@@ -645,7 +653,6 @@ export default function FormsHeroTour() {
             {scene.modal === "new" && <NewFormModal scene={scene} />}
             {scene.modal === "qr" && <QrModal />}
 
-            {scene.zero && <ActZero state={scene.zero} items={ZERO_ITEMS} bg="#FAF9F7" />}
 
             {/* Ask Multi AI, present on every screen in the product. Not on the
                 public form, which is somebody else's browser. */}

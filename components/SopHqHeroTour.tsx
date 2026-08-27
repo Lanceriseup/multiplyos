@@ -25,7 +25,6 @@
 // height card, so it never resizes mid-tour.
 import { useEffect, useRef, useState } from "react";
 import { useInView, useReducedMotion } from "framer-motion";
-import ActZero, { runZero, type Zero } from "./ReplacesActZero";
 
 const MIN_W = 980; // narrower than this and the whole stage scales down
 const STAGE_H = 500; // card height, sized to the tallest view (the library home)
@@ -609,12 +608,6 @@ function SharedTabView({ scene }: { scene: Scene }) {
   );
 }
 
-// ---------------------------------------------------------------- act zero
-// The loop opens on the tool this replaces, struck out, before the product
-// appears. The cross-out used to be a caption above the animation; here it is
-// the first thing the animation does. Roughly 2.6s, replayed every loop.
-const ZERO_ITEMS = [{ name: "Trainual", logo: "/replaces-trainual.png" }];
-
 // ---------------------------------------------------------------- scene
 // "planner" was added August 2026: the SOP Planner, which is the other half of
 // SOP HQ. The library is where SOPs live; the planner is where you work out
@@ -627,10 +620,11 @@ type Banner = "" | "rec" | "draft";
 type Doc = "none" | "rec" | "draft";
 
 type Scene = {
+  // The whole card faded out, so the loop restarts on a fade rather than a cut.
+  dim: boolean;
   view: View;
   modal: Modal;
   banner: Banner;
-  zero: Zero;
   hot: string; // data-t of the element under the cursor
   typed: string; // characters entered in the title field
   caret: boolean;
@@ -659,7 +653,8 @@ type Scene = {
 };
 
 const BLANK: Scene = {
-  view: "home", modal: "", banner: "", zero: "", hot: "", typed: "", caret: false, title: NEW_TITLE,
+  dim: false,
+  view: "home", modal: "", banner: "", hot: "", typed: "", caret: false, title: NEW_TITLE,
   doc: "none", recSrc: "screen", recOn: false, recSecs: 0,
   picked: false, count: 3, wtSecs: 0, draftH: "", draftP: 0, shots: 0,
   zoomed: false, racked: false, planTyped: "", planAdded: false, planWho: false, planMade: false,
@@ -857,12 +852,23 @@ export default function SopHqHeroTour() {
 
     (async function loop() {
       setCursor(160, 46);
+      let first = true;
       while (alive()) {
-        // ============================================ act zero: the cross-out
-        // Runs before the cursor appears, so the first thing on screen is the
-        // tool being replaced rather than a pointer looking for something.
-        setScene({ ...BLANK });
-        if (!(await runZero((z) => patch({ zero: z }), wait, alive, ZERO_ITEMS.length))) return;
+        // The cross-out used to run here, before the cursor appeared. It is
+        // above the panel now, as ReplacesChip, so the loop opens on the
+        // library instead.
+        if (first) {
+          setScene({ ...BLANK });
+          first = false;
+        } else {
+          // Come back behind the fade the last pass ended on, then bring the
+          // card up rather than cutting to it.
+          setScene({ ...BLANK, dim: true });
+          await wait(90);
+          patch({ dim: false });
+          await wait(460);
+          if (!alive()) return;
+        }
         await fade(1);
 
         // ============================================== act one: read a SOP
@@ -1047,6 +1053,8 @@ export default function SopHqHeroTour() {
         await wait(2600);
 
         if (!alive()) return;
+        // Fade the card out before the loop restarts, rather than cutting.
+        patch({ dim: true });
         await fade(0);
         await wait(520);
       }
@@ -1074,8 +1082,8 @@ export default function SopHqHeroTour() {
         >
           <div
             ref={cardRef}
-            className="relative overflow-hidden rounded-2xl border border-black/5 bg-[#F3F1ED] text-brand-ink shadow-[0_30px_60px_-30px_rgba(40,30,15,0.45),0_2px_6px_-3px_rgba(40,30,15,0.12)]"
-            style={{ height: STAGE_H }}
+            className="relative overflow-hidden rounded-2xl border border-black/5 bg-[#F3F1ED] text-brand-ink shadow-[0_30px_60px_-30px_rgba(40,30,15,0.45),0_2px_6px_-3px_rgba(40,30,15,0.12)] transition-opacity duration-[520ms] ease-out"
+            style={{ height: STAGE_H, opacity: scene.dim ? 0 : 1 }}
           >
             {/* Behind the plate and never scaled, so it is invisible until the
                 pull-back uncovers it, and so the one cursor target used while
@@ -1112,9 +1120,6 @@ export default function SopHqHeroTour() {
               {scene.banner === "rec" && <RecBanner scene={scene} />}
               {scene.banner === "draft" && <DraftBanner />}
             </div>
-
-            {/* the opening cross-out, over the library it is about to become */}
-            {scene.zero && <ActZero state={scene.zero} items={ZERO_ITEMS} bg="#FAF9F7" />}
 
             {scene.modal && <ModalLayer scene={scene} />}
 
