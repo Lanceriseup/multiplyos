@@ -9,6 +9,17 @@ export const metadata: Metadata = {
   description:
     "Done-with-you to done-for-you Multiply OS packages: onsite implementation, leadership meeting facilitation, KPI accountability, and CEO coaching.",
   alternates: { canonical: "/implementation" },
+  // Link-only page: reachable by anyone with the direct URL, but kept out of
+  // search results. Deliberately NOT blocked in robots.txt — crawlers must be
+  // able to fetch the page to see this noindex directive.
+  robots: {
+    index: false,
+    follow: false,
+    googleBot: {
+      index: false,
+      follow: false,
+    },
+  },
   openGraph: {
     title: "Multiply OS — Implementation & Coaching Packages",
     description:
