@@ -2,15 +2,26 @@
 
 // Animated hero for the Projects & Tasks feature page.
 //
-// Two acts on a loop, one per clause of the headline, at 1x pacing:
+// Three acts on a loop, at 1x pacing:
 //
-//   ACT 1 — see the whole board
+//   ACT 1 — the work is all here
 //     1. the gallery            open "Client Onboarding"
 //     2. the views              List -> Board -> Timeline, same tasks
 //
-//   ACT 2 — work the next row
+//   ACT 2 — and it closes out
 //     3. My Tasks               tick "Collect brand assets and logins" done
 //     4. back to the project    259/352 becomes 260/352, the bar moves
+//
+//   ACT 3 — the whole team is in it   (added Sept 2026, on the client's brief)
+//     5. open the task          the row they just finished
+//     6. share                  copy the link, tick a teammate, notify them
+//     7. collaborators          add somebody to the task
+//
+// Act 3 is the one that answers the headline. The first two show one person
+// working; this one shows the task being handed around, which is what "your
+// whole team works in one place" actually means. It is built from the client's
+// own screenshots of the share and collaborator popovers, down to the section
+// labels.
 //
 // The featured project is deliberately one almost every business runs, so the
 // tour reads as "this is your work" rather than "this is somebody's website".
@@ -137,6 +148,42 @@ const StarIcon = ({ className }: IconProps) => (
     <path d="M12 4l2.5 5.1 5.6.8-4 3.9 1 5.6-5.1-2.7-5.1 2.7 1-5.6-4-3.9 5.6-.8z" />
   </svg>
 );
+const ShareIcon = ({ className }: IconProps) => (
+  <svg className={className} {...ico}>
+    <circle cx="17.6" cy="5.8" r="2.6" />
+    <circle cx="6.4" cy="12" r="2.6" />
+    <circle cx="17.6" cy="18.2" r="2.6" />
+    <path d="M8.7 10.8l6.6-3.6M8.7 13.2l6.6 3.6" />
+  </svg>
+);
+const LinkIcon = ({ className }: IconProps) => (
+  <svg className={className} {...ico}>
+    <path d="M10.4 13.6a3.4 3.4 0 0 0 5 .3l2.6-2.6a3.4 3.4 0 0 0-4.8-4.8l-1.5 1.5" />
+    <path d="M13.6 10.4a3.4 3.4 0 0 0-5-.3L6 12.7a3.4 3.4 0 0 0 4.8 4.8l1.5-1.5" />
+  </svg>
+);
+const SendIcon = ({ className }: IconProps) => (
+  <svg className={className} {...ico}>
+    <path d="M20.4 3.6L10.8 13.2M20.4 3.6l-6.2 16.8-3.4-7.2-7.2-3.4z" />
+  </svg>
+);
+const MailIcon = ({ className }: IconProps) => (
+  <svg className={className} {...ico}>
+    <rect x="3.2" y="5.4" width="17.6" height="13.2" rx="2.2" />
+    <path d="M3.8 7l8.2 5.6L20.2 7" />
+  </svg>
+);
+const EyeIcon = ({ className }: IconProps) => (
+  <svg className={className} {...ico}>
+    <path d="M2.6 12S6 5.8 12 5.8 21.4 12 21.4 12 18 18.2 12 18.2 2.6 12 2.6 12z" />
+    <circle cx="12" cy="12" r="2.8" />
+  </svg>
+);
+const XIcon = ({ className }: IconProps) => (
+  <svg className={className} {...ico} strokeWidth={2.2}>
+    <path d="M6.4 6.4l11.2 11.2M17.6 6.4L6.4 17.6" />
+  </svg>
+);
 const ListIcon = ({ className }: IconProps) => (
   <svg className={className} {...ico} strokeWidth={2}>
     <path d="M4 7h3M4 12h3M4 17h3M10 7h10M10 12h10M10 17h10" />
@@ -144,14 +191,21 @@ const ListIcon = ({ className }: IconProps) => (
 );
 
 // ---------------------------------------------------------------- people
+// Act 3 says these names out loud, so every key carries one. The initials in
+// the earlier acts are the same records, just rendered smaller.
 const PEOPLE = {
-  SL: { bg: "linear-gradient(135deg,#F49230,#D8563F)" },
-  MC: { bg: "#3E7BC0" },
-  DB: { bg: "#1F8A52" },
-  JL: { bg: "#C9503B" },
-  AR: { bg: "#8A3F6D" },
-  TN: { bg: "#41638A" },
+  SL: { bg: "linear-gradient(135deg,#F49230,#D8563F)", name: "Skylar Lewis" },
+  MC: { bg: "#3E7BC0", name: "Mia Castellanos" },
+  DB: { bg: "#1F8A52", name: "Daniel Brooks" },
+  JL: { bg: "#C9503B", name: "Jordan Lee" },
+  AR: { bg: "#8A3F6D", name: "Ana Reyes" },
+  TN: { bg: "#41638A", name: "Tomas Nguyen" },
 } as const;
+
+// The people the task is already shared with, and the ones it is not. Split
+// rather than filtered so the order in each popover is deliberate.
+const ON_TASK: PersonKey[] = ["SL", "AR", "TN"];
+const OFF_TASK: PersonKey[] = ["MC", "DB", "JL"];
 type PersonKey = keyof typeof PEOPLE;
 
 function Who({ k, size = 20 }: { k: PersonKey; size?: number }) {
@@ -249,7 +303,11 @@ const TABS = [
 ] as const;
 
 // ---------------------------------------------------------------- component
-type View = "gallery" | "list" | "board" | "timeline" | "mytasks";
+type View = "gallery" | "list" | "board" | "timeline" | "mytasks" | "task";
+
+// Which popover the task view is showing. Only one is ever open, which is also
+// how the real thing behaves.
+type Pop = null | "share" | "collab";
 
 const ABORT = Symbol("abort");
 
@@ -266,6 +324,13 @@ export default function ProjectsTasksHeroTour() {
   const myTasksRef = useRef<HTMLDivElement>(null);
   const checkRef = useRef<HTMLDivElement>(null);
   const chipRef = useRef<HTMLDivElement>(null);
+  // act 3
+  const openTaskRef = useRef<HTMLDivElement>(null);
+  const shareBtnRef = useRef<HTMLDivElement>(null);
+  const notifyRowRef = useRef<HTMLDivElement>(null);
+  const notifyBtnRef = useRef<HTMLDivElement>(null);
+  const collabBtnRef = useRef<HTMLDivElement>(null);
+  const addRowRef = useRef<HTMLDivElement>(null);
 
   const inView = useInView(wrapRef, { once: false, margin: "-60px" });
   const reduce = useReducedMotion() ?? false;
@@ -274,6 +339,11 @@ export default function ProjectsTasksHeroTour() {
   const [ticked, setTicked] = useState(false);
   const [done, setDone] = useState(259);
   const [bump, setBump] = useState(false);
+  // act 3 state
+  const [pop, setPop] = useState<Pop>(null);
+  const [notifyPick, setNotifyPick] = useState<PersonKey | null>(null);
+  const [notified, setNotified] = useState(false);
+  const [added, setAdded] = useState<PersonKey | null>(null);
   // The whole card faded out, so the loop restarts on a fade, not a cut.
   const [dim, setDim] = useState(false);
 
@@ -415,6 +485,10 @@ export default function ProjectsTasksHeroTour() {
         setTicked(false);
         setDone(259);
         setBump(false);
+        setPop(null);
+        setNotifyPick(null);
+        setNotified(false);
+        setAdded(null);
         await fade(0, 0);
         setCursor(MIN_W / 2, STAGE_H + 70);
         if (!first) {
@@ -456,7 +530,38 @@ export default function ProjectsTasksHeroTour() {
         setView("list");
         setDone(260);
         setBump(true);
-        await wait(2000);
+        await wait(1500);
+
+        // ---------------------------------------------- ACT 3: the whole team
+        // Open the row that was just ticked, so the task on screen is the one
+        // the viewer already watched somebody finish.
+        await tap(openTaskRef, 660);
+        setView("task");
+        await wait(950);
+
+        // share: the link first, because it is the thing people reach for
+        await tap(shareBtnRef, 620);
+        setPop("share");
+        await wait(1150);
+
+        // then the half nobody expects, notifying somebody from the same panel
+        await tap(notifyRowRef, 560);
+        setNotifyPick("MC");
+        await wait(700);
+
+        await tap(notifyBtnRef, 480);
+        setNotified(true);
+        setPop(null);
+        await wait(1400);
+
+        // collaborators: not a notification, a person added to the work
+        await tap(collabBtnRef, 640);
+        setPop("collab");
+        await wait(1150);
+
+        await tap(addRowRef, 560);
+        setAdded("DB");
+        await wait(1750);
 
         // Fade the card out before the loop restarts, rather than cutting.
         setDim(true);
@@ -498,6 +603,19 @@ export default function ProjectsTasksHeroTour() {
           <GalleryView cardRef={cardRef} myTasksRef={myTasksRef} />
         ) : shown === "mytasks" ? (
           <MyTasksView ticked={ticked} checkRef={checkRef} chipRef={chipRef} />
+        ) : shown === "task" ? (
+          <TaskView
+            pop={pop}
+            notifyPick={notifyPick}
+            notified={notified}
+            added={added}
+            shareBtnRef={shareBtnRef}
+            notifyRowRef={notifyRowRef}
+            notifyBtnRef={notifyBtnRef}
+            collabBtnRef={collabBtnRef}
+            addRowRef={addRowRef}
+            myTasksRef={myTasksRef}
+          />
         ) : (
           <ProjectView
             tab={shown}
@@ -507,6 +625,7 @@ export default function ProjectsTasksHeroTour() {
             boardTabRef={boardTabRef}
             timelineTabRef={timelineTabRef}
             myTasksRef={myTasksRef}
+            openTaskRef={openTaskRef}
           />
         )}
 
@@ -641,6 +760,7 @@ function ProjectView({
   boardTabRef,
   timelineTabRef,
   myTasksRef,
+  openTaskRef,
 }: {
   tab: View;
   done: number;
@@ -649,6 +769,7 @@ function ProjectView({
   boardTabRef: React.RefObject<HTMLButtonElement | null>;
   timelineTabRef: React.RefObject<HTMLButtonElement | null>;
   myTasksRef: React.RefObject<HTMLDivElement | null>;
+  openTaskRef?: React.RefObject<HTMLDivElement | null>;
 }) {
   return (
     <div className="flex h-full flex-col">
@@ -732,7 +853,7 @@ function ProjectView({
 
       {/* keyed, so each tab's body fades up as it swaps in rather than snapping */}
       <div key={tab} className="pt-view flex-1 overflow-hidden bg-[#FBFAF8]">
-        {tab === "list" && <ListBody />}
+        {tab === "list" && <ListBody openTaskRef={openTaskRef} />}
         {tab === "board" && <BoardBody />}
         {tab === "timeline" && <TimelineBody />}
       </div>
@@ -740,7 +861,7 @@ function ProjectView({
   );
 }
 
-function ListBody() {
+function ListBody({ openTaskRef }: { openTaskRef?: React.RefObject<HTMLDivElement | null> }) {
   return (
     <div className="px-4 py-2.5">
       <div className="flex items-center gap-2.5 border-b border-[#ECEAE6] px-2 pb-1.5 text-[9px] font-bold uppercase tracking-[0.08em] text-brand-gray">
@@ -754,7 +875,13 @@ function ListBody() {
         <span className="text-[10px] tabular-nums text-brand-gray">(6)</span>
       </div>
       {LIST_ROWS.map((r) => (
-        <div key={r.name} className="flex items-center gap-2.5 border-b border-[#F5F2ED] px-2 py-[9px]">
+        <div
+          key={r.name}
+          // Act 3 opens the row act 2 just ticked, so the task it lands on is
+          // the one the viewer already watched somebody finish.
+          ref={r.name === "Collect brand assets and logins" ? openTaskRef : undefined}
+          className="flex items-center gap-2.5 border-b border-[#F5F2ED] px-2 py-[9px]"
+        >
           <span className="h-[14px] w-[14px] flex-none rounded-full border-[1.5px] border-[#DDD8D0]" />
           <span className="min-w-0 flex-1 truncate text-[12px] font-medium text-brand-ink">{r.name}</span>
           <span className="flex w-[80px] flex-none items-center gap-1.5">
@@ -972,6 +1099,326 @@ function MyTasksView({
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------- act 3
+// The task panel, and the two popovers the client's screenshots specify: a
+// share sheet carrying both a link and a notify list, and a collaborator list
+// you can add somebody to. Both are anchored to the control that opens them and
+// sit on z-40, above the panel and below the cursor.
+//
+// Everything here is presentational. What is open, who is ticked and who has
+// been added are all driven from the tour's state, so nothing in this file
+// decides its own timing.
+
+function PopLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="mb-1.5 text-[8.5px] font-bold uppercase tracking-[0.13em] text-brand-gray">{children}</p>
+  );
+}
+
+function PersonRow({ k, right }: { k: PersonKey; right?: React.ReactNode }) {
+  return (
+    <div className="flex items-center gap-2 px-2 py-[5px]">
+      <Who k={k} size={18} />
+      <span className="min-w-0 flex-1 truncate text-[11px] text-brand-ink">{PEOPLE[k].name}</span>
+      {right}
+    </div>
+  );
+}
+
+function SharePop({
+  notifyPick,
+  notifyRowRef,
+  notifyBtnRef,
+}: {
+  notifyPick: PersonKey | null;
+  notifyRowRef: React.RefObject<HTMLDivElement | null>;
+  notifyBtnRef: React.RefObject<HTMLDivElement | null>;
+}) {
+  return (
+    <div className="pt-view absolute right-[14px] top-[102px] z-40 w-[268px] rounded-[10px] border border-black/[0.08] bg-white p-3 shadow-[0_18px_44px_-12px_rgba(30,22,10,0.34)]">
+      <PopLabel>Share link</PopLabel>
+      <div className="flex items-center gap-1.5">
+        <span className="min-w-0 flex-1 truncate rounded-[7px] border border-[#E3E0DA] px-2 py-[6px] text-[10.5px] text-brand-charcoal">
+          https://app.multiplyos.com/t/e7Kq
+        </span>
+        <span className="flex flex-none items-center gap-1 rounded-[7px] border border-[#E3E0DA] px-2 py-[6px] text-[10.5px] font-semibold text-brand-charcoal">
+          <LinkIcon className="h-[11px] w-[11px]" />
+          Copy
+        </span>
+      </div>
+
+      <PopLabel>
+        <span className="mt-2.5 block">Notify a teammate</span>
+      </PopLabel>
+      <div className="max-h-[104px] overflow-hidden rounded-[7px] border border-[#E3E0DA]">
+        {OFF_TASK.concat(["AR"]).map((k) => {
+          const on = notifyPick === k;
+          return (
+            <div
+              key={k}
+              ref={k === "MC" ? notifyRowRef : undefined}
+              className="flex items-center gap-2 px-2 py-[6px]"
+            >
+              <span
+                className="grid h-[12px] w-[12px] flex-none place-items-center rounded-[3px] border-[1.5px] transition-colors duration-200"
+                style={{
+                  borderColor: on ? PURPLE : "#DDD8D0",
+                  background: on ? PURPLE : "transparent",
+                }}
+              >
+                {on && <CheckIcon className="h-[8px] w-[8px]" style={{ color: "#fff" }} />}
+              </span>
+              <span className="truncate text-[11px] text-brand-ink">{PEOPLE[k].name}</span>
+            </div>
+          );
+        })}
+      </div>
+
+      <div
+        ref={notifyBtnRef}
+        className="mt-2.5 flex items-center justify-center gap-1.5 rounded-[7px] py-[7px] text-[11px] font-bold text-white transition-colors duration-200"
+        style={{ background: notifyPick ? PURPLE : "#A9A49B" }}
+      >
+        <SendIcon className="h-[11px] w-[11px]" />
+        Notify
+      </div>
+    </div>
+  );
+}
+
+function CollabPop({ added, addRowRef }: { added: PersonKey | null; addRowRef: React.RefObject<HTMLDivElement | null> }) {
+  const on = added ? ON_TASK.concat(added) : ON_TASK;
+  return (
+    <div className="pt-view absolute right-[85px] top-[102px] z-40 w-[248px] rounded-[10px] border border-black/[0.08] bg-white p-3 shadow-[0_18px_44px_-12px_rgba(30,22,10,0.34)]">
+      <PopLabel>Collaborators</PopLabel>
+      <div>
+        {on.map((k) => (
+          <PersonRow key={k} k={k} right={<XIcon className="h-[10px] w-[10px] flex-none text-[#C4BFB6]" />} />
+        ))}
+      </div>
+      <div className="mt-1.5 rounded-[7px] border border-[#E3E0DA] px-2 py-[6px] text-[10.5px] text-brand-gray">
+        Add teammate...
+      </div>
+      <div className="mt-1.5 max-h-[96px] overflow-hidden rounded-[7px] border border-[#EFECE6] bg-[#FBFAF8]">
+        {OFF_TASK.filter((k) => k !== added).map((k) => (
+          <div key={k} ref={k === "DB" ? addRowRef : undefined}>
+            <PersonRow k={k} />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function TaskView({
+  pop,
+  notifyPick,
+  notified,
+  added,
+  shareBtnRef,
+  notifyRowRef,
+  notifyBtnRef,
+  collabBtnRef,
+  addRowRef,
+  myTasksRef,
+}: {
+  pop: Pop;
+  notifyPick: PersonKey | null;
+  notified: boolean;
+  added: PersonKey | null;
+  shareBtnRef: React.RefObject<HTMLDivElement | null>;
+  notifyRowRef: React.RefObject<HTMLDivElement | null>;
+  notifyBtnRef: React.RefObject<HTMLDivElement | null>;
+  collabBtnRef: React.RefObject<HTMLDivElement | null>;
+  addRowRef: React.RefObject<HTMLDivElement | null>;
+  myTasksRef: React.RefObject<HTMLDivElement | null>;
+}) {
+  const team = added ? ON_TASK.concat(added) : ON_TASK;
+
+  const Field = ({ label, children }: { label: string; children: React.ReactNode }) => (
+    <div className="flex items-center gap-3 py-[7px]">
+      <span className="w-[74px] flex-none text-[10.5px] text-brand-gray">{label}</span>
+      <span className="flex min-w-0 items-center gap-1.5">{children}</span>
+    </div>
+  );
+
+  return (
+    <div className="pt-view relative flex h-full flex-col">
+      <TopBar myTasksRef={myTasksRef} />
+
+      {/* task header: the collaborator stack and the share control both live
+          here, which is what makes act 3 read as one panel rather than two */}
+      <div className="flex items-center gap-2.5 border-b border-[#ECEAE6] px-4 py-2">
+        <span className="text-[9px] font-bold uppercase tracking-[0.13em] text-brand-gray">Task</span>
+        <span className="ml-auto flex items-center gap-2">
+          <span ref={collabBtnRef} className="flex items-center">
+            <span className="flex -space-x-1.5">
+              {team.map((k) => (
+                <span key={k} className="rounded-full ring-2 ring-white">
+                  <Who k={k} size={20} />
+                </span>
+              ))}
+            </span>
+            <span className="ml-1 grid h-[20px] w-[20px] flex-none place-items-center rounded-full border border-dashed border-[#C4BFB6] text-brand-gray">
+              <PlusIcon className="h-[10px] w-[10px]" />
+            </span>
+          </span>
+          <span className="flex items-center gap-1.5 rounded-[7px] bg-[#F1EEE9] px-2 py-[5px] text-[10.5px] font-semibold text-brand-charcoal">
+            <EyeIcon className="h-[11px] w-[11px]" />
+            Following
+          </span>
+          <span className="grid h-[24px] w-[24px] place-items-center rounded-[7px] text-brand-charcoal">
+            <MailIcon className="h-[13px] w-[13px]" />
+          </span>
+          <span
+            ref={shareBtnRef}
+            className="grid h-[24px] w-[24px] place-items-center rounded-[7px] text-brand-charcoal transition-colors duration-200"
+            style={{ background: pop === "share" ? "#EDE9E2" : "transparent" }}
+          >
+            <ShareIcon className="h-[13px] w-[13px]" />
+          </span>
+        </span>
+      </div>
+
+      <div className="flex min-h-0 flex-1">
+        {/* left: the properties */}
+        <div className="w-[400px] flex-none px-4 pt-3">
+          <div className="flex items-center gap-2">
+            <span className="grid h-[16px] w-[16px] flex-none place-items-center rounded-full" style={{ background: GREEN }}>
+              <CheckIcon className="h-[10px] w-[10px]" style={{ color: "#fff" }} />
+            </span>
+            <b className="truncate text-[17px] leading-tight tracking-tight text-brand-ink">
+              Collect brand assets and logins
+            </b>
+          </div>
+
+          <div className="mt-2 divide-y divide-[#F5F2ED]">
+            <Field label="Status">
+              <Pill s="review" />
+            </Field>
+            <Field label="Assignee">
+              <Who k="SL" size={18} />
+              <span className="text-[11.5px] text-brand-ink">{PEOPLE.SL.name}</span>
+            </Field>
+            <Field label="Due date">
+              <span className="flex items-center gap-1.5 rounded-[6px] border border-[#E3E0DA] px-2 py-[3px] text-[11px] text-brand-charcoal">
+                <CalIcon className="h-[11px] w-[11px]" />
+                Today
+              </span>
+            </Field>
+            <Field label="Priority">
+              <span
+                className="rounded-[6px] px-2 py-[3px] text-[11px] font-semibold"
+                style={{ background: `${AMBER}1A`, color: "#9A6413" }}
+              >
+                P2
+              </span>
+            </Field>
+            <Field label="Labels">
+              <span className="rounded-[6px] bg-[#EFEAF9] px-2 py-[3px] text-[11px] font-medium text-[#5B47A8]">
+                Onboarding
+              </span>
+              <span className="rounded-[6px] bg-[#E7F1FA] px-2 py-[3px] text-[11px] font-medium text-[#2C6E9E]">
+                Assets
+              </span>
+            </Field>
+            <Field label="Project">
+              <span className="flex items-center gap-1.5 rounded-[6px] border border-[#E3E0DA] px-2 py-[3px] text-[11px] text-brand-charcoal">
+                <span className="h-[6px] w-[6px] flex-none rounded-full" style={{ background: PURPLE }} />
+                Client Onboarding
+              </span>
+            </Field>
+          </div>
+
+        </div>
+
+        {/* middle: the work. Subtasks are here rather than in the properties
+            because they are the thing somebody opens a task to actually do. */}
+        <div className="min-w-0 flex-1 border-l border-[#F5F2ED] px-4 pt-3">
+          <p className="text-[9px] font-bold uppercase tracking-[0.13em] text-brand-gray">Description</p>
+          <p className="mt-1.5 text-[11.5px] leading-relaxed text-brand-charcoal">
+            Logo files, brand colours, and admin access for the domain and the ad accounts.
+            Everything the build needs before week two.
+          </p>
+          <p className="mt-3.5 text-[9px] font-bold uppercase tracking-[0.13em] text-brand-gray">
+            Subtasks <span className="text-[#C4BFB6]">3 of 4</span>
+          </p>
+          <div className="mt-1.5 space-y-[7px]">
+            {[
+              ["Logo pack and typefaces", true],
+              ["Brand colour values", true],
+              ["Domain and DNS access", true],
+              ["Ad account access", false],
+            ].map(([label, done]) => (
+              <div key={label as string} className="flex items-center gap-2">
+                <span
+                  className="grid h-[13px] w-[13px] flex-none place-items-center rounded-full border-[1.5px]"
+                  style={{
+                    borderColor: done ? GREEN : "#DDD8D0",
+                    background: done ? GREEN : "transparent",
+                  }}
+                >
+                  {done && <CheckIcon className="h-[8px] w-[8px]" style={{ color: "#fff" }} />}
+                </span>
+                <span
+                  className="truncate text-[11.5px]"
+                  style={{ color: done ? "#8C877F" : "#33302C", textDecoration: done ? "line-through" : "none" }}
+                >
+                  {label as string}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* right: where the work actually gets talked about */}
+        <div className="w-[320px] flex-none border-l border-[#ECEAE6] bg-[#FBFAF8] px-3.5 pt-3">
+          <p className="text-[9px] font-bold uppercase tracking-[0.13em] text-brand-gray">Activity</p>
+          <div className="mt-2 space-y-2">
+            <div className="flex gap-2">
+              <Who k="AR" size={18} />
+              <p className="text-[10.5px] leading-snug text-brand-charcoal">
+                <b className="font-semibold text-brand-ink">Ana</b> attached the logo pack and the
+                DNS credentials.
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Who k="TN" size={18} />
+              <p className="text-[10.5px] leading-snug text-brand-charcoal">
+                <b className="font-semibold text-brand-ink">Tomas</b> moved this to In Review.
+              </p>
+            </div>
+            {/* the two act 3 beats leave a mark, so the panel remembers what
+                just happened rather than only flashing a popover */}
+            {notified && (
+              <div className="pt-view flex gap-2">
+                <Who k="MC" size={18} />
+                <p className="text-[10.5px] leading-snug text-brand-charcoal">
+                  <b className="font-semibold text-brand-ink">Mia</b> was notified.
+                </p>
+              </div>
+            )}
+            {added && (
+              <div className="pt-view flex gap-2">
+                <Who k={added} size={18} />
+                <p className="text-[10.5px] leading-snug text-brand-charcoal">
+                  <b className="font-semibold text-brand-ink">{PEOPLE[added].name.split(" ")[0]}</b>{" "}
+                  was added as a collaborator.
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {pop === "share" && (
+        <SharePop notifyPick={notifyPick} notifyRowRef={notifyRowRef} notifyBtnRef={notifyBtnRef} />
+      )}
+      {pop === "collab" && <CollabPop added={added} addRowRef={addRowRef} />}
     </div>
   );
 }

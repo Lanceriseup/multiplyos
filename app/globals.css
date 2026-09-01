@@ -280,40 +280,4 @@ body {
   .pt-view, .pt-pop { animation: none; }
 }
 
-/* ---- Pricing calculator sliders ----
-   The track colour is set inline per input (a gradient split at the current
-   value), so only the rail geometry and the thumb live here. */
-.price-range {
-  -webkit-appearance: none;
-  appearance: none;
-  height: 6px;
-  border-radius: 999px;
-  outline: none;
-  cursor: pointer;
-}
-.price-range::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 18px;
-  height: 18px;
-  border-radius: 999px;
-  background: #fff;
-  border: 2px solid #ea7b1b;
-  box-shadow: 0 1px 3px rgba(20, 14, 6, 0.28);
-  cursor: grab;
-}
-.price-range::-webkit-slider-thumb:active { cursor: grabbing; }
-.price-range::-moz-range-thumb {
-  width: 18px;
-  height: 18px;
-  border-radius: 999px;
-  background: #fff;
-  border: 2px solid #ea7b1b;
-  box-shadow: 0 1px 3px rgba(20, 14, 6, 0.28);
-  cursor: grab;
-}
-.price-range:focus-visible {
-  outline: 2px solid #ea7b1b;
-  outline-offset: 3px;
-}
 

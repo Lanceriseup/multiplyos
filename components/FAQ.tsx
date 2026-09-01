@@ -3,8 +3,29 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
 import Reveal from "./Reveal";
+import { useDemo } from "./DemoModal";
 
 type Item = { q: string; a: ReactNode };
+
+// Opens the demo form itself rather than scrolling to the section that holds
+// the button that opens it, which is what an href="#demo" would do. It is a
+// button because it performs an action and goes nowhere, styled as a link
+// because that is what it reads as inside a sentence.
+//
+// It exists as its own component so ITEMS can stay a module level constant:
+// useDemo is a hook and cannot be called out there.
+function DemoLink({ children }: { children: ReactNode }) {
+  const { openDemo } = useDemo();
+  return (
+    <button
+      type="button"
+      onClick={openDemo}
+      className="font-semibold text-brand-orange-dark underline decoration-brand-orange/40 underline-offset-2 hover:decoration-brand-orange"
+    >
+      {children}
+    </button>
+  );
+}
 
 const ITEMS: Item[] = [
   {
@@ -23,15 +44,10 @@ const ITEMS: Item[] = [
     q: "What does Multiply OS include?",
     a: (
       <>
-        A wide range of features to help you run your business more efficiently
-        and multiply results. You can see full details broken down by plan{" "}
-        <a
-          href="#demo"
-          className="font-semibold text-brand-orange-dark underline decoration-brand-orange/40 underline-offset-2 hover:decoration-brand-orange"
-        >
-          here
-        </a>
-        .
+        Multiply OS includes a wide range of features designed to help you run
+        your business more effectively and efficiently. You can explore all of
+        our features in more depth and how they can support your business goals
+        by <DemoLink>Requesting a Demo</DemoLink>.
       </>
     ),
   },
@@ -48,7 +64,7 @@ export default function FAQ() {
             FAQ
           </p>
           <h2 className="mt-2 text-xl font-extrabold tracking-tight text-brand-ink sm:mt-3 sm:text-4xl">
-            Frequently asked questions
+            Frequently Asked Questions
           </h2>
         </Reveal>
 
