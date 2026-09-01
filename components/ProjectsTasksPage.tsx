@@ -1466,19 +1466,30 @@ export default function ProjectsTasksPage() {
                 Projects &amp; Tasks
               </span>
             </span>
-            <h1 className="text-[24px] font-extrabold leading-[1.1] tracking-tight text-brand-ink sm:text-[66px] sm:leading-[1.04]">
-              See the whole board,
-              <br />
-              <span className="text-brand-orange">work the next row.</span>
+            {/* The break is placed, not left to chance: "one place" has to
+                land on its own line for the orange to read as the payoff rather
+                than as a stray colour mid-sentence. Below sm it wraps naturally
+                and the span still carries the colour. */}
+            <h1 className="text-[24px] font-extrabold leading-[1.1] tracking-tight text-brand-ink sm:text-[62px] sm:leading-[1.04]">
+              Your whole team works
+              <br className="hidden sm:block" />{" "}
+              <span className="text-brand-orange">in one place.</span>
             </h1>
-            <p className="mx-auto mt-3.5 max-w-2xl text-[14.5px] leading-relaxed text-brand-charcoal sm:mt-7 sm:text-xl">
-              <span className="sm:hidden">Projects hold the full scope. My Tasks hands you this week's slice.</span>
-              <span className="hidden sm:inline">Projects hold the full scope, in seven views. My Tasks hands you the slice that is due
-              this week.</span>
+            {/* One paragraph at both sizes, on the client's copy. It runs to
+                four sentences, so the measure is wider here than the 2xl the
+                other feature heroes use, or it stacks to six lines on a phone. */}
+            <p className="mx-auto mt-3.5 max-w-[54ch] text-[14.5px] leading-relaxed text-brand-charcoal sm:mt-7 sm:text-[19px]">
+              Projects, tasks, meeting notes, and daily work all live here. No more context
+              switching between tools. AI supports your work. Everything happens inside of
+              Multiply OS.
             </p>
           </Reveal>
 
-          <Reveal delay={0.12} className="mt-6 sm:mt-12">
+          {/* The replaces chip is centred on the panel's top edge, so half
+              of it hangs above. On a phone it wraps to two lines and overhangs
+              about 36px, which the old 24px gap could not clear once the lede
+              grew to four lines. 56px does. */}
+          <Reveal delay={0.12} className="mt-14 sm:mt-12">
             {/* The chip goes in a relative wrapper alongside the panel rather
                 than inside it: the panel clips to its rounded corners, and the
                 claim has to hang over its top edge. */}

@@ -20,12 +20,28 @@ Verbatim:
 > (Show a full view of an org chart, show the list view, show DISC being turned on to see DISC on
 > profiles, don't show clicking on a person and seeing the full detail, that is too much info)
 
-Three shows and one **do not**. The do-not is the useful one: **no person-detail view anywhere on
-this page.** The argument is the shape of the org, not any individual's record. Every mockup stops
-at the card.
+Three shows and one **do not**. The do-not was: **no person-detail view anywhere on this page.**
 
-**Replaces ninety.io**, per the client. Artwork is already at `public/replaces-ninety.png`, shared
-with the Metrics Scoreboard and Team Meetings pages.
+### That do-not was lifted in September 2026
+
+The client asked for two more things by name: that the cards can be **dragged between managers**, and
+that **clicking a seat opens its Role Details**. Both are now beats 3 and 4 of the hero tour. The
+instruction quoted above is superseded and is kept here only so the reversal is legible to whoever
+reads this next.
+
+**The privacy half of it still stands and is not negotiable.** The reason the client gave was "that
+is too much info", and their screenshot of the Role Details panel carries a real colleague's name
+and a real `riseupkings.com` address. None of that goes on a public page. The panel in
+`OrgChartHeroTour.tsx` is filled with the fictional Ridgeline Services cast from section 5, on a
+`ridgeline.co` address. Section 5's rule governs this panel exactly as it governs the cards.
+
+The drag beat moves an **open seat** rather than a named person, deliberately: re-hanging a hiring
+plan is the honest re-org to depict, and moving a named person between managers on a public
+marketing page depicts a demotion nobody asked for.
+
+**Replaces Pingboard**, per the client (corrected September 2026; it had been ninety.io, which is the
+scoreboard and meetings competitor, not the org-chart one). Artwork at
+`public/replaces-pingboard.png`.
 
 ---
 
@@ -220,8 +236,10 @@ Counts on the chrome follow the real page's shape: `18 of 24 Team Members`, `(16
 ## 6. Page status
 
 - Route `/features/org-chart`, nav label `Org Chart`, tile colour `#3F7A6B` from the navbar.
-- **Replaces ninety.io.** Logo already present.
-- **No person-detail view anywhere**, per the client's explicit instruction.
+- **Replaces Pingboard.** Logo already present at `public/replaces-pingboard.png`.
+- **Role Details opens from a seat**, and **seats drag between managers**, both added September 2026
+  at the client's request. This reverses the original "no person-detail view" instruction; see the
+  note in section 1. Every value in that panel is fictional.
 - The DISC overlay cross-links to the **DISC Assessments** feature, which does not have a page yet.
   When it ships, section 5 of this page should link to it.
 - The `Annual Outcomes` on each card cross-link to **Team Accountability**, whose annual goals are

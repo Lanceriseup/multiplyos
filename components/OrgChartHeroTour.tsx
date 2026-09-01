@@ -2,17 +2,36 @@
 
 // Animated hero for the Org Chart feature page.
 //
-// The client's brief is three shows and one do-not: show the full chart, show
-// the list view, show DISC being switched on, and never open a person's detail.
-// Adding somebody was asked for afterwards and slots in as the fourth beat:
+// The client's original brief was three shows and one do-not: show the full
+// chart, show the list view, show DISC being switched on, and NEVER open a
+// person's detail, because "that is too much info". Adding somebody was asked
+// for afterwards.
+//
+// THAT DO-NOT WAS LIFTED IN SEPTEMBER 2026. The client asked for two more
+// things by name: that the cards can be dragged between managers, and that
+// clicking a seat opens its Role Details. Beats 3 and 4 below are those, and
+// they reverse the instruction docs/org-chart-feature-notes.md section 1
+// records verbatim. The note there has been updated; this comment is the second
+// place somebody would look.
+//
+// The privacy half of that instruction still stands and is not negotiable. The
+// client's screenshots are of Rise Up Kings's real org, with real names and
+// real work addresses. Nothing here uses them. The Role Details panel is filled
+// with the fictional Ridgeline Services cast the rest of the site already uses,
+// on a ridgeline.co address, exactly as section 5 requires.
 //
 //   1. the chart, collapsed    the CEO and three reports
 //   2. Expand All              the whole company fans out, open seats included
-//   3. + New User/Role         the chooser, the form, and a card landing
-//   4. Show DISC               the legend lands and every face gets a badge
-//   5. the list view           the same org, as rows, new hire included
+//   3. drag a seat             an open seat moves to a new manager, chart reflows
+//   4. Role Details            a seat opens, and closes again
+//   5. + New User/Role         the chooser, the form, and a card landing
+//   6. Show DISC               the legend lands and every face gets a badge
+//   7. the list view           the same org, as rows, new hire included
 //
-// The cross-out of ninety.io used to open this loop. It is above the panel now,
+// Seven beats is a long loop, so the holds on the older ones were trimmed to pay
+// for the new ones. The tour is about three seconds longer than it was.
+//
+// The cross-out of Pingboard used to open this loop. It is above the panel now,
 // as ReplacesChip, so the tour starts on the product.
 //
 // The new hire is deliberately unassessed, so when DISC comes on a beat later
@@ -119,6 +138,11 @@ const Plus = ({ className, style }: IconProps) => (
     <path d="M12 5.4v13.2M5.4 12h13.2" />
   </svg>
 );
+const XMark = ({ className, style }: IconProps) => (
+  <svg className={className} style={style} {...ico} strokeWidth={2.2}>
+    <path d="M6.4 6.4l11.2 11.2M17.6 6.4L6.4 17.6" />
+  </svg>
+);
 const Chevron = ({ className, style }: IconProps) => (
   <svg className={className} style={style} {...ico} strokeWidth={2.2}>
     <path d="M6.4 9.6l5.6 5.2 5.6-5.2" />
@@ -191,6 +215,26 @@ const BRANCHES: Node[] = [
 // up with two and the whole row re-flows. That re-flow is the point.
 const HIRE_INTO = 2;
 
+// What the drag beat moves, and where to.
+//
+// An OPEN seat, deliberately. Two reasons. Moving a named person between
+// managers on a public marketing page depicts a demotion nobody asked us to
+// depict, and an open seat being re-hung is the more honest re-org anyway: it
+// is a hiring plan changing hands, which is the argument section 3 of the page
+// already makes. A market manager reporting to the COO rather than to VP Sales
+// is a decision a real company makes.
+const MOVE_ROLE = "Second Market Manager";
+const MOVE_FROM = 1; // VP Sales
+const MOVE_TO = 0; // COO
+
+// Which seat the Role Details beat opens. Kath has an outcome and a report, so
+// the panel has something in every row rather than a column of empty states.
+const DETAIL_ROLE = "Technology Lead";
+
+// data-t keys are derived from the role, so a renamed seat cannot leave the
+// tour pointing at a target that no longer exists.
+const slug = (role: string) => role.toLowerCase().replace(/[^a-z]+/g, "-");
+
 // The form, as the tour fills it in.
 const FORM = [
   { label: "Last name", value: "Barnes" },
@@ -212,17 +256,23 @@ type Scene = {
   filled: number; // how many of the remaining fields have landed
   added: boolean;
   hot: string;
+  dragging: boolean; // a card is in the air, so the source ghosts and a drop zone lights
+  moved: boolean; // MOVE_ROLE now hangs off MOVE_TO
+  details: boolean; // the Role Details panel is open
 };
 
 const BLANK: Scene = {
   dim: false,
   view: "chart", expanded: false, disc: false,
   modal: "", typed: "", filled: 0, added: false, hot: "",
+  dragging: false, moved: false, details: false,
 };
 
 // Under prefers-reduced-motion: the full chart with DISC on, which is the frame
 // that carries the client's headline asks at once.
-const STILL: Scene = { ...BLANK, expanded: true, disc: true, added: true };
+// Under prefers-reduced-motion the seat has already been moved, so the still
+// frame shows the org the tour ends on rather than the one it starts from.
+const STILL: Scene = { ...BLANK, expanded: true, disc: true, added: true, moved: true };
 
 // ---------------------------------------------------------------- component
 export default function OrgChartHeroTour() {
@@ -231,6 +281,10 @@ export default function OrgChartHeroTour() {
   const cardRef = useRef<HTMLDivElement>(null);
   const cursorRef = useRef<SVGSVGElement>(null);
   const rippleRef = useRef<HTMLSpanElement>(null);
+  // The card that rides under the cursor during the drag beat. It is animated
+  // with the same keyframes as the cursor rather than parented to it, because
+  // the cursor is an SVG whose transform is already being driven imperatively.
+  const dragRef = useRef<HTMLDivElement>(null);
 
   const inView = useInView(hostRef, { margin: "-60px" });
   const reduce = useReducedMotion() ?? false;
@@ -370,6 +424,46 @@ export default function OrgChartHeroTour() {
       return alive();
     };
 
+    // Press, carry, release. The ghost and the cursor share one set of
+    // keyframes so they cannot drift apart mid-flight, and both are cancelled
+    // and committed the same way every other move in this file is.
+    const drag = async (fromKey: string, toKey: string, carry = 940) => {
+      await glide(pointAt(fromKey), 640);
+      if (!alive()) return false;
+      await wait(260);
+      await click();
+      // Park the ghost on the pointer BEFORE it becomes visible. Without this it
+      // paints one frame at the stage origin, because its transform is only set
+      // by the carry animation that has not started yet.
+      if (dragRef.current) dragRef.current.style.transform = `translate(${posRef.current.x}px,${posRef.current.y}px)`;
+      patch({ dragging: true });
+      await wait(260);
+      if (!alive()) return false;
+
+      const from = posRef.current;
+      const to = pointAt(toKey);
+      const kf = [
+        { transform: `translate(${from.x}px,${from.y}px)` },
+        { transform: `translate(${to.x}px,${to.y}px)` },
+      ];
+      const anims: Animation[] = [];
+      const c = cursorRef.current;
+      const gh = dragRef.current;
+      if (c) anims.push(c.animate(kf, { duration: carry, easing: EASE, fill: "forwards" }));
+      if (gh) anims.push(gh.animate(kf, { duration: carry, easing: EASE, fill: "forwards" }));
+      try { await Promise.all(anims.map((a) => a.finished)); } catch { /* cancelled */ }
+      anims.forEach((a) => a.cancel());
+      if (!alive()) return false;
+      setCursor(to.x, to.y);
+      if (gh) gh.style.transform = `translate(${to.x}px,${to.y}px)`;
+
+      await wait(340);
+      if (!alive()) return false;
+      await click();
+      patch({ dragging: false, moved: true });
+      return alive();
+    };
+
     const type = async (text: string, apply: (v: string) => void, per = 60) => {
       for (let i = 1; i <= text.length; i++) {
         if (!alive()) return;
@@ -403,9 +497,22 @@ export default function OrgChartHeroTour() {
         // --- 2. and the rest of it
         if (!(await tap("expand", 700))) return;
         patch({ expanded: true });
-        await wait(2600);
+        await wait(1900);
 
-        // --- 3. hire somebody
+        // --- 3. the chart is a thing you rearrange, not a picture of one
+        if (!(await drag(`seat-${slug(MOVE_ROLE)}`, "drop-zone"))) return;
+        await wait(1900);
+
+        // --- 4. and every seat opens onto the role behind it
+        if (!(await tap(`seat-${slug(DETAIL_ROLE)}`, 720))) return;
+        patch({ details: true });
+        await wait(3000);
+
+        if (!(await tap("details-close", 620))) return;
+        patch({ details: false });
+        await wait(800);
+
+        // --- 5. hire somebody
         if (!(await tap("new-user", 700))) return;
         patch({ modal: "choose" });
         await wait(1100);
@@ -430,17 +537,17 @@ export default function OrgChartHeroTour() {
 
         if (!(await tap("create", 620))) return;
         patch({ modal: "", added: true });
-        await wait(2600);
+        await wait(1900);
 
-        // --- 4. the overlay nobody expects, and the new hire has no profile yet
+        // --- 6. the overlay nobody expects, and the new hire has no profile yet
         if (!(await tap("disc", 700))) return;
         patch({ disc: true });
-        await wait(3600);
+        await wait(2800);
 
-        // --- 5. the same org, as rows
+        // --- 7. the same org, as rows
         if (!(await tap("list", 700))) return;
         patch({ view: "list" });
-        await wait(3600);
+        await wait(2800);
 
         if (!alive()) return;
         // Fade the card out before the loop restarts, rather than cutting.
@@ -483,6 +590,7 @@ export default function OrgChartHeroTour() {
 
             {scene.modal === "choose" && <ChooserModal scene={scene} />}
             {scene.modal === "form" && <AddMemberModal scene={scene} />}
+            {scene.details && <RoleDetailsModal />}
 
 
             <span className="pointer-events-none absolute bottom-4 right-5 z-[50] flex items-center gap-1.5 rounded-full border border-[#F7D8B4] bg-white px-3 py-1.5 text-[11px] font-semibold text-brand-ink shadow-[0_10px_22px_-10px_rgba(40,30,15,0.5)]">
@@ -491,6 +599,36 @@ export default function OrgChartHeroTour() {
               </span>
               Ask Multi AI
             </span>
+          </div>
+
+          {/* The card in the air. Offset up and left of the pointer the way a
+              real drag image sits, and tilted a little so it reads as lifted
+              rather than as a second card that happens to be there. */}
+          <div
+            ref={dragRef}
+            aria-hidden="true"
+            className="pointer-events-none absolute left-0 top-0 z-[88] origin-top-left transition-opacity duration-150"
+            style={{ opacity: scene.dragging ? 1 : 0 }}
+          >
+            <div
+              className="-ml-[26px] -mt-[16px] w-[124px] rotate-[-3deg] rounded-lg border border-[#F0C79A] bg-white px-2 py-1.5 shadow-[0_16px_30px_-10px_rgba(40,30,15,0.45)]"
+            >
+              <p className="truncate text-[9.5px] font-bold leading-tight">{MOVE_ROLE}</p>
+              <p className="mt-1 flex items-center gap-1">
+                <span className="h-[14px] w-[14px] flex-none rounded-full bg-[#E6E2DB]" />
+                <span className="truncate text-[8.5px] font-semibold uppercase tracking-[0.04em] text-brand-gray">
+                  Open seat
+                </span>
+              </p>
+              <p className="mt-1">
+                <span
+                  className="inline-block rounded-full px-1.5 py-px text-[7.5px] font-semibold"
+                  style={{ background: `${DEPTS.Sales}1A`, color: DEPTS.Sales }}
+                >
+                  Sales
+                </span>
+              </p>
+            </div>
           </div>
 
           <span
@@ -655,13 +793,15 @@ function DiscBadge({ seat }: { seat: Seat }) {
 }
 
 // ---------------------------------------------------------------- a role card
-function Card({ seat, scene, root }: { seat: Seat; scene: Scene; root?: boolean }) {
+function Card({ seat, scene, root, hot }: { seat: Seat; scene: Scene; root?: boolean; hot?: boolean }) {
   const dept = DEPTS[seat.dept];
   return (
     <div
-      className={`rounded-lg border bg-white px-2 py-1.5 shadow-[0_2px_6px_-3px_rgba(40,30,15,0.16)] ${
-        seat.fresh ? "tour-landed" : ""
-      }`}
+      className={`rounded-lg border bg-white px-2 py-1.5 transition-shadow duration-150 ${
+        hot
+          ? "shadow-[0_0_0_2px_rgba(234,123,27,0.55),0_6px_14px_-6px_rgba(40,30,15,0.3)]"
+          : "shadow-[0_2px_6px_-3px_rgba(40,30,15,0.16)]"
+      } ${seat.fresh ? "tour-landed" : ""}`}
       style={{ borderColor: "#EBE7E0", borderLeft: root ? "3px solid #EA7B1B" : undefined }}
     >
       <p className="truncate text-[9.5px] font-bold leading-tight">{seat.role}</p>
@@ -741,8 +881,18 @@ function Stub({ left, from = 0 }: { left: number; from?: number }) {
 function ChartView({ scene }: { scene: Scene }) {
   // Each branch is as wide as its own children need, so branches never overlap
   // and a new hire widens only the branch that gained one.
-  const kidsOf = (i: number) =>
-    i === HIRE_INTO && scene.added ? [...BRANCHES[i].kids, NEW_HIRE] : BRANCHES[i].kids;
+  // Order matters: move the seat first, then hire into whatever branch results,
+  // so the two beats compose instead of fighting over the same array.
+  const moved = BRANCHES[MOVE_FROM].kids.find((k) => k.role === MOVE_ROLE)!;
+  const kidsOf = (i: number) => {
+    let kids = BRANCHES[i].kids;
+    if (scene.moved) {
+      if (i === MOVE_FROM) kids = kids.filter((k) => k.role !== MOVE_ROLE);
+      if (i === MOVE_TO) kids = [...kids, moved];
+    }
+    if (i === HIRE_INTO && scene.added) kids = [...kids, NEW_HIRE];
+    return kids;
+  };
 
   const kidRow = (n: number) => n * KID_W + Math.max(0, n - 1) * KID_GAP;
   const widths = BRANCHES.map((_, i) =>
@@ -809,10 +959,32 @@ function ChartView({ scene }: { scene: Scene }) {
                         <Stub key={k.role} left={startX + j * (KID_W + KID_GAP) + KID_W / 2} from={STUB} />
                       ))}
                     </div>
-                    <div className="flex justify-center" style={{ gap: KID_GAP }}>
+                    {/* The receiving branch lights up while a card is in the
+                        air. It is the whole kid row rather than a gap between
+                        two cards, because a drop target you cannot see is not a
+                        demonstration of anything. */}
+                    <div
+                      data-t={i === MOVE_TO ? "drop-zone" : undefined}
+                      className="flex justify-center rounded-lg border border-dashed transition-colors duration-200"
+                      style={{
+                        gap: KID_GAP,
+                        borderColor: scene.dragging && i === MOVE_TO ? "#EA7B1B" : "transparent",
+                        background: scene.dragging && i === MOVE_TO ? "rgba(234,123,27,0.07)" : "transparent",
+                        padding: 3,
+                      }}
+                    >
                       {kids.map((k) => (
-                        <div key={k.role} style={{ width: KID_W }}>
-                          <Card seat={k} scene={scene} />
+                        <div
+                          key={k.role}
+                          data-t={`seat-${slug(k.role)}`}
+                          style={{
+                            width: KID_W,
+                            // the seat being carried leaves a hole behind it
+                            opacity: scene.dragging && k.role === MOVE_ROLE ? 0.3 : 1,
+                            transition: "opacity .2s ease",
+                          }}
+                        >
+                          <Card seat={k} scene={scene} hot={scene.hot === `seat-${slug(k.role)}`} />
                         </div>
                       ))}
                     </div>
@@ -1050,6 +1222,130 @@ function ListView({ scene }: { scene: Scene }) {
           })}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------- role details
+// Added September 2026, when the client lifted the do-not that had kept this
+// page off any person's record. See the note at the top of this file.
+//
+// EVERY VALUE HERE IS FICTIONAL. The client's screenshot of this panel carries
+// a real colleague's name and a real riseupkings.com address; none of that is
+// on a public page. This is the Ridgeline Services cast from section 5 of
+// docs/org-chart-feature-notes.md, on a ridgeline.co address.
+//
+// Condensed from the real panel, which scrolls. What is kept is the argument:
+// the seat has a title and a department of its own, a person is assigned INTO
+// it, and their outcomes hang off the assignment. That is why an empty seat is
+// still a seat, which is the claim the rest of the page makes.
+function RoleDetailsModal() {
+  const seat =
+    BRANCHES.flatMap((b) => b.kids).find((k) => k.role === DETAIL_ROLE) ?? BRANCHES[0].kids[0];
+  const dept = DEPTS[seat.dept];
+
+  const Label = ({ children }: { children: React.ReactNode }) => (
+    <p className="mb-1 text-[9px] font-semibold text-brand-charcoal">{children}</p>
+  );
+  const Box = ({ children }: { children: React.ReactNode }) => (
+    <div className="rounded-md border border-[#E6E2DB] bg-[#FBFAF8] px-2.5 py-1.5 text-[10.5px] text-brand-ink">
+      {children}
+    </div>
+  );
+
+  return (
+    <div className="absolute inset-0 z-[60] grid place-items-center bg-[rgba(24,19,12,0.42)] px-6">
+      <div className="sop-view w-[440px] overflow-hidden rounded-2xl bg-white shadow-[0_24px_60px_-18px_rgba(20,14,6,0.5)]">
+        <div className="flex items-center border-b border-[#EFECE6] px-5 py-3">
+          <h4 className="text-[14px] font-bold tracking-tight">Role Details</h4>
+          <span
+            data-t="details-close"
+            className="ml-auto grid h-[22px] w-[22px] place-items-center rounded-md text-brand-gray"
+          >
+            <XMark className="h-[13px] w-[13px]" />
+          </span>
+        </div>
+
+        <div className="space-y-2.5 px-5 py-3.5">
+          <div>
+            <Label>Role Title</Label>
+            <Box>{seat.role}</Box>
+          </div>
+
+          <div>
+            <Label>Assigned To</Label>
+            <div className="flex items-center gap-2 rounded-md border border-[#F3DCC4] bg-[#FFF8F1] px-2.5 py-1.5">
+              <span className="grid h-[22px] w-[22px] flex-none place-items-center rounded-full bg-[#F1EEE9] text-[8px] font-bold text-brand-charcoal">
+                {seat.init}
+              </span>
+              <span className="min-w-0">
+                <span className="block truncate text-[11px] font-semibold leading-tight">{seat.who}</span>
+                <span className="block truncate text-[9px] text-brand-gray">kath@ridgeline.co</span>
+              </span>
+            </div>
+          </div>
+
+          <div>
+            <Label>Employment Type</Label>
+            <div className="grid grid-cols-4 gap-1.5">
+              {["Full-Time", "Part-Time", "FT Contractor", "PT Contractor"].map((t) => {
+                const on = t === "Full-Time";
+                return (
+                  <span
+                    key={t}
+                    className="rounded-md border px-1 py-1.5 text-center text-[8.5px] font-semibold"
+                    style={{
+                      borderColor: on ? "#EA7B1B" : "#E6E2DB",
+                      background: on ? "#FFF6EC" : "#FBFAF8",
+                      color: on ? "#C9650F" : "#6B6660",
+                    }}
+                  >
+                    {t}
+                  </span>
+                );
+              })}
+            </div>
+          </div>
+
+          <div>
+            <Label>Department</Label>
+            <span
+              className="inline-block rounded-full px-2 py-0.5 text-[9px] font-semibold"
+              style={{ background: `${dept}1A`, color: dept }}
+            >
+              {seat.dept}
+            </span>
+            <p className="mt-1 text-[8.5px] leading-snug text-brand-gray">
+              The seat&rsquo;s department, independent of who fills it. It also seeds the assigned
+              person&rsquo;s home department, which you can change afterwards.
+            </p>
+          </div>
+
+          <div>
+            <Label>
+              {seat.who?.split(" ")[0]}&rsquo;s Annual Outcomes ({seat.outcomes})
+            </Label>
+            <div className="flex items-center gap-1.5 rounded-md border border-[#E6E2DB] bg-[#FBFAF8] px-2.5 py-1.5">
+              <Target className="h-[10px] w-[10px] flex-none" style={{ color: "#C9832B" }} />
+              <span className="truncate text-[10px] text-brand-ink">
+                Systems uptime above 99.5% every quarter
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center border-t border-[#EFECE6] px-5 py-3">
+          <span className="text-[10.5px] font-semibold text-[#C0402B]">Delete Role</span>
+          <span className="ml-auto flex items-center gap-2">
+            <span className="rounded-md border border-[#E6E2DB] px-3 py-1.5 text-[10.5px] font-semibold text-brand-charcoal">
+              Cancel
+            </span>
+            <span className="rounded-md bg-brand-orange px-3 py-1.5 text-[10.5px] font-bold text-white">
+              Save Changes
+            </span>
+          </span>
+        </div>
+      </div>
     </div>
   );
 }

@@ -293,7 +293,10 @@ export const REPLACES = {
     { name: "Google Forms", logo: "/replaces-google-forms.png" },
     { name: "Typeform", logo: "/replaces-typeform.png" },
   ],
-  orgChart: [{ name: "ninety.io", logo: "/replaces-ninety.png" }],
+  // Pingboard, not ninety.io. ninety.io is the scoreboard and meetings tool;
+  // the org chart competitor is Pingboard, which is what the pricing table has
+  // had on its Org chart row all along. Corrected September 2026.
+  orgChart: [{ name: "Pingboard", logo: "/replaces-pingboard.png" }],
   projectsTasks: [
     { name: "Asana", logo: "/replaces-asana.png" },
     { name: "Monday.com", logo: "/replaces-monday.png" },

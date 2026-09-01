@@ -8,11 +8,21 @@
 //
 //   1. Screenshots of the live in-app pricing page: the Multiply Scale Bundle at
 //      $299 with ten seats, the AI usage billing explainer, the savings
-//      calculator, the six included modules, and the FAQ. All reproduced.
+//      calculator, the six included modules, and the FAQ.
 //   2. The client's reference, HighLevel's "what's included" table, which lists
 //      each capability against the tools it replaces and totals the stack.
 //
 // The stack table is the addition. Everything else already existed in the app.
+//
+// September 2026, on the client's note. The stack table moved above the price
+// and now opens the page; the price card follows it. The AI usage explainer and
+// the savings calculator that used to sit between the price and the FAQ are
+// gone entirely, along with the .price-range rules in globals.css that styled
+// the calculator's sliders. What survives of that section is one line, the AI
+// row's note in STACK, which says the usage is billed per user and there is no
+// set fee per user. That started as an asterisk on the price with a footnote
+// under the table and moved into the row, where it sits beside the number it
+// qualifies. The FAQ still answers the billing question in full.
 //
 // The hero was rebuilt in August 2026 on the client's reference, Stripe's
 // pricing page. Two decks fed it: design/pricing-hero-stripe-options.html for
@@ -26,7 +36,7 @@
 //
 // >>> BEFORE THIS SHIPS: every figure in STACK is a competitor's list price and
 // >>> needs verifying. They are gathered in one constant for exactly that reason.
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
 import Reveal from "./Reveal";
@@ -38,8 +48,6 @@ import { useDemo } from "./DemoModal";
 const ORANGE = "#EA7B1B";
 const ORANGE_DARK = "#C9650F";
 const ORANGE_GRAD = "linear-gradient(135deg, #F49230, #DE6F14)";
-// the orange has to lift off a near-black slab, so it is a lighter tint of the same hue
-const ORANGE_ON_DARK = "#FFB265";
 const GREEN = "#1F7F4C";
 const RED = "#C0402B";
 
@@ -61,13 +69,6 @@ const Tick = ({ className, style }: IconProps) => (
 const Spark = ({ className, style }: IconProps) => (
   <svg className={className} style={style} {...ico} strokeWidth={2}>
     <path d="M12 3l1.6 4L18 8.5 14 10l-2 4-2-4-4-1.5L10 7z" />
-  </svg>
-);
-const People = ({ className, style }: IconProps) => (
-  <svg className={className} style={style} {...ico}>
-    <circle cx="9.2" cy="8.4" r="3" />
-    <path d="M3.6 18.6c0-2.8 2.5-4.6 5.6-4.6s5.6 1.8 5.6 4.6" />
-    <path d="M16.2 6.2a3 3 0 0 1 0 5.6M17.4 14.6c1.9.6 3.2 1.9 3.2 4" />
   </svg>
 );
 const Chevron = ({ className, style }: IconProps) => (
@@ -135,6 +136,13 @@ const INCLUDED = [
 // One vendor is never counted twice: each row is a distinct category with its
 // own tool, so the total is a clean sum rather than HighLevel's approach of
 // repeating the same vendor across several rows and adding it in each time.
+//
+// The CRM row came out in September 2026 on the client's instruction. It was
+// GoHighLevel Starter at $97 flat, and it was the one figure here that needed
+// no arithmetic to arrive at. Its removal is why the total is $1,664 rather
+// than $1,761 and why the page says eleven tools rather than twelve, and it
+// means the page no longer claims to replace a CRM at all. If it goes back,
+// the word "eleven" has to move with it in three places.
 const AS_OF = "August 2026";
 
 type StackRow = {
@@ -233,7 +241,11 @@ const STACK: StackRow[] = [
   },
   {
     what: "An AI assistant for the whole team",
-    note: "Claude and GPT, grounded in your own company data",
+    // The note that used to describe the capability now states how we bill
+    // for it, on the client's instruction (September 2026). It replaced an
+    // asterisk on the price and a footnote under the table, which said the
+    // same thing one glance further away from the number it qualifies.
+    note: "Pay only for monthly AI usage per user, no set fee per user",
     // Claude Team standard seat, $25/seat/mo monthly, x10. Annual is $20.
     // OpenAI's pricing page refused automated fetching, so ChatGPT is not the
     // basis for this figure; Claude alone carries it, which is fine since
@@ -273,22 +285,13 @@ const STACK: StackRow[] = [
     was: 100,
     logos: [{ name: "Calendly", logo: "/replaces-calendly.png" }],
   },
-  {
-    what: "CRM and pipeline",
-    note: "Contacts, deals, and the follow-up that closes them",
-    // GoHighLevel Starter, $97/mo flat with unlimited users, so nothing to
-    // multiply. The one figure on the table that was already exactly right.
-    was: 97,
-    logos: [{ name: "GoHighLevel", logo: "/replaces-highlevel.png" }],
-  },
 ];
 
 const STACK_TOTAL = STACK.reduce((s, r) => s + r.was, 0);
 
 const FAQ = [
-  { q: "Can I cancel anytime?", a: "Yes. Cancel from Settings, then Billing, whenever you like. There is no notice period and no cancellation fee, and you keep full access until the end of the period you have already paid for." },
-  { q: "How does AI usage billing work?", a: "Your $299 is billed monthly like any subscription. AI usage is separate: it is metered and invoiced every two weeks on a Friday against the same card, so a quiet month costs less than a busy one. You set a monthly maximum, $200 by default, and AI features pause once your team reaches it until the month rolls over. Raise it, lower it, or turn the cap off entirely from Settings, then Billing." },
-  { q: "What is included in the Multiply Scale Bundle?", a: "Every module. Scoreboards, the one page plan, meetings and 1-on-1s, the org chart, DISC assessments, SOP HQ, projects and tasks, forms, checklists, agreements, the CRM, the CFO dashboard with banking analytics, and Multi AI across all of it. There are no add-ons to assemble and nothing held back for a higher tier." },
+  { q: "Can I cancel anytime?", a: "Yes, you can cancel whenever you like. There’s no cancellation fee and you’ll maintain access until the end of the month for which you’ve paid." },
+  { q: "How does AI usage billing work?", a: "Your main Multiply OS software is billed as a monthly subscription. AI usage is billed separately. It is metered and invoiced every two weeks on a Friday with the same credit card you have on file. You’re able to set a monthly maximum ($200 by default) and the AI features pause once your team reaches it until the month rolls over. Raise it, lower it, turn it on/off per user or turn the cap off entirely from your Billing Settings." },
   { q: "Can I add or remove users mid-month?", a: "Yes. Ten seats are included and extra seats are $29 each per month. Add them when somebody joins and remove them when somebody leaves, rather than waiting for a renewal date." },
   { q: "Do I need to be on QuickBooks for the CFO dashboard?", a: "No. QuickBooks connects in about two minutes and is read-only, which is the fastest route. If you are on something else, upload a profit and loss and a balance sheet as a CSV each month and every dashboard, chart, and AI briefing works exactly the same way." },
 ];
@@ -402,16 +405,38 @@ function PlanCard() {
 // pick up an orange rail and a warm tint on hover, and the total bar carries
 // the $299 on its own raised chip.
 //
-// Below sm each row becomes a small card: a four-column table at 360px is
-// unreadable, and the price is the one thing that must not end up in a corner.
+// The logo column leads, on the client's instruction (September 2026). A
+// reader recognises a mark faster than they read a capability, so the row now
+// opens with the tool being replaced and explains the replacement second. The
+// two flexible columns were reweighted at the same time, and then again when
+// the client asked for the marks to stop stacking (September 2026). The logo
+// track is sized off a measurement rather than a guess: at 21px the widest set
+// on the table, Typeform + Jotform + Google Forms, runs 332px, and at the
+// 1200px container the 1.25fr track comes out at about 362px. That is one line
+// with 30px to spare, and no fixed width to go stale if a row gains a mark.
+//
+// Below roughly a 1226px viewport the track drops under 332px and the three
+// mark rows wrap again. That is deliberate. The alternative is either marks too
+// small to read or logos overflowing into the description, and a laptop at
+// 1280px, which is where this gets looked at, is comfortably above the line.
+//
+// The marks themselves went up half again on the client's instruction and then
+// back down a fifth, landing at 21px, which is why the pill lost a little
+// vertical padding on the way through.
+//
+// Both left hand columns centre from sm up, on the client's instruction. Left
+// aligned in a track sized for the three-mark rows, a single logo sat hard
+// against the table edge and the description read as though it had drifted away
+// from its own column. Centred, every column on the table is centred, and the
+// rows with one mark line up with the rows that have three.
 function StackTable() {
   return (
     <div className="overflow-hidden rounded-[20px] border border-black/[0.07] bg-white shadow-[0_24px_54px_-30px_rgba(40,30,15,0.45)]">
-      <div className="hidden grid-cols-[minmax(0,1.45fr)_minmax(0,1.35fr)_120px_116px] items-center gap-4 border-b border-[#EBE7E0] bg-[#F6F3EE] px-6 py-3.5 sm:grid">
-        {["What you get", "Instead of", "Their price", "Multiply OS"].map((h, i) => (
+      <div className="hidden grid-cols-[minmax(0,1.25fr)_minmax(0,1.75fr)_120px_116px] items-center gap-4 border-b border-[#EBE7E0] bg-[#F6F3EE] px-6 py-3.5 sm:grid">
+        {["Instead of", "What you get", "Their price", "Multiply OS"].map((h) => (
           <span
             key={h}
-            className={`text-[10.5px] font-extrabold uppercase tracking-[0.11em] text-[#8A857D] ${i >= 2 ? "text-center" : ""}`}
+            className="text-center text-[10.5px] font-extrabold uppercase tracking-[0.11em] text-[#8A857D]"
           >
             {h}
           </span>
@@ -422,11 +447,11 @@ function StackTable() {
           the two column version of it, and it carries the Included claim for
           the whole table.
 
-          That claim used to be a chip on every row. Twelve identical chips read
-          as a column on a desktop and as the same three words twelve times on a
-          phone, which is padding rather than information. Stated once here, the
-          rows get a whole block back each. */}
-      <div className="grid grid-cols-[1fr_76px] items-center gap-x-2.5 border-b border-[#EBE7E0] bg-[#F6F3EE] px-4 py-2.5 sm:hidden">
+          That claim used to be a chip on every row. An identical chip on every
+          row reads as a column on a desktop and as the same three words over
+          and over on a phone, which is padding rather than information. Stated
+          once here, the rows get a whole block back each. */}
+      <div className="grid grid-cols-[1fr_84px] items-center gap-x-2.5 border-b border-[#EBE7E0] bg-[#F6F3EE] px-4 py-2.5 sm:hidden">
         <span
           className="inline-flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-extrabold"
           style={{ background: "#EAF7F0", color: GREEN }}
@@ -442,38 +467,48 @@ function StackTable() {
       {/* Below sm this stays a table rather than unfolding into a card per row.
           See design/stack-table-mobile-options.html, direction 4. A reader on a
           price comparison runs their eye down a column of numbers, and a card
-          breaks that column on every row. So: name over its logos on the left,
-          price pinned right across both lines, note hidden, chip gone. */}
+          breaks that column on every row. So: logos over the name on the left,
+          price pinned right across both lines, note hidden, chip gone.
+
+          The bottom hairline comes off the LAST ROW with nth-last-child(2),
+          not with last:. The total bar is the table's last child, so the row
+          before it is never :last-child and last:border-b-0 silently did
+          nothing: every row kept its rule and the twelfth one stacked a grey
+          hairline straight onto the total bar's 2px orange one.
+
+          The two left cells sit in explicit grid slots rather than in flow, so
+          the phone stacks them in the same order the desktop reads them in.
+          Logos first on both. */}
       {STACK.map((r) => (
         <div
           key={r.what}
-          className="grid grid-cols-[1fr_76px] gap-x-2.5 gap-y-1 border-b border-l-[3px] border-[#F3F0EB] border-l-transparent px-4 py-3 transition-colors duration-150 last:border-b-0 hover:border-l-brand-orange hover:bg-[#FFFCF7] sm:grid-cols-[minmax(0,1.45fr)_minmax(0,1.35fr)_120px_116px] sm:items-center sm:gap-4 sm:px-6 sm:py-[15px]"
+          className="grid grid-cols-[1fr_84px] gap-x-2.5 gap-y-1.5 border-b border-l-[3px] border-[#F3F0EB] border-l-transparent px-4 py-3 transition-colors duration-150 [&:nth-last-child(2)]:border-b-0 hover:border-l-brand-orange hover:bg-[#FFFCF7] sm:grid-cols-[minmax(0,1.25fr)_minmax(0,1.75fr)_120px_116px] sm:items-center sm:gap-4 sm:px-6 sm:py-[15px]"
         >
-          <span className="col-start-1 row-start-1 min-w-0 sm:col-auto sm:row-auto">
-            <span className="block text-[13px] font-bold leading-tight sm:text-[14px]">{r.what}</span>
-            {/* Kept in the DOM, hidden on a phone: it is the longest text in
-                the row and it explains a capability the visitor was already
-                sold two screens up. What this table is for is the arithmetic. */}
-            <span className="hidden text-[11.5px] leading-snug text-brand-gray sm:block">
-              {r.note}
-            </span>
-          </span>
-
-          {/* bare marks on a phone, pills from sm up: at 14px a pill around a
+          {/* bare marks on a phone, pills from sm up: at 21px a pill around a
               wordmark is mostly border */}
-          <span className="col-start-1 row-start-2 flex min-w-0 flex-wrap items-center gap-[7px] sm:col-auto sm:row-auto">
+          <span className="col-start-1 row-start-1 flex min-w-0 flex-wrap items-center gap-[7px] sm:col-auto sm:row-auto sm:justify-center">
             {r.logos.map((l) => (
               <span
                 key={l.name}
-                className="inline-flex items-center rounded-full border-black/[0.08] text-[11px] font-[650] text-brand-charcoal sm:border sm:bg-white sm:px-2.5 sm:py-1.5 sm:shadow-[0_1px_2px_rgba(40,30,15,0.05)]"
+                className="inline-flex items-center rounded-full border-black/[0.08] text-[12.5px] font-[650] text-brand-charcoal sm:border sm:bg-white sm:px-2.5 sm:py-1 sm:shadow-[0_1px_2px_rgba(40,30,15,0.05)]"
               >
                 <ReplacedLogo
                   src={l.logo ?? ""}
                   name={l.name}
-                  className="h-[14px] w-auto opacity-80 sm:h-[17px] sm:opacity-100"
+                  className="h-[17px] w-auto opacity-80 sm:h-[21px] sm:opacity-100"
                 />
               </span>
             ))}
+          </span>
+
+          <span className="col-start-1 row-start-2 min-w-0 sm:col-auto sm:row-auto sm:text-center">
+            <span className="block text-[13px] font-bold leading-tight sm:text-[14px]">{r.what}</span>
+            {/* Kept in the DOM, hidden on a phone: it is the longest text in
+                the row, and the phone already has the mark and the price, which
+                is what this table is for. */}
+            <span className="hidden text-[11.5px] leading-snug text-brand-gray sm:block">
+              {r.note}
+            </span>
           </span>
 
           <span className="col-start-2 row-start-1 row-span-2 flex items-center justify-end gap-1.5 sm:col-auto sm:row-auto sm:row-span-1 sm:items-baseline sm:justify-center sm:gap-2">
@@ -549,179 +584,6 @@ function StackTable() {
   );
 }
 
-// ---------------------------------------------------------------- calculator
-function Slider({ value, min, max, step, onChange, label }: {
-  value: number; min: number; max: number; step: number;
-  onChange: (n: number) => void; label: string;
-}) {
-  const pct = ((value - min) / (max - min)) * 100;
-  return (
-    <input
-      type="range"
-      aria-label={label}
-      min={min}
-      max={max}
-      step={step}
-      value={value}
-      onChange={(e) => onChange(Number(e.target.value))}
-      className="price-range w-full"
-      style={{ background: `linear-gradient(to right, ${ORANGE} ${pct}%, #E1DDD6 ${pct}%)` }}
-    />
-  );
-}
-
-/* The three billing facts. Deliberately not a card: it sits on the page ground so
-   the calculator beside it is the only object in the section with a border. */
-function BillingFacts() {
-  const facts = [
-    {
-      t: "The plan is billed monthly",
-      d: "Your Multiply Scale Bundle price behaves like any other subscription.",
-    },
-    {
-      t: "Usage is invoiced every two weeks",
-      d: "Insights, the coach, and recordings are metered and charged on a Friday, as a separate automatic charge against the same card.",
-    },
-    {
-      t: "You set the ceiling",
-      d: "$200 a month by default. AI features pause when your team reaches it, until the month rolls over. Raise it, lower it, or turn it off from Settings, then Billing.",
-    },
-  ];
-
-  return (
-    <div className="pt-1">
-      <h3 className="flex items-center gap-2 text-[20px] font-extrabold tracking-tight sm:text-[22px]">
-        <Spark className="h-[18px] w-[18px] flex-none text-brand-orange" />
-        How AI usage billing works
-      </h3>
-      <p className="mt-2.5 text-[14px] leading-relaxed text-brand-charcoal">
-        Claude is built into every seat, so you skip the $20 to $200 a month subscription and pay
-        only for what your team actually uses. Heavy month or light month, the bill follows the
-        usage rather than a flat AI fee.
-      </p>
-
-      <ul className="mt-6 flex flex-col gap-[18px]">
-        {facts.map((f, i) => (
-          <li key={f.t} className="grid grid-cols-[30px_minmax(0,1fr)] items-start gap-x-[13px]">
-            <span
-              className="row-span-2 grid h-[30px] w-[30px] place-items-center rounded-[9px] text-[12.5px] font-extrabold"
-              style={{ background: "#FDEEDC", color: ORANGE_DARK }}
-            >
-              {i + 1}
-            </span>
-            <b className="text-[14px] font-bold text-brand-ink">{f.t}</b>
-            <span className="col-start-2 mt-[3px] text-[13px] leading-relaxed text-brand-charcoal">
-              {f.d}
-            </span>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-function Calculator() {
-  const [rev, setRev] = useState(100000);
-  const [lift, setLift] = useState(3);
-  const [team, setTeam] = useState(SEATS);
-  const perUser = 20;
-
-  const { save, year, aiCost } = useMemo(() => ({
-    save: rev * (lift / 100),
-    year: rev * (lift / 100) * 12,
-    aiCost: team * perUser,
-  }), [rev, lift, team]);
-
-  // a white-ish inset panel, used for every input group
-  const panel = "rounded-[14px] border border-white/80 bg-white/70 p-4";
-
-  return (
-    <div
-      className="rounded-[20px] border p-5 shadow-[0_22px_48px_-30px_rgba(150,90,20,0.5)] sm:p-6"
-      style={{ borderColor: "#F0DCC4", background: "linear-gradient(160deg, #FFF8F0, #FDEEDC)" }}
-    >
-      <div className={panel}>
-        <p className="text-[10.5px] font-bold uppercase tracking-[0.09em] text-brand-charcoal">
-          Your monthly revenue today
-        </p>
-        <p className="mt-2 flex items-baseline gap-[7px]">
-          <span className="text-[28px] font-extrabold leading-none tabular-nums sm:text-[36px]">
-            {money(rev)}
-          </span>
-          <span className="text-[13px] text-brand-gray">/mo</span>
-        </p>
-        <div className="mt-3">
-          <Slider value={rev} min={0} max={10000000} step={100000} onChange={setRev} label="Monthly revenue" />
-          <div className="mt-1 flex justify-between font-mono text-[10.5px] text-brand-gray">
-            <span>$0</span>
-            <span>Drag to set</span>
-            <span>$10M+</span>
-          </div>
-        </div>
-      </div>
-
-      <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <div className={panel}>
-          <p className="flex items-baseline gap-2.5 text-[10.5px] font-bold uppercase tracking-[0.09em] text-brand-charcoal">
-            Profit lift from AI
-            <b className="ml-auto text-[16px] font-extrabold tabular-nums text-brand-ink">{lift}%</b>
-          </p>
-          <div className="mt-2.5">
-            <Slider value={lift} min={1} max={10} step={1} onChange={setLift} label="Profitability improvement" />
-            <div className="mt-1 flex justify-between font-mono text-[10.5px] text-brand-gray">
-              <span>1%</span>
-              <span>10%</span>
-            </div>
-          </div>
-        </div>
-
-        <div className={panel}>
-          <p className="flex items-baseline gap-2.5 text-[10.5px] font-bold uppercase tracking-[0.09em] text-brand-charcoal">
-            <People className="h-3 w-3 flex-none" />
-            Team size
-            <b className="ml-auto text-[16px] font-extrabold tabular-nums text-brand-ink">{team}</b>
-          </p>
-          <div className="mt-2.5">
-            <Slider value={team} min={1} max={50} step={1} onChange={setTeam} label="Team size" />
-            <div className="mt-1 flex justify-between font-mono text-[10.5px] text-brand-gray">
-              <span>1</span>
-              <span>50</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* the answer, on a dark slab so the orange figure is the loudest thing here */}
-      <div className="mt-3 rounded-[14px] px-[18px] pb-4 pt-[18px] text-white" style={{ background: "#171310" }}>
-        <p className="text-[10.5px] font-bold uppercase tracking-[0.11em]" style={{ color: ORANGE_ON_DARK }}>
-          Estimated monthly gain
-        </p>
-        <p className="mt-1.5 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-          <span
-            className="text-[32px] font-black leading-none tabular-nums sm:text-[42px]"
-            style={{ color: ORANGE_ON_DARK }}
-          >
-            {money(save)}
-          </span>
-          <span className="text-[13px] text-white/60">/mo</span>
-          <span className="text-[19px] font-bold tabular-nums" style={{ color: ORANGE_ON_DARK }}>
-            {money(year)}
-          </span>
-          <span className="text-[13px] text-white/60">a year</span>
-        </p>
-        <p className="mt-3 border-t border-white/[0.14] pt-3 text-[13px] text-white/[0.78]">
-          Against <b className="font-semibold text-white tabular-nums">{money(aiCost)}</b>/mo of
-          metered AI usage, plus your <b className="font-semibold text-white">{money(PRICE)}</b> plan.
-        </p>
-      </div>
-
-      <p className="mt-2.5 text-[11.5px] leading-snug text-brand-gray">
-        An estimate built from the numbers you entered, not a projection or a guarantee.
-      </p>
-    </div>
-  );
-}
-
 // ---------------------------------------------------------------- FAQ
 function Faq() {
   const [open, setOpen] = useState<number | null>(0);
@@ -770,13 +632,102 @@ export default function PricingPage() {
     <main className="min-h-screen bg-white">
       <Navbar />
 
-      {/* ------------------------------------------------ hero
+      {/* ------------------------------------------------ what it replaces
+          The client moved this above the price in September 2026, so the
+          argument now runs the other way round. The visitor reads the stack and
+          its total first, and the $299 arrives underneath as the answer to a
+          number they are already carrying.
+
+          Which makes this the page opening, so it takes the h1. The price
+          section below, which used to hold it, took an h2.
+
+          The eyebrow and the lede came back with the move. They had been
+          dropped when this was section two and the table could speak for
+          itself. At the top of a page it has to say what it is before the table
+          gets a chance to. */}
+      <section
+        id="stack"
+        className="relative scroll-mt-24 overflow-hidden bg-white px-5 pb-14 pt-10 sm:px-8 sm:pb-[76px] sm:pt-[72px]"
+      >
+        {/* The platform page's ground, brought across unchanged: white under
+            .bg-dotted at 60%, which is globals.css's 1px #e5e5e5 radial on a
+            22px pitch. Hero.tsx runs the identical pair, so the two pages now
+            open on the same surface rather than on two different creams.
+
+            See design/pricing-lead-bg-and-highlight-options.html, direction A1.
+
+            It is a texture, not a layer with content in it, so it is aria-hidden
+            and the container below picks up relative to sit over it. */}
+        <div
+          aria-hidden="true"
+          className="bg-dotted pointer-events-none absolute inset-0 opacity-60"
+        />
+        <div className="relative mx-auto max-w-container">
+          <Reveal className="mx-auto mb-8 max-w-2xl text-center sm:mb-11">
+            <p
+              className="mb-2.5 text-[10.5px] font-bold uppercase tracking-[0.19em] sm:mb-4"
+              style={{ color: ORANGE_DARK }}
+            >
+              Eleven tools &middot; one subscription
+            </p>
+            <h1 className="text-[28px] font-extrabold leading-[1.1] tracking-tight text-brand-ink sm:text-[44px]">
+              Everything Multiply OS{" "}
+              <span className="relative whitespace-nowrap">
+                replaces.
+                <svg className="absolute -bottom-2 left-0 h-3 w-full text-brand-orange" viewBox="0 0 120 12" preserveAspectRatio="none" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" aria-hidden="true">
+                  <path d="M3 8c26-5 74-6 114-3" />
+                </svg>
+              </span>
+            </h1>
+            <p className="mx-auto mt-6 max-w-[48ch] text-[14.5px] leading-relaxed text-brand-charcoal sm:mt-7 sm:text-[15.5px]">
+              The stack a team of ten is usually paying for, at list price, next to what the same
+              work costs on one subscription.
+            </p>
+          </Reveal>
+
+          <Reveal delay={0.1}>
+            <StackTable />
+          </Reveal>
+
+          {/* Sourcing only. The asterisk note that used to lead this block
+              moved into the AI row itself, where it sits beside the price it
+              qualifies rather than a table's length below it. */}
+          <Reveal delay={0.16} className="mx-auto mt-5 max-w-2xl text-center">
+            <p className="text-[11.5px] leading-relaxed text-brand-gray">
+              Comparison uses each vendor&rsquo;s entry level paid plan at monthly list pricing for a team of ten, checked {AS_OF}.
+              Vendors change their pricing, so treat these as indicative rather than quoted.
+              All trademarks belong to their owners.
+            </p>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* ------------------------------------------------ the price
           Stripe's pricing hero rebuilt in this site's palette. See
           design/pricing-hero-stripe-options.html (direction S5) and
           design/pricing-hero-s5-revised.html (direction R4), which is what
           shipped.
 
-          Four things carry it, and none of them is decoration:
+          It used to open the page. Since the stack moved above it, it is the
+          second sheet: it rides 36px up over the section above on a rounded top
+          edge, which is the join the stack section used to make over the hero.
+          One surface passing under another is a thing the eye already knows how
+          to read, which is why the join is done this way rather than with a
+          rule. See design/pricing-hero-seam-options.html, direction 4.
+
+          THE THREE GROUNDS ARE A SET AND HAVE TO STAY ONE. An overlap only
+          reads while the two surfaces differ, so the page alternates: white
+          under the stack, cream #F6F3EE here, near-white #FBFAF8 under the FAQ.
+          This section held #FBFAF8 while the stack was cream above it; taking
+          the platform page's white up there pushed the cream down to here and
+          the near-white down to the FAQ. Change any one of the three and the
+          sheet under it stops looking like a sheet.
+
+          The cream is also the better ground for what this section holds: the
+          price card is white, and it was designed to lift off exactly this
+          colour back when this was the hero.
+
+          Four things carry the section, and none of them is decoration:
 
             1. The dashed column rules ARE the layout. The lead sits in columns
                one and two and the card in three to five. They mirror the
@@ -787,18 +738,62 @@ export default function PricingPage() {
             3. The card is three bands with two hairlines between them: price,
                then what is in it, then the way in. That is what makes it read
                as expensive rather than as a box with a number in it.
-            4. The gradient strip is 160px at -10.5 degrees, centred on the
-               section. At that angle its low end drops about 176px below
-               centre, so the section has to stay taller than roughly 510px or
-               the strip gets sliced flat by its own overflow and reads as a
-               bug. The generous vertical padding below is load-bearing.
+            4. The gradient strip is 148px at -10.5 degrees. At that angle its
+               low end drops about 176px below its centre on a 1440px viewport,
+               and that offset grows with the viewport, so the section has to
+               stay tall enough or the strip gets sliced flat by its own
+               overflow and reads as a bug. The 276px of bottom padding is
+               load-bearing, and it is scoped to lg for that reason: the strip
+               is the only thing it makes room for, and between sm and lg there
+               is no strip, so the same padding there was just a blank field.
+
+          The strip geometry, which is tight and worth writing down. The two
+          numbers move together and are set so the strip's top edge lands 68px
+          above the end of the content: calc(100% - 332px) against 264px of
+          bottom padding. Change the padding and the offset changes with it, or
+          the strip slides into the price card.
+
+          Nothing hides the strip's low end any more. The FAQ below is the same
+          cream carried on, with no sheet and no card to bury anything, so the
+          strip is masked to fade out instead. The note on the strip itself has
+          the measurements. What the padding buys now is only clearance: at
+          1920px the faded end finishes about 27px above where the FAQ's own
+          padding starts.
 
           Below lg the rules and the strip come off and it stacks. That is not a
           fallback, it is the design: the grid is the idea, and there is no grid
           on a phone. */}
-      <section className="relative overflow-hidden bg-[#F6F3EE] px-5 pb-[76px] pt-8 sm:px-8 sm:pb-[276px] sm:pt-20">
-        {/* the column rules, aligned to the content grid by mirroring it */}
-        <div aria-hidden="true" className="pointer-events-none absolute inset-0 hidden px-5 sm:px-8 lg:block">
+      <section
+        id="pricing"
+        className="relative z-10 -mt-9 scroll-mt-24 overflow-hidden rounded-t-[22px] bg-[#F6F3EE] px-5 pb-[76px] pt-12 shadow-[0_-18px_36px_-22px_rgba(40,30,15,0.26)] sm:px-8 sm:pb-20 sm:pt-20 lg:pb-[264px]"
+      >
+        {/* the grabber. Without it the section reads as a box with two rounded
+            corners; with it, it reads as a sheet that has been pulled up.
+
+            A chevron was tried here instead (direction 6 in
+            design/pricing-sheet-edge-options.html) and came back off: at the
+            size this edge wants, an arrow is too small to read as anything. A
+            bar carries that width comfortably, an icon does not. */}
+        <span
+          aria-hidden="true"
+          className="absolute left-1/2 top-[13px] h-[3px] w-[42px] -translate-x-1/2 rounded-full bg-[#E4DED4]"
+        />
+
+        {/* The column rules, aligned to the content grid by mirroring it.
+
+            They fade out at the foot for the same reason the strip does. With
+            the FAQ below carrying this section on rather than covering it, a
+            hard stop is the one thing left that gives the boundary away: twelve
+            dashed lines ending on a level in the middle of an unbroken cream
+            field reads as a mistake. Dissolved, the grid simply runs out. */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 hidden px-5 sm:px-8 lg:block"
+          style={{
+            WebkitMaskImage: "linear-gradient(180deg, #000 58%, transparent 94%)",
+            maskImage: "linear-gradient(180deg, #000 58%, transparent 94%)",
+          }}
+        >
           <div className="mx-auto grid h-full max-w-container grid-cols-5">
             <span />
             <span className="border-l border-dashed border-[#E8E2D8]" />
@@ -811,31 +806,28 @@ export default function PricingPage() {
         {/* Anchored to the bottom of the section rather than centred in it,
             because the only thing that matters is that it passes BELOW the lead
             column's last line. Centred, it runs straight through the sentence
-            and prints ink on orange.
-
-            The geometry is tight and worth writing down. At -10.5 degrees the
-            strip's low end sits about 176px below its centre on a 1440px
-            viewport, and that offset grows with the viewport. calc(100% - 344px)
-            puts its centre 270px above the section's bottom edge, which leaves
-            roughly 20px under the strip and about 30px between its top edge and
-            the last line of the lead. 276px is the old 240px plus the 36px the
-            #stack sheet below rides up over, so the visible hero still ends
-            240px under the lead exactly as it always did. The two numbers move
-            together: change one and the hero gets shorter or taller than it
-            looks here.
-
-            One consequence, and it is wanted. The strip's low end now finishes
-            about 16px past the visible edge, behind the sheet. That is where
-            the overflow-hidden cut goes to hide, so the flat chop that used to
-            land on the section boundary is no longer visible at all. Check the
-            left column at 1440px before shipping. */}
+            and prints ink on orange. The comment on the section has the
+            arithmetic. */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute left-[-16%] top-[calc(100%-344px)] hidden h-[148px] w-[132%] lg:block"
+          className="pointer-events-none absolute left-[-16%] top-[calc(100%-332px)] hidden h-[148px] w-[132%] lg:block"
           style={{
             transform: "rotate(-10.5deg)",
             background:
               "linear-gradient(93deg, #C9650F 0%, #F49230 14%, #FFD08A 27%, #E8683A 40%, #F7B45C 55%, #DE4E52 70%, #F49230 86%, #A8480A 100%)",
+            // The low end fades rather than stopping. It is the one part of this
+            // strip whose position is not ours to choose: the bar is 132% of the
+            // viewport and rotated about its centre, so its low end drops further
+            // the wider the screen gets. Measured, it finishes 12px below the FAQ
+            // edge at 1440px, 69px at 1920px, and about 147px at 2560px.
+            //
+            // A full-bleed sheet could cover that by overlapping far enough. The
+            // FAQ is an inset card now and covers nothing at the margins, so
+            // instead of racing the geometry the strip dissolves into the ground
+            // before it ever reaches a boundary. Viewport independent, and it
+            // reads as a fade rather than as something ending.
+            WebkitMaskImage: "linear-gradient(90deg, transparent 5%, #000 30%)",
+            maskImage: "linear-gradient(90deg, transparent 5%, #000 30%)",
           }}
         />
 
@@ -854,22 +846,25 @@ export default function PricingPage() {
               >
                 One plan &middot; {SEATS} users &middot; no tiers
               </p>
-              <h1 className="text-balance text-[26px] font-bold leading-[1.12] tracking-[-0.022em] text-brand-ink sm:text-[34px] sm:leading-[1.1]">
+              <h2 className="text-balance text-[26px] font-bold leading-[1.12] tracking-[-0.022em] text-brand-ink sm:text-[34px] sm:leading-[1.1]">
                 Pricing built for the whole team
-              </h1>
+              </h2>
               <p className="mx-auto mt-2.5 max-w-[30ch] text-[14.5px] leading-relaxed text-brand-charcoal sm:mx-0 sm:mt-3 sm:max-w-[42ch] sm:text-[15px]">
                 Every module, with nothing held back for a bigger contract.
               </p>
-              {/* "twelve" tracks STACK.length. If a row is added or removed
-                  there, this word changes with it.
+              {/* "eleven" tracks STACK.length. If a row is added or removed
+                  there, this word changes with it, here and in the eyebrow at
+                  the top of the page and in the card's phone-only band below.
+                  Three places, all spelled out in words, so grep for the word
+                  rather than trusting this comment.
 
-                  Hidden on a phone, where it runs to three lines in a hero that
-                  is already fighting for the fold. It is not lost: below sm the
-                  card carries the same claim as a strip under the button, where
-                  it sits next to the price it is being compared with. Both are
-                  fed from STACK_TOTAL, so they cannot drift apart. */}
+                  Hidden on a phone, where it runs to three lines. It is not
+                  lost: below sm the card carries the same claim as a strip
+                  under the button, where it sits next to the price it is being
+                  compared with. Both are fed from STACK_TOTAL, so they cannot
+                  drift apart. */}
               <p className="mt-5 hidden max-w-[34ch] text-[15.5px] font-medium leading-relaxed text-brand-ink sm:block">
-                The same twelve tools cost{" "}
+                The same eleven tools cost{" "}
                 <b className="font-extrabold line-through decoration-[rgba(192,64,43,0.55)] decoration-2">
                   {money(STACK_TOTAL)} a month
                 </b>{" "}
@@ -896,7 +891,7 @@ export default function PricingPage() {
                   style={{ background: "linear-gradient(112deg, #FFFAF3 0%, #FFEEDD 100%)" }}
                 >
                   <span className="order-2 min-w-0 sm:order-1">
-                    <h2 className="flex items-center justify-center gap-2.5 text-[14px] font-[650] tracking-[-0.016em] text-brand-charcoal sm:justify-start sm:text-[21px] sm:font-bold sm:text-brand-ink">
+                    <h3 className="flex items-center justify-center gap-2.5 text-[14px] font-[650] tracking-[-0.016em] text-brand-charcoal sm:justify-start sm:text-[21px] sm:font-bold sm:text-brand-ink">
                       {/* the dot is desktop only: at 14px caption weight it
                           reads as a stray bullet rather than a marker */}
                       <span
@@ -904,7 +899,7 @@ export default function PricingPage() {
                         style={{ background: ORANGE }}
                       />
                       Multiply Scale Bundle
-                    </h2>
+                    </h3>
                     <p className="mt-1 text-[12.5px] leading-snug text-brand-charcoal sm:mt-1.5 sm:text-[13px]">
                       {SEATS} users included <span className="text-[#C4BFB6]">&middot;</span> $
                       {EXTRA} per extra seat
@@ -922,7 +917,7 @@ export default function PricingPage() {
 
                     Below sm the list shows four and the rest are behind the
                     button underneath. Ten single-column rows, several of them
-                    wrapping, were most of the reason this hero ran past a
+                    wrapping, were most of the reason this card ran past a
                     screen and a half on a phone. Nothing is deleted: the tail
                     is hidden with a class, so at sm and up the full list is
                     always rendered and always in the DOM for search engines
@@ -990,7 +985,7 @@ export default function PricingPage() {
                     most work, right under the price it is being measured
                     against. */}
                 <div className="border-t border-[#F1EBE2] bg-[#FFF9F2] px-5 py-2.5 text-center text-[12.5px] leading-snug text-brand-charcoal sm:hidden">
-                  The same twelve tools cost{" "}
+                  The same eleven tools cost{" "}
                   <b className="font-extrabold text-brand-ink line-through decoration-[rgba(192,64,43,0.55)] decoration-2">
                     {money(STACK_TOTAL)}/mo
                   </b>{" "}
@@ -1002,107 +997,26 @@ export default function PricingPage() {
         </div>
       </section>
 
-      {/* ------------------------------------------------ the sheet
-          #stack rides 36px up over the hero on a rounded top edge with a soft
-          shadow above it. The join used to be a 1px #EFECE6 rule between
-          #FBF9F6 and #FBFAF8, two creams close enough that the rule read as an
-          edge that should not be there rather than as a change of section. Now
-          one surface passes under another, which is a thing the eye already
-          knows how to read. See design/pricing-hero-seam-options.html,
-          direction 4.
+      {/* ------------------------------------------------ FAQ
+          Part of the price section, on the client's instruction. Not a sheet
+          over it, not a card on it: the same cream, carried straight on. No
+          rounded edge, no overlap, no shadow, no rule, nothing drawn between
+          the two at all. What separates them is white space and a heading,
+          which is what separates any two runs of a document.
 
-          The hero's ground dropped to #F6F3EE at the same time, so it reads as
-          the surface underneath rather than as the same paper.
+          It stays its own <section> because it is its own subject and carries
+          its own h2. Only the styling is continuous. Merging the elements would
+          also break the strip above, whose position is measured off its
+          section's own height.
 
-          The hero's bottom padding grew by the same 36px this pulls up, so the
-          hero looks exactly as tall as it did before; the comment on the hero
-          has the arithmetic. The strip's low end runs on under this sheet,
-          which is the good part: the hero still chops it flat with its own
-          overflow-hidden, but the cut now lands behind here where nobody sees
-          it. */}
-      <section
-        id="stack"
-        className="relative z-10 -mt-9 scroll-mt-24 rounded-t-[22px] bg-[#FBFAF8] px-5 pb-14 pt-16 shadow-[0_-18px_36px_-22px_rgba(40,30,15,0.26)] sm:px-8 sm:pb-20 sm:pt-24"
-      >
-        {/* the grabber. Without it the section reads as a box with two rounded
-            corners; with it, it reads as a sheet that has been pulled up.
-
-            A chevron was tried here instead (direction 6 in
-            design/pricing-sheet-edge-options.html) and came back off: at the
-            size this edge wants, an arrow is too small to read as anything. A
-            bar carries that width comfortably, an icon does not. */}
-        <span
-          aria-hidden="true"
-          className="absolute left-1/2 top-[13px] h-[3px] w-[42px] -translate-x-1/2 rounded-full bg-[#E4DED4]"
-        />
-        <div className="mx-auto max-w-container">
-          {/* Headline only. The eyebrow and the subheadline were removed: the
-              table underneath says what the section is faster than a paragraph
-              above it can. */}
-          <Reveal className="mx-auto mb-8 max-w-2xl text-center sm:mb-10">
-            <h2 className="text-[26px] font-extrabold leading-[1.1] tracking-tight text-brand-ink sm:text-[40px]">
-              Everything Multiply OS{" "}
-              <span className="relative whitespace-nowrap">
-                replaces.
-                <svg className="absolute -bottom-2 left-0 h-3 w-full text-brand-orange" viewBox="0 0 120 12" preserveAspectRatio="none" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" aria-hidden="true">
-                  <path d="M3 8c26-5 74-6 114-3" />
-                </svg>
-              </span>
-            </h2>
-          </Reveal>
-
-          <Reveal delay={0.1}>
-            <StackTable />
-          </Reveal>
-
-          <Reveal delay={0.16}>
-            <p className="mx-auto mt-4 max-w-2xl text-center text-[11.5px] leading-relaxed text-brand-gray">
-              Comparison uses each vendor&rsquo;s entry level paid plan at monthly list pricing for a team of ten, checked {AS_OF}.
-              Vendors change their pricing, so treat these as indicative rather than quoted.
-              All trademarks belong to their owners.
-            </p>
-          </Reveal>
-
-          <Reveal delay={0.2} className="mt-8 flex justify-center">
-            <button
-              type="button"
-              onClick={openDemo}
-              className="inline-flex w-full max-w-[420px] items-center justify-center gap-2.5 rounded-lg bg-brand-orange px-10 py-3.5 text-[15px] font-semibold text-white shadow-[0_12px_30px_-10px_rgba(234,123,27,0.85)] transition-colors hover:bg-brand-orange-dark sm:w-auto sm:min-w-[300px]"
-            >
-              Request a Demo
-              <Arrow className="h-[17px] w-[17px]" />
-            </button>
-          </Reveal>
-        </div>
-      </section>
-      <section className="px-5 py-14 sm:px-8 sm:py-20">
-        <div className="mx-auto max-w-container">
-          <Reveal className="mx-auto max-w-2xl text-center">
-            <h2 className="text-[26px] font-extrabold leading-[1.1] tracking-tight text-brand-ink sm:text-[38px]">
-              What the AI costs, and what it returns.
-            </h2>
-            <p className="mt-3 text-[15px] leading-relaxed text-brand-charcoal">
-              Usage is metered rather than a flat fee, so the number below moves with your team.
-            </p>
-          </Reveal>
-
-          {/* calculator leads, explainer follows: the interactive thing earns the wider column */}
-          <div className="mt-8 grid items-start gap-8 lg:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)] lg:gap-12 sm:mt-10">
-            <Reveal>
-              <Calculator />
-            </Reveal>
-            <Reveal delay={0.1}>
-              <BillingFacts />
-            </Reveal>
-          </div>
-        </div>
-      </section>
-
-      <section className="border-t border-[#EFECE6] bg-[#FBFAF8] px-5 py-14 sm:px-8 sm:py-20">
+          So the gap is made entirely of the price section's bottom padding plus
+          this section's top padding. The bulk of it is the strip's clearance,
+          which is why the number up there is large and why it is on lg only. */}
+      <section className="bg-[#F6F3EE] px-5 pb-14 pt-6 sm:px-8 sm:pb-20 sm:pt-10">
         <div className="mx-auto max-w-container">
           <Reveal className="mb-8 text-center sm:mb-10">
             <h2 className="text-[26px] font-extrabold leading-[1.1] tracking-tight text-brand-ink sm:text-[38px]">
-              Frequently asked questions
+              Frequently Asked Questions
             </h2>
           </Reveal>
           <Reveal delay={0.08}>
