@@ -69,6 +69,24 @@ And at the very bottom:
 
 > Powered by Claude & GPT &middot; Answers grounded in your live company data
 
+### The model picker, September 2026
+
+The composer's model chip opens a grouped picker. Five models across two providers, and the copy is
+candid in a way worth reusing:
+
+| Group | Model | The product's own description |
+| --- | --- | --- |
+| `CLAUDE (ANTHROPIC)` | `Claude Haiku 4.5` | `Default — Haiku is fast, cost effective, and comprehensive.` |
+| | `Claude Sonnet 4.6` | `Use Sonnet for your deepest work.` |
+| | `Claude Opus 4.8` | `Anthropic flagship — deepest reasoning for your hardest strategic work (slower, costlier).` |
+| `GPT (OPENAI)` | `OpenAI GPT-5` | `OpenAI flagship. Text in / text out — no business tools, web search, or images.` |
+| | `OpenAI GPT-5 mini` | `OpenAI value tier. Faster and cheaper than GPT-5 with the same constraints.` |
+
+Two things matter here. **Haiku is the default**, not Sonnet, which the hero mockup had wrong. And
+the product openly says the **OpenAI models lose the business tools, web search, and images** — so
+the grounding this whole page argues for is a Claude-path capability. Do not let the page imply the
+two providers are interchangeable.
+
 ### The suggested prompts change with the coach
 
 This is the single best detail in the screenshots, because it proves the coaches are actually
@@ -217,6 +235,12 @@ screenshot and explained nowhere. A hub with a count of four looks like a saved 
 multi-step assistant, but that is a guess. **Not claimed on the page.** One screenshot of a hub open
 would probably earn its own section.
 
+**Still open as of September 2026.** Lance asked for the hero tour to show a hub being built,
+suggesting "a social media voice or a sales quote tool" as examples. Those examples suggest a hub is
+a saved, configured assistant with a purpose and a stored brief, which would fit the sidebar count.
+It was **not built**, because every other screen in this tour is drawn from a screenshot and there
+is still none of a hub. What is needed to build it: the hub open, and whatever screen creates one.
+
 **2. Guided expert playbooks.** Capability 11 names `Compensation Plans` as an expert-authored
 playbook you can be walked through. Nothing in the UI shows this. Not claimed.
 
@@ -300,5 +324,38 @@ arithmetically true against the other pages.
 - **This is the only feature page that does not end with the `MultiAiWired` closer**, because the
   whole page is Multi AI and the component would be arguing with itself. Its closing section is a
   cross-product one instead, which is also the page that ties the other eleven together.
+### The hero tour, September 2026
+
+Two beats were added, both drawn from screenshots.
+
+- **The model picker**, opened just before the Coach's hardest question and switched from the
+  default `Haiku 4.5` to `Claude Opus 4.8`. Placed there deliberately: the product's own description
+  of Opus is "deepest reasoning for your hardest strategic work", so the switch reads as a judgement
+  rather than as a feature demo. The picker opens **downward**, because on the home screen the
+  composer sits mid-page with the suggested prompts under it.
+- **Saved Memory**, as the closing beat and the longest one in the tour, reached from the sidebar.
+  It shows all three tiers with their real caps, the `What works well as a memory` guidance, and
+  the privacy line. The cursor actually fills two of the three tiers:
+
+  1. **Primary instructions**, typed in and saved: `Answer concisely. Plain English, not jargon.`
+     The `0/5000` counter runs up as the characters land and the `Save primary instructions` button
+     goes from grey to live to a green `Saved`. The counter is what makes the field read as a real
+     5000-character field rather than a label.
+  2. **Shared with every coach**, filled one memory at a time so the `N of 25 memories` count moves
+     on screen: `We price in tiers, never hourly.` then `Our fiscal year starts in April.`
+
+  All three strings are **durable preferences or standing facts**, never anything about a project
+  and never anything that changes soon. That is deliberate: it is the exact line the product's own
+  guidance draws, so the mockup demonstrates the guidance instead of contradicting it.
+
+Memory closes the loop rather than opening it: it is the reason the coach opened already knowing
+the business, which is what the September hero copy ("Gets smarter every day") now promises. It
+gets the most screen time of any beat for the same reason.
+
+The loop runs about **forty-three seconds**. Roughly eight seconds were trimmed out of the earlier
+holds across two passes to pay for the two new beats. If it needs to come down further, the
+cheapest cut is the Assistant's opening errand, worth about six seconds, since the Coach beat
+already establishes the grounding argument on its own.
+
 - Not claimed anywhere, all real: Hubs, the `Ctrl+K` global search, chat search, attachments, voice,
   PDF / Excel / CSV export, coach switching mid-thread, image generation, and expert playbooks.

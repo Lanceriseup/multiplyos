@@ -4,17 +4,24 @@
 //
 // The client's brief for this page, in their order: show the form list, show
 // creating a form, show a form that has been created, show the QR code, show a
-// form adding a task, and show a response reaching Google Sheets. The first four
-// are this tour. The last two are the Integrations section further down the page,
-// because they are what happens after a submission rather than part of building.
+// form adding a task, and show a response reaching Google Sheets. Building is
+// only half of it, so the tour also walks the two stages that answer "and then
+// what happens": the response is emailed to a list, and it is pushed to Sheets,
+// to Ontraport, and to your own endpoint.
 //
 // One loop:
 //   1. the library                  26 forms, response counts, the sidebar
 //   2. New form                     name it, start from blank, who can see it
 //   3. the builder                  click three fields in, open one's settings
-//   4. Preview                      the form as a person filling it in sees it
-//   5. Publish                      the public link on your own subdomain
-//   6. the QR code                  the thing you put on a flyer
+//   4. Email Notifications          two addresses on the list, plus the in-app inbox
+//   5. Integrations                 Sheets and Ontraport on, then a webhook added
+//   6. Preview                      the form as a person filling it in sees it
+//   7. Publish                      the public link on your own subdomain
+//   8. the QR code                  the thing you put on a flyer
+//
+// It runs about 36 seconds end to end. That is long for a hero, and deliberate:
+// the loop is the page's argument, and the last two stages are the half of it
+// that a standalone form tool cannot make.
 //
 // Content is generalised per docs/forms-feature-notes.md, section 8.
 //
@@ -249,6 +256,24 @@ const Cal = ({ className }: IconProps) => (
   <svg className={className} {...ico}><rect x="3.6" y="5.4" width="16.8" height="15" rx="2.2" /><path d="M3.6 10h16.8M8.4 3.4v3.6M15.6 3.4v3.6" /></svg>
 );
 
+// Marks for the integration destinations. Same trim as the ones in FormsPage's
+// integrations section, so the hero and the section below read as one product.
+const Board = ({ className }: IconProps) => (
+  <svg className={className} {...ico}><rect x="3.4" y="4.4" width="17.2" height="15.2" rx="2.2" /><path d="M9.2 4.4v15.2M15 4.4v15.2" /></svg>
+);
+const Sheet = ({ className }: IconProps) => (
+  <svg className={className} {...ico}><rect x="4.4" y="3.4" width="15.2" height="17.2" rx="2" /><path d="M4.4 9h15.2M4.4 14.6h15.2M10.2 3.4v17.2" /></svg>
+);
+const Trend = ({ className }: IconProps) => (
+  <svg className={className} {...ico}><path d="M3.6 16.6l5-5.2 3.2 3.2 6-6.4" /><path d="M13.6 8.2h4.2v4.2" /></svg>
+);
+const Orbit = ({ className }: IconProps) => (
+  <svg className={className} {...ico}><circle cx="12" cy="12" r="3.2" /><ellipse cx="12" cy="12" rx="9" ry="4.3" transform="rotate(-28 12 12)" /></svg>
+);
+const Hook = ({ className }: IconProps) => (
+  <svg className={className} {...ico}><circle cx="12" cy="5.6" r="2.5" /><circle cx="6" cy="17" r="2.5" /><circle cx="18" cy="17" r="2.5" /><path d="M10.8 7.8L7.2 14.7M13.2 7.8l3.6 6.9M8.6 17h6.8" /></svg>
+);
+
 // ---------------------------------------------------------------- data
 // The library, generalised. Response counts are the interesting column: they are
 // what a reader checks to see whether anybody actually fills these in.
@@ -345,13 +370,46 @@ const FIELDS: Field[] = [
 const CHOICES = ["Onboarding", "Billing", "Something else"];
 const DROPS = ["A referral", "Search", "Social"];
 
+// The two addresses typed into the notifications stage. Typed as one comma
+// separated string because that is what the product's paste area asks for, and
+// the comma doing the splitting is worth showing.
+const NEW_ADDRESSES = "skylar@yourcompany.com, ops@yourcompany.com";
+
+// The integrations stage, in the order the product lists its destinations. The
+// tour only flips Sheets and Ontraport and adds the webhook, but all five are
+// drawn: the point of the shot is that a submission has somewhere to go.
+type DestKey = "task" | "score" | "crm" | "sheets" | "ontraport";
+
+const DESTS: {
+  key: DestKey;
+  label: string;
+  sub: string;
+  tint: string;
+  icon: (p: IconProps) => React.JSX.Element;
+}[] = [
+  { key: "task", label: "Create a task on submit", sub: "Turn each response into a Move assigned to a teammate", tint: "#5B47A8", icon: Board },
+  { key: "score", label: "Send results to a Scoreboard", sub: "Push NPS / rating / count into a weekly metric", tint: "#EA7B1B", icon: Trend },
+  { key: "crm", label: "Create a CRM record on submit", sub: "Pick an object, map at least one field, and cover required fields to enable", tint: "#2C6BA6", icon: People },
+  { key: "sheets", label: "Send responses to Google Sheets", sub: "Connect a spreadsheet below to enable", tint: "#188038", icon: Sheet },
+  { key: "ontraport", label: "Send responses to Ontraport", sub: "Map at least the contact email to enable", tint: "#0B7FA8", icon: Orbit },
+];
+
+// The endpoint the webhook beat adds. Signed JSON goes here, per the product.
+const HOOK_URL = "https://api.yourcompany.com/hooks/forms";
+
 // ---------------------------------------------------------------- scene
 type View = "library" | "builder" | "preview" | "published";
+
+// Which stage of the builder the left rail is sitting on. The tour walks Build,
+// then Email Notifications, then Integrations: the last two are what a
+// submission actually does, and neither is claimed anywhere else on the page.
+type Stage = "build" | "notify" | "integrations";
 
 type Scene = {
   // The whole card faded out, so the loop restarts on a fade rather than a cut.
   dim: boolean;
   view: View;
+  stage: Stage;
   modal: "" | "new" | "qr";
   hot: string;
   typed: string; // the form name being entered
@@ -360,12 +418,23 @@ type Scene = {
   selected: number; // which field's settings panel is open, -1 for none
   share: boolean; // the Sharing popover
   live: boolean; // published
+  // --- the notifications stage
+  draft: string; // the addresses being typed into the paste area
+  draftCaret: boolean;
+  addresses: string[]; // the notification list, once they are added
+  inApp: boolean; // "Also notify me in the app"
+  // --- the integrations stage
+  dests: DestKey[]; // which destinations are switched on
+  hook: boolean; // a webhook has been added
+  scrollY: number; // how far down the integrations panel has scrolled
 };
 
 const BLANK: Scene = {
   dim: false,
-  view: "library", modal: "", hot: "", typed: "", caret: false,
+  view: "library", stage: "build", modal: "", hot: "", typed: "", caret: false,
   fields: 0, selected: -1, share: false, live: false,
+  draft: "", draftCaret: false, addresses: [], inApp: false,
+  dests: [], hook: false, scrollY: 0,
 };
 
 // The static frame under prefers-reduced-motion: the published form, since that
@@ -557,7 +626,7 @@ export default function FormsHeroTour() {
         await fade(1);
 
         // --- 1. the library, then New form
-        await wait(1500);
+        await wait(1200);
         if (!(await tap("new-form", 700))) return;
         patch({ modal: "new" });
         await wait(520);
@@ -577,40 +646,92 @@ export default function FormsHeroTour() {
         await wait(260);
         if (!(await tap("create", 520))) return;
         patch({ modal: "", view: "builder", caret: false });
-        await wait(680);
+        await wait(560);
 
         // --- 2. the builder: three fields in
         for (let i = 0; i < FIELDS.length; i++) {
           if (!(await tap(`fld-${PICKS[i]}`, i === 0 ? 700 : 520))) return;
           patch({ fields: i + 1 });
-          await wait(i === FIELDS.length - 1 ? 320 : 480);
+          await wait(i === FIELDS.length - 1 ? 280 : 400);
         }
 
         // open the last field's settings, so options and conditional logic show
         if (!(await tap("canvas-2", 560))) return;
         patch({ selected: 2 });
-        await wait(2300);
+        await wait(1500);
 
-        // --- 3. preview it
+        // --- 3. Email Notifications: the submission has to reach a person
+        // The client's ask in one beat. Two addresses go on the list, then the
+        // in-app toggle, which is the half a standalone form tool cannot do
+        // because it does not own an inbox to put anything in.
+        if (!(await tap("stage-notify", 620))) return;
+        patch({ stage: "notify", selected: -1 });
+        await wait(600);
+
+        await glide(pointAt("paste"), 500);
+        if (!alive()) return;
+        await click();
+        patch({ draftCaret: true });
+        await wait(200);
+        await type(NEW_ADDRESSES, (v) => patch({ draft: v }), 26);
+        if (!alive()) return;
+        await wait(240);
+        if (!(await tap("add-emails", 460))) return;
+        patch({
+          addresses: NEW_ADDRESSES.split(",").map((a) => a.trim()),
+          draft: "",
+          draftCaret: false,
+        });
+        await wait(520);
+
+        if (!(await tap("in-app", 500))) return;
+        patch({ inApp: true });
+        await wait(700);
+
+        // --- 4. Integrations: Sheets, Ontraport, and your own endpoint
+        if (!(await tap("stage-integrations", 600))) return;
+        patch({ stage: "integrations" });
+        await wait(520);
+
+        if (!(await tap("dest-sheets", 540))) return;
+        patch({ dests: ["sheets"] });
+        await wait(640);
+
+        // Ontraport and the webhook sit below the fold of the panel, so scroll
+        // to the bottom and let it settle before pointing at anything: pointAt
+        // reads live rects, and a rect mid-scroll is the wrong one.
+        patch({ scrollY: 999 });
+        await wait(700);
+        if (!alive()) return;
+
+        if (!(await tap("dest-ontraport", 500))) return;
+        patch({ dests: ["sheets", "ontraport"] });
+        await wait(600);
+
+        if (!(await tap("add-hook", 480))) return;
+        patch({ hook: true });
+        await wait(1000);
+
+        // --- 5. preview it
         if (!(await tap("preview", 640))) return;
-        patch({ view: "preview", selected: -1 });
-        await wait(2400);
+        patch({ view: "preview", stage: "build", selected: -1 });
+        await wait(1800);
 
-        // --- 4. publish, and open the share popover
+        // --- 6. publish, and open the share popover
         if (!(await tap("publish", 620))) return;
         patch({ view: "published", live: true });
-        await wait(760);
+        await wait(700);
 
         // Copy link, not Sharing: Sharing is who on your team can access the
         // form. The public link, QR, and embed are behind Copy link.
         if (!(await tap("copy", 560))) return;
         patch({ share: true });
-        await wait(2100);
+        await wait(1700);
 
-        // --- 5. the QR code
+        // --- 7. the QR code
         if (!(await tap("qr", 540))) return;
         patch({ modal: "qr" });
-        await wait(2600);
+        await wait(2100);
 
         if (!alive()) return;
         // Fade the card out before the loop restarts, rather than cutting.
@@ -1018,24 +1139,36 @@ function TopBar({ scene }: { scene: Scene }) {
   );
 }
 
-function StageRail() {
+function StageRail({ scene }: { scene: Scene }) {
   return (
     <div className="w-[164px] flex-none border-r border-[#EBE7E0] bg-white p-2">
-      {STAGES.map((s, i) => {
+      {STAGES.map((s) => {
         const Ico = s.icon;
-        const on = i === 0;
+        const on = s.key === scene.stage;
+        const hot = scene.hot === `stage-${s.key}`;
+        // The rail carries a count per stage in the product, so the notification
+        // list growing shows up here as well as in the panel.
+        const sub =
+          s.key === "notify" && scene.addresses.length > 0
+            ? `${scene.addresses.length} address${scene.addresses.length === 1 ? "" : "es"}`
+            : s.sub;
         return (
           <span
             key={s.key}
-            className={`mb-1 flex items-center gap-2 rounded-lg px-2 py-[7px] ${
-              on ? "bg-[#16233D] text-white" : "text-brand-charcoal"
+            data-t={`stage-${s.key}`}
+            className={`mb-1 flex items-center gap-2 rounded-lg px-2 py-[7px] transition-all duration-200 ${
+              on
+                ? "bg-[#16233D] text-white"
+                : hot
+                  ? "bg-[#FFF6EC] text-brand-charcoal shadow-[0_0_0_2px_rgba(234,123,27,0.26)]"
+                  : "text-brand-charcoal"
             }`}
           >
             <Ico className={`h-3.5 w-3.5 flex-none ${on ? "text-white" : "text-brand-gray"}`} />
             <span className="min-w-0">
               <span className="block truncate text-[10.5px] font-semibold leading-tight">{s.label}</span>
               <span className={`block truncate text-[8.5px] ${on ? "text-white/65" : "text-brand-gray"}`}>
-                {s.sub}
+                {sub}
               </span>
             </span>
           </span>
@@ -1045,103 +1178,149 @@ function StageRail() {
   );
 }
 
-// ---------------------------------------------------------------- view: builder
-function BuilderView({ scene }: { scene: Scene }) {
-  const shown = FIELDS.slice(0, scene.fields);
-  const panel = scene.selected >= 0 && scene.selected < scene.fields;
+// A stage toggle, drawn the way the product draws them: a track that takes the
+// destination's own colour once it is on.
+function Toggle({ on, tint }: { on: boolean; tint: string }) {
+  return (
+    <span
+      className="h-[16px] w-[28px] flex-none rounded-full transition-colors duration-300"
+      style={{ background: on ? tint : "#E3E0DA" }}
+    >
+      <span
+        className="mt-[2px] block h-[12px] w-[12px] rounded-full bg-white shadow-[0_1px_2px_rgba(40,30,15,0.3)] transition-transform duration-300"
+        style={{ transform: on ? "translateX(14px)" : "translateX(2px)" }}
+      />
+    </span>
+  );
+}
 
+// The indented account or object picker that hangs under a gated destination.
+function SubSelect({ label, value, muted }: { label: string; value: string; muted?: boolean }) {
+  return (
+    <div className="mt-1.5 border-l-2 border-[#EDE9E2] pl-2.5">
+      <p className="text-[9px] font-semibold text-brand-charcoal">{label}</p>
+      <div
+        className={`mt-1 flex items-center justify-between gap-2 rounded-md border border-[#E6E2DB] bg-[#FBFAF8] px-2 py-1 text-[9.5px] ${
+          muted ? "text-brand-gray" : "text-brand-ink"
+        }`}
+      >
+        <span className="truncate">{value}</span>
+        <Caret className="h-2.5 w-2.5 flex-none text-brand-gray" />
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------- view: builder
+// The builder is one chrome with three interchangeable stages hanging off the
+// rail. Build is the one the tour spends longest in, but Email Notifications and
+// Integrations are the two that answer "and then what happens".
+function BuilderView({ scene }: { scene: Scene }) {
   return (
     <div className="sop-view flex h-full flex-col">
       <TopBar scene={scene} />
       <div className="flex min-h-0 flex-1">
-        <StageRail />
+        <StageRail scene={scene} />
+        {scene.stage === "build" && <BuildStage scene={scene} />}
+        {scene.stage === "notify" && <NotifyStage scene={scene} />}
+        {scene.stage === "integrations" && <IntegrationsStage scene={scene} />}
+      </div>
+    </div>
+  );
+}
 
-        {/* the palette */}
-        <div className="w-[196px] flex-none overflow-hidden border-r border-[#EBE7E0] px-2.5 py-2">
-          <p className="mb-1.5 flex items-center gap-1 text-[8.5px] font-bold uppercase tracking-[0.1em] text-brand-orange-dark">
+// ---------------------------------------------------------------- stage: build
+function BuildStage({ scene }: { scene: Scene }) {
+  const shown = FIELDS.slice(0, scene.fields);
+  const panel = scene.selected >= 0 && scene.selected < scene.fields;
+
+  return (
+    <>
+      {/* the palette */}
+      <div className="w-[196px] flex-none overflow-hidden border-r border-[#EBE7E0] px-2.5 py-2">
+        <p className="mb-1.5 flex items-center gap-1 text-[8.5px] font-bold uppercase tracking-[0.1em] text-brand-orange-dark">
+          <Plus className="h-2.5 w-2.5" />
+          Drag or click to add
+        </p>
+        {PALETTE.map((g) => (
+          <div key={g.group} className="mb-1.5">
+            <p className="mb-1 text-[7.5px] font-bold uppercase tracking-[0.12em] text-brand-gray">
+              {g.group}
+            </p>
+            <div className="grid grid-cols-2 gap-1">
+              {g.items.map((it) => {
+                const Ico = it.icon;
+                const hot = scene.hot === `fld-${it.label}`;
+                return (
+                  <span
+                    key={it.label}
+                    data-t={`fld-${it.label}`}
+                    className={`flex items-center gap-1 overflow-hidden rounded-md border bg-white px-1.5 py-[5px] text-[8.5px] font-medium transition-all duration-200 ${
+                      hot
+                        ? "border-brand-orange/60 bg-[#FFF6EC] shadow-[0_0_0_2px_rgba(234,123,27,0.2)]"
+                        : "border-[#EBE7E0]"
+                    }`}
+                  >
+                    <Ico className="h-2.5 w-2.5 flex-none text-brand-charcoal" />
+                    <span className="truncate">{it.label}</span>
+                  </span>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* the canvas */}
+      <div className="min-w-0 flex-1 overflow-hidden px-4 py-3">
+        <div className="grid place-items-center rounded-lg border border-dashed border-[#DED9D0] py-2 text-[10px] text-brand-gray">
+          <span className="flex items-center gap-1.5">
             <Plus className="h-2.5 w-2.5" />
-            Drag or click to add
-          </p>
-          {PALETTE.map((g) => (
-            <div key={g.group} className="mb-1.5">
-              <p className="mb-1 text-[7.5px] font-bold uppercase tracking-[0.12em] text-brand-gray">
-                {g.group}
-              </p>
-              <div className="grid grid-cols-2 gap-1">
-                {g.items.map((it) => {
-                  const Ico = it.icon;
-                  const hot = scene.hot === `fld-${it.label}`;
-                  return (
-                    <span
-                      key={it.label}
-                      data-t={`fld-${it.label}`}
-                      className={`flex items-center gap-1 overflow-hidden rounded-md border bg-white px-1.5 py-[5px] text-[8.5px] font-medium transition-all duration-200 ${
-                        hot
-                          ? "border-brand-orange/60 bg-[#FFF6EC] shadow-[0_0_0_2px_rgba(234,123,27,0.2)]"
-                          : "border-[#EBE7E0]"
-                      }`}
-                    >
-                      <Ico className="h-2.5 w-2.5 flex-none text-brand-charcoal" />
-                      <span className="truncate">{it.label}</span>
-                    </span>
-                  );
-                })}
-              </div>
+            Add logo above form
+          </span>
+        </div>
+
+        <div className="mt-2 rounded-lg border border-dashed border-[#D8D2C8] bg-[#F4F1EC] px-3 py-2 text-center">
+          <b className="block text-[11.5px]">{NEW_NAME}</b>
+          <span className="text-[8.5px] text-brand-gray">
+            Form header. Edit the text here, drag to reposition, or delete to remove it.
+          </span>
+        </div>
+
+        <div className="mt-2 space-y-1.5">
+          {shown.map((f, i) => (
+            <div
+              key={f.label}
+              data-t={`canvas-${i}`}
+              className={`sop-pop flex items-center gap-2 rounded-lg border bg-white px-2.5 py-2 transition-all duration-200 ${
+                scene.selected === i
+                  ? "border-brand-ink/40 shadow-[0_0_0_2px_rgba(22,35,61,0.12)]"
+                  : hotRing(scene.hot === `canvas-${i}`)
+              }`}
+            >
+              <span className="grid h-[22px] w-[22px] flex-none place-items-center rounded-md bg-[#16233D] text-white">
+                {f.kind === "name" ? <People className="h-3 w-3" /> : f.kind === "choice" ? <Radio className="h-3 w-3" /> : <Caret className="h-3 w-3" />}
+              </span>
+              <span className="min-w-0">
+                <span className="block truncate text-[11px] font-semibold leading-tight">{f.label}</span>
+                <span className="text-[8.5px] text-brand-gray">
+                  {f.kind === "name" ? "Full name" : f.kind === "choice" ? "Single choice" : "Dropdown"}
+                </span>
+              </span>
             </div>
           ))}
         </div>
 
-        {/* the canvas */}
-        <div className="min-w-0 flex-1 overflow-hidden px-4 py-3">
-          <div className="grid place-items-center rounded-lg border border-dashed border-[#DED9D0] py-2 text-[10px] text-brand-gray">
-            <span className="flex items-center gap-1.5">
-              <Plus className="h-2.5 w-2.5" />
-              Add logo above form
-            </span>
+        {shown.length < FIELDS.length && (
+          <div className="mt-2 grid place-items-center rounded-lg border border-dashed border-[#DED9D0] py-2.5 text-[9.5px] text-brand-gray">
+            Drop here to add at the end
           </div>
-
-          <div className="mt-2 rounded-lg border border-dashed border-[#D8D2C8] bg-[#F4F1EC] px-3 py-2 text-center">
-            <b className="block text-[11.5px]">{NEW_NAME}</b>
-            <span className="text-[8.5px] text-brand-gray">
-              Form header. Edit the text here, drag to reposition, or delete to remove it.
-            </span>
-          </div>
-
-          <div className="mt-2 space-y-1.5">
-            {shown.map((f, i) => (
-              <div
-                key={f.label}
-                data-t={`canvas-${i}`}
-                className={`sop-pop flex items-center gap-2 rounded-lg border bg-white px-2.5 py-2 transition-all duration-200 ${
-                  scene.selected === i
-                    ? "border-brand-ink/40 shadow-[0_0_0_2px_rgba(22,35,61,0.12)]"
-                    : hotRing(scene.hot === `canvas-${i}`)
-                }`}
-              >
-                <span className="grid h-[22px] w-[22px] flex-none place-items-center rounded-md bg-[#16233D] text-white">
-                  {f.kind === "name" ? <People className="h-3 w-3" /> : f.kind === "choice" ? <Radio className="h-3 w-3" /> : <Caret className="h-3 w-3" />}
-                </span>
-                <span className="min-w-0">
-                  <span className="block truncate text-[11px] font-semibold leading-tight">{f.label}</span>
-                  <span className="text-[8.5px] text-brand-gray">
-                    {f.kind === "name" ? "Full name" : f.kind === "choice" ? "Single choice" : "Dropdown"}
-                  </span>
-                </span>
-              </div>
-            ))}
-          </div>
-
-          {shown.length < FIELDS.length && (
-            <div className="mt-2 grid place-items-center rounded-lg border border-dashed border-[#DED9D0] py-2.5 text-[9.5px] text-brand-gray">
-              Drop here to add at the end
-            </div>
-          )}
-        </div>
-
-        {/* the field settings panel */}
-        {panel && <FieldPanel />}
+        )}
       </div>
-    </div>
+
+      {/* the field settings panel */}
+      {panel && <FieldPanel />}
+    </>
   );
 }
 
@@ -1188,6 +1367,219 @@ function FieldPanel() {
         <Plus className="h-2.5 w-2.5" />
         Add a rule
       </p>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------- stage: notifications
+// "When someone submits, the info goes to an email." Every form tool says that,
+// so the two details worth drawing are the ones that are not generic: the
+// reply-to falling back to the company default, and the in-app inbox, which
+// needs a product that owns an inbox to put anything in.
+function NotifyStage({ scene }: { scene: Scene }) {
+  return (
+    <div className="sop-view min-w-0 flex-1 overflow-hidden px-6 py-4">
+      <div className="mx-auto w-[486px]">
+        <p className="text-[16px] font-extrabold tracking-tight">Email Notifications</p>
+        <p className="mt-1 text-[10.5px] leading-relaxed text-brand-gray">
+          When someone submits this form, a response summary is emailed to everyone on this
+          list. Add as many people as you like.
+        </p>
+
+        {/* reply-to */}
+        <div className="mt-3 rounded-xl border border-[#EBE7E0] bg-white p-2.5">
+          <p className="text-[11px] font-bold">Reply-to address</p>
+          <p className="mt-0.5 text-[9.5px] leading-snug text-brand-gray">
+            When someone replies to this form&rsquo;s emails, this is where it goes. Leave blank
+            to use your company&rsquo;s default.
+          </p>
+          <div className="mt-1.5 rounded-lg border border-[#E6E2DB] bg-[#FBFAF8] px-2.5 py-1.5 text-[10px] text-brand-gray">
+            Use the company default
+          </div>
+        </div>
+
+        {/* the in-app inbox */}
+        <div
+          data-t="in-app"
+          className={`mt-2 flex items-center gap-3 rounded-xl border bg-white p-2.5 transition-all duration-200 ${hotRing(
+            scene.hot === "in-app",
+          )}`}
+        >
+          <span className="min-w-0 flex-1">
+            <span className="block text-[11px] font-bold">Also notify me in the app</span>
+            <span className="mt-0.5 block text-[9.5px] leading-snug text-brand-gray">
+              Puts each submission in the in-app inbox (bell) of the form owner and any teammate
+              on this list, on web and mobile.
+            </span>
+          </span>
+          <Toggle on={scene.inApp} tint="#16233D" />
+        </div>
+
+        {/* the list */}
+        <div className="mt-2 rounded-xl border border-[#EBE7E0] bg-white p-2.5">
+          {scene.addresses.length > 0 && (
+            <div className="mb-2 flex flex-wrap gap-1">
+              {scene.addresses.map((a) => (
+                <span
+                  key={a}
+                  className="sop-pop flex items-center gap-1 rounded-full border border-[#DCE7F1] bg-[#F2F7FB] px-2 py-[3px] text-[9.5px] font-semibold text-[#2C6BA6]"
+                >
+                  <Mail className="h-2.5 w-2.5" />
+                  {a}
+                </span>
+              ))}
+            </div>
+          )}
+
+          <div
+            data-t="paste"
+            className={`min-h-[44px] rounded-lg border px-2.5 py-1.5 text-[10px] leading-relaxed transition-all duration-200 ${hotRing(
+              scene.hot === "paste",
+            )}`}
+          >
+            {scene.draft ? (
+              <span className="text-brand-ink">
+                {scene.draft}
+                {scene.draftCaret && <TypeCaret />}
+              </span>
+            ) : (
+              <span className="text-brand-gray">
+                Paste emails, separated by commas or new lines...
+                {scene.draftCaret && <TypeCaret />}
+              </span>
+            )}
+          </div>
+
+          <span
+            data-t="add-emails"
+            className={`mt-2 inline-flex items-center gap-1.5 rounded-lg bg-[#5F6672] px-3 py-1.5 text-[10px] font-semibold text-white transition-shadow duration-200 ${
+              scene.hot === "add-emails" ? "shadow-[0_0_0_3px_rgba(234,123,27,0.4)]" : ""
+            }`}
+          >
+            <Plus className="h-2.5 w-2.5" />
+            Add emails
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------- stage: integrations
+// The panel is taller than the stage, exactly as it is in the product, so the
+// tour scrolls it rather than pretending the whole list fits. Scrolling runs on
+// the real scroll container instead of a transform, so the browser clamps the
+// bottom for us and the layout can drift without the beat overshooting.
+function IntegrationsStage({ scene }: { scene: Scene }) {
+  const boxRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    boxRef.current?.scrollTo({ top: scene.scrollY, behavior: "smooth" });
+  }, [scene.scrollY]);
+
+  return (
+    <div className="sop-view min-w-0 flex-1 overflow-hidden px-6 py-4">
+      <div className="mx-auto h-full w-[520px] overflow-hidden rounded-xl border border-[#EBE7E0] border-l-[3px] border-l-brand-orange bg-white">
+        <div ref={boxRef} className="h-full overflow-hidden px-3 py-2.5">
+          <p className="text-[13px] font-extrabold tracking-tight">Integrations</p>
+
+          {DESTS.map((d) => {
+            const Ico = d.icon;
+            const on = scene.dests.includes(d.key);
+            const hot = scene.hot === `dest-${d.key}`;
+            return (
+              <div key={d.key} className="mt-2 border-t border-[#F1EEE9] pt-2 first-of-type:border-t-0">
+                <div
+                  data-t={`dest-${d.key}`}
+                  className={`flex items-start gap-2.5 rounded-lg px-1.5 py-1 transition-all duration-200 ${
+                    hot ? "bg-[#FFF6EC] shadow-[0_0_0_2px_rgba(234,123,27,0.26)]" : ""
+                  }`}
+                >
+                  <span
+                    className="mt-px grid h-[21px] w-[21px] flex-none place-items-center rounded-md transition-colors duration-300"
+                    style={on ? { background: d.tint, color: "#fff" } : { background: "#F1EEE9", color: "#8A857D" }}
+                  >
+                    <Ico className="h-3 w-3" />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[11px] font-bold leading-tight">{d.label}</span>
+                    <span className="mt-0.5 block text-[9.5px] leading-snug text-brand-gray">{d.sub}</span>
+                  </span>
+                  <Toggle on={on} tint={d.tint} />
+                </div>
+
+                {d.key === "crm" && <SubSelect label="CRM object" value="Choose an object..." muted />}
+
+                {d.key === "sheets" && (
+                  <div className="mt-1.5 border-l-2 border-[#EDE9E2] pl-2.5">
+                    <p className="text-[9px] font-semibold text-brand-charcoal">Your Google account</p>
+                    <div className="mt-1 flex items-center justify-between gap-2 rounded-md border border-[#E6E2DB] bg-[#FBFAF8] px-2 py-1 text-[9.5px]">
+                      <span className="truncate">skylar@yourcompany.com</span>
+                      <Caret className="h-2.5 w-2.5 flex-none text-brand-gray" />
+                    </div>
+                    <p className="mt-1 flex gap-3 text-[9px] font-semibold text-brand-charcoal">
+                      <span className="underline decoration-[#D8D2C8] underline-offset-2">Create new spreadsheet</span>
+                      <span className="underline decoration-[#D8D2C8] underline-offset-2">Pick existing...</span>
+                    </p>
+                    <p className="mt-1 text-[8.5px] leading-snug text-brand-gray">
+                      Sheets sync runs through a personal Google account, so an Admin sets it up
+                      here using their own connected account.
+                    </p>
+                  </div>
+                )}
+
+                {d.key === "ontraport" && (
+                  <SubSelect label="Ontraport account" value="Yourcompany Marketing" />
+                )}
+              </div>
+            );
+          })}
+
+          {/* the webhook, which is Admin or owner only */}
+          <div className="mt-2 border-t border-[#F1EEE9] pt-2">
+            <p className="flex items-center gap-1.5 text-[11px] font-bold">
+              <Hook className="h-3 w-3 text-brand-charcoal" />
+              Send submissions to a URL
+            </p>
+            <p className="mt-0.5 pl-[18px] text-[9.5px] leading-snug text-brand-gray">
+              We POST each new response as signed JSON, and retry with backoff if your endpoint
+              is down. Only this form&rsquo;s submissions are sent.
+            </p>
+
+            {scene.hook ? (
+              <div className="sop-pop mt-1.5 flex items-center gap-2 rounded-lg border border-[#EBE7E0] bg-[#FBFAF8] px-2 py-1.5">
+                <span className="grid h-[18px] w-[18px] flex-none place-items-center rounded-md bg-[#16233D] text-white">
+                  <Hook className="h-2.5 w-2.5" />
+                </span>
+                <span className="min-w-0 flex-1 truncate font-mono text-[9px] text-brand-charcoal">
+                  {HOOK_URL}
+                </span>
+                <span className="flex-none rounded-full bg-[#EAF7F0] px-1.5 py-px text-[8.5px] font-bold text-[#2BA463]">
+                  Active
+                </span>
+              </div>
+            ) : (
+              <p className="mt-1.5 text-[9.5px] text-brand-gray">No webhooks on this form yet.</p>
+            )}
+
+            <span
+              data-t="add-hook"
+              className={`mt-1.5 inline-flex items-center gap-1.5 rounded-lg border bg-white px-2.5 py-1.5 text-[9.5px] font-semibold text-brand-charcoal transition-all duration-200 ${
+                scene.hot === "add-hook"
+                  ? "border-brand-orange/60 bg-[#FFF6EC] shadow-[0_0_0_2px_rgba(234,123,27,0.26)]"
+                  : "border-[#E6E2DB]"
+              }`}
+            >
+              <Plus className="h-2.5 w-2.5" />
+              Add webhook
+            </span>
+
+            <p className="mt-1.5 text-[8.5px] text-brand-gray">
+              Only an Admin or the business owner can manage webhooks.
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -1251,7 +1643,7 @@ function PublishedView({ scene }: { scene: Scene }) {
     <div className="sop-view flex h-full flex-col">
       <TopBar scene={scene} />
       <div className="relative flex min-h-0 flex-1">
-        <StageRail />
+        <StageRail scene={scene} />
         <div className="min-w-0 flex-1 overflow-hidden bg-[#F1F0EE] px-6 py-5">
           <div className="mx-auto w-[400px] rounded-xl border border-[#E3E0DA] bg-white px-6 py-4 shadow-[0_12px_28px_-18px_rgba(40,30,15,0.35)]">
             <p className="text-center text-[15px] font-extrabold tracking-tight">{NEW_NAME}</p>

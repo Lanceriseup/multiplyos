@@ -7,10 +7,14 @@
 // "Powered by Claude & GPT". So the page cannot argue it is better than either.
 // What it argues instead is both true and stronger:
 //
-//     Same models. They can just see your business.
+//     Your business brain. Gets smarter every day.
 //
 // You are not replacing the intelligence, you are replacing the copying and
 // pasting, and the twenty minutes of context you type before every question.
+// The hero used to say "Same models. They can just see your business.", which
+// made the same point from the model's side; the September 2026 copy makes it
+// from the customer's side instead, because what compounds is the context the
+// AI has accumulated about your company, not the model underneath it.
 //
 //   2. two coaches    one tells you what to do, one tells you what you are missing
 //   3. grounded       it names the record, counts the days, and does not flatter you
@@ -286,7 +290,6 @@ function GroundedDemo() {
   return (
     <div className={`flex flex-col overflow-hidden rounded-2xl border border-black/5 bg-white shadow-[0_24px_50px_-28px_rgba(40,30,15,0.4)] ${CARD_CLS}`}>
       <div className="flex-none border-b border-[#F1EEE9] px-3.5 py-2.5">
-        <p className="mb-1.5 text-[9.5px] text-brand-gray">Ask it something it could dodge</p>
         <div className="scrollbar-none flex flex-nowrap gap-1 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-x-visible sm:pb-0">
           {ANSWERS.map((x, i) => (
             <button
@@ -342,10 +345,6 @@ function GroundedDemo() {
           </div>
         </div>
       </div>
-
-      <p className="flex-none border-t border-[#F1EEE9] px-3.5 py-2 text-[10px] leading-snug text-brand-gray">
-        Three features, one answer. Nobody exported anything.
-      </p>
     </div>
   );
 }
@@ -699,6 +698,7 @@ function Section({
   title,
   swash,
   body,
+  body2,
   points,
   visual,
   flip,
@@ -709,6 +709,10 @@ function Section({
   title: React.ReactNode;
   swash?: string;
   body: string;
+  // An optional second paragraph. Only the two-coaches section uses it: that one
+  // has to describe two different things, and running them together in one block
+  // made the split the section exists to draw invisible.
+  body2?: string;
   points: string[];
   visual: React.ReactNode;
   flip?: boolean;
@@ -750,6 +754,11 @@ function Section({
           <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-brand-charcoal sm:mt-6 sm:text-lg lg:mx-0">
             {body}
           </p>
+          {body2 && (
+            <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-brand-charcoal sm:mt-4 sm:text-lg lg:mx-0">
+              {body2}
+            </p>
+          )}
           <ul className="mt-5 flex flex-col items-center gap-2.5 sm:gap-3 lg:items-start">
             {points.map((p) => (
               <li key={p} className="flex items-start gap-3 text-left text-[13.5px] text-brand-ink sm:text-[15px]">
@@ -799,27 +808,28 @@ export default function AiCoachPage() {
               </span>
             </span>
             <h1 className="text-[24px] font-extrabold leading-[1.1] tracking-tight text-brand-ink sm:text-[66px] sm:leading-[1.04]">
-              Same models.
+              Your business brain.
               <br />
-              <span className="text-brand-orange">They can see your business.</span>
+              <span className="text-brand-orange">Gets smarter every day.</span>
             </h1>
             <p className="mx-auto mt-3.5 max-w-2xl text-[14.5px] leading-relaxed text-brand-charcoal sm:mt-7 sm:text-xl">
               <span className="sm:hidden">
-                Multi AI runs on Claude and GPT, with your numbers, plan, and people already in the
-                room.
+                The AI learns your business as you use it. Better insights, smarter advice, zero
+                reprompting.
               </span>
               <span className="hidden sm:inline">
-                Multi AI runs on Claude and GPT, so the intelligence is the same one you are already
-                paying for. The difference is that it opens with your overdue tasks, your margin, and
-                your open seats, instead of an empty box you have to explain your company to first.
+                The AI learns your business as you use it. Better insights, smarter advice, zero
+                reprompting. The more you work in Multiply OS, the more aligned the coaching
+                becomes.
               </span>
             </p>
           </Reveal>
 
           <Reveal delay={0.12} className="mt-6 sm:mt-12">
             {/* The chip goes in a relative wrapper alongside the panel rather
-                than inside it: the panel clips to its rounded corners, and the
-                claim has to hang over its top edge. */}
+                than inside it: the panel clips to its rounded corners, and from
+                sm up the claim has to hang over its top edge. On a phone it sits
+                in normal flow above the panel instead. See ReplacesChip. */}
             <div className="relative">
               <ReplacesChip names={REPLACES.aiCoach} />
               <div
@@ -853,10 +863,11 @@ export default function AiCoachPage() {
       {/* ------------------------------------------------ 2. two coaches */}
       <Section
         id="coaches"
-        eyebrow="Two coaches"
-        title="One tells you what to do. One tells you what"
-        swash="you are missing."
-        body="The Assistant is operational: your tasks, your SOPs, your week, and it will write the update for you. The Strategic Coach is the one that asks the uncomfortable questions. They keep separate histories and separate instructions, because they are separate jobs."
+        eyebrow="Two AI Coaches"
+        title="Operational clarity and strategic insight,"
+        swash="in one place."
+        body="Your Multi AI Assistant drafts your weekly update, finds your overdue tasks and writes the SOPs you keep forgetting. It handles the operational noise so you can focus on what matters."
+        body2="Your Strategic Coach reads your business, asks the hard questions and spots patterns you are missing: the margin leak, the capacity bottleneck, the customer trend that is shifting. It keeps you honest and points at what you are not seeing."
         points={[
           "The Assistant drafts, finds, and clears your week",
           "The Coach reads the business and tells you what you are not seeing",
@@ -869,10 +880,10 @@ export default function AiCoachPage() {
       {/* ------------------------------------------------ 3. grounded */}
       <Section
         id="grounded"
-        eyebrow="It has already read the file"
-        title="Answers that name the record, not"
-        swash="the topic."
-        body="Ask a general AI why your margin fell and it will explain what margin is. Ask this one and it says which account moved, by how much, whose goal it belongs to, and how many days that has been true. It is looking at the same rows your team is."
+        eyebrow="It's already read the file"
+        title="Answers you can"
+        swash="actually act on."
+        body="Ask a generic AI why your margin fell and it explains what margin is. Ask the Strategic Coach and it tells you which account moved, by how much, who owns it, and how long it has been true. You get the specific answer, not the textbook answer."
         points={[
           "Cites the actual figure, the actual owner, and the actual date",
           "Pulls from several features at once to answer one question",

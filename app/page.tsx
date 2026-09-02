@@ -1,6 +1,7 @@
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
 import OsOverview from "@/components/OsOverview";
+import StackStrip from "@/components/StackStrip";
 import Framework from "@/components/Framework";
 import FeatureScoreboards from "@/components/FeatureScoreboards";
 import FeatureBuiltInAI from "@/components/FeatureBuiltInAI";
@@ -19,6 +20,7 @@ export default function Home() {
       <Navbar />
       <Hero />
       <OsOverview />
+      <StackStrip />
       <Framework />
       <FeatureScoreboards />
       <FeatureBuiltInAI />

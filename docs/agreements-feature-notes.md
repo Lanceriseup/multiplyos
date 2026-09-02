@@ -32,6 +32,68 @@ Which means the page's argument against DocuSign, PandaDoc, and Adobe Sign write
 **Do not let this page read as a cheaper DocuSign.** The claim is that the signed document is a
 live object in the same system as your projects, CRM, and scoreboards.
 
+### Correction, September 2026: the product does both
+
+The table above was written before the create flow was screenshotted properly, and its first row
+is now wrong. **Agreements does take a finished PDF.** `+ New agreement` opens a picker whose
+first question is which of the two you want, and both are real:
+
+| Card | Copy |
+| --- | --- |
+| `Form based agreement` | `Build the terms as a form with a signature block. Best when you're writing the agreement here.` |
+| `Document based agreement` | `Bring in a finished PDF, Word file or Google Doc, drop signature and date fields onto its pages, and send it out for signing.` |
+
+So the honest version of the row is: DocuSign can *only* start from a finished document; Agreements
+does that **and** builds one out of real fields. That is a strictly larger claim, and it makes the
+rest of the table stronger rather than weaker, because the "what happens after" row still only goes
+one way. **The positioning note above still stands**: lead with the form path, because the
+integrations argument only exists on that side.
+
+### The document path, step by step
+
+> **New agreement**
+> Bring in the finished document &mdash; a PDF, a Word file, or a Google Doc. Next you'll place the
+> signature and date fields on its pages and send it out for signing.
+
+- `Agreement name`, placeholder `e.g. Consulting agreement`
+- A dashed drop zone: `Drop your PDF or Word file here or browse`, then `PDF or Word (.docx), up to
+  25 MB`, then `OR`, then a `Connect Google Drive` button, then
+  `Google Docs are converted to PDF for signing.`
+- Footer: `Back` and `Next: who signs it`, the primary disabled until a file is in
+
+Three details worth holding onto. The ceiling is **25 MB**. Word is **.docx specifically**. And a
+Google Doc is **converted to PDF**, not signed live, which is the sort of thing that turns into a
+support ticket if the page implies otherwise.
+
+### The tracking page, as screenshotted September 2026
+
+Section 2 used to flag the populated list as inferred. It has now been screenshotted in full and
+the hero has been rebuilt to match. What is on it:
+
+- Heading **`My Agreements`**, then the subtitle from section 2.
+- An actions row: `How it works` (a plain link with a `?`), `Templates` (outline button), and
+  `+ New agreement` (dark, primary).
+- **Tabs**, in one rounded container, each with a count badge:
+  `All`, `Needs my signature`, `Awaiting signatures`, `Drafts`, `Completed`, `Archived`.
+  A `Search by title or signer...` box sits to their right.
+- A **grid / list view toggle** below them, grid selected.
+- A **card grid**, three across, not a table.
+
+**A card carries:** the title, a status pill, a `...` menu, then `N signers`, then **one row per
+signer** with their name and either a green `⊘ Signed` or a grey `Sent`, then
+`Created <date>`, then a green `Completed <date>` when there is one, then an action:
+`Download` (outline) on a completed one, `Continue editing` (dark) on a draft.
+
+Per-signer state is the detail worth noticing. A three-signer agreement shows all three and which
+of them have actually signed, so "awaiting" is never a mystery about who.
+
+**Status pills seen:** `Draft` (grey), `Completed` (green), `Voided` (red). The in-flight pill has
+**not** been screenshotted; the `Awaiting signatures` tab proves the state exists. The hero uses
+`Awaiting` in amber as a stand-in. **Confirm the real label before launch.**
+
+The mockup's tab counts are its own rather than the screenshot's, which are mostly zeros: a page of
+zeros reads as an empty account rather than a working one.
+
 ### The help centre's framing
 
 - **Find every signed document** &mdash; one view of everything the company has executed
@@ -189,7 +251,46 @@ screenshots.
   sign"; the product is **PandaDoc**. Logos needed at `public/replaces-docusign.png`,
   `public/replaces-pandadoc.png`, `public/replaces-adobe-sign.png`.
 - **This page took the nav slot that was Analytics Reports**, which does not exist as a feature yet.
-- **The populated Agreements list is inferred, not screenshotted.** See the caveat in section 2.
+- The Agreements list has been **rebuilt to the September 2026 design** and is no longer inferred.
+  The one open question on it is the in-flight status pill, noted in section 1.
+
+### The hero tour, September 2026
+
+The tour runs **one continuous pass covering both create paths**, about forty seconds.
+
+It was built as two alternating passes first, and that was wrong. Fading out after the signature
+and coming back to the tracking page read as the loop restarting, so the document path looked like
+the beginning of a second viewing rather than the next thing that happens. Anyone who did not sit
+through two full passes never saw the PDF at all.
+
+The fix is that **there is no fade between the two halves**. The signed copy lands on the tracking
+page, holds for a beat and a half, and the cursor goes straight back to `+ New agreement` and picks
+`Document based` this time. The tracking page is where you already are once something is signed, so
+carrying on from it is both truer to the product and the fastest route to the PDF. The document
+half now starts around twenty-three seconds in rather than after a restart.
+
+Two other things the pass shows:
+
+- A field **dragged in by hand** from the palette, landing above the signature block. The scaffold
+  that `Create agreement` lays down used to appear on its own and read as a fixed template. The
+  field dragged in is a `Dropdown`, because a question with options is the thing a flat PDF cannot
+  ask.
+- The document half ends at `Send for signing`, not at a signature. The card then lands on the
+  tracking page as awaiting the other side, which is true: nobody has signed it yet. Signing a
+  document-based agreement is a screen that has not been screenshotted, so it is not drawn.
+
+**If the loop needs to come down from forty seconds**, the cheapest cuts in order are: the
+`Explicit "I agree"` beat in the scaffold picker (about 1.4s), the hold after the hand-dragged
+field (about 1s), and the closing hold on the tracking page (about 2.3s, of which roughly 1s is
+spare).
+
+Two things in the document path are **drawn rather than screenshotted**, and should be checked:
+
+- The **page editor** itself. The modal copy names the two fields (`signature and date`), so only
+  those two are in the palette, but the real editor's chrome, its page navigation, and whether
+  fields snap or free-place are all unknown. The mockup shows a single page with a
+  `Drag onto the document` palette and a `1 signer` chip.
+- The file's **page count and size** on the upload chip (`184 KB · 3 pages`) are invented detail.
 - Not claimed anywhere yet, all real: the six theme presets, `Sub-heading` on section headings,
   `Clear date`, the countersigned copy going to the signer's email, and the `Explicit "I agree"`
   option being additional to the consent that is always collected.

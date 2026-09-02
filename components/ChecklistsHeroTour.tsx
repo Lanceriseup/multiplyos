@@ -11,7 +11,8 @@
 //   3. build it            three of the five item types, with Required and Photo
 //   4. Settings            a weekly cadence, and who hears about a finished run
 //   5. Run Checklist       tick, Pass, a reading
-//   6. sign off            type your name, and the record is sealed
+//   6. the photo           the evidence the item was flagged for in step 3
+//   7. sign off            type your name, and the record is sealed
 //
 // Content is generalised per docs/checklists-feature-notes.md, section 7: the
 // live library is one ministry's van fleet, which reads as a niche rather than
@@ -302,6 +303,7 @@ type Scene = {
   // the run
   ticked: boolean;
   passed: boolean;
+  photo: boolean; // the evidence attached to the item flagged Photo
   count: string;
   signed: string;
   complete: boolean;
@@ -310,14 +312,14 @@ type Scene = {
 const BLANK: Scene = {
   dim: false,
   view: "library", hot: "", items: 0, cadence: "No reminder",
-  ticked: false, passed: false, count: "", signed: "", complete: false,
+  ticked: false, passed: false, photo: false, count: "", signed: "", complete: false,
 };
 
 // The static frame under prefers-reduced-motion: the signed run, since the
 // sign-off is what the whole loop exists to reach.
 const STILL: Scene = {
   ...BLANK, view: "run", items: ITEMS.length,
-  ticked: true, passed: true, count: "412.60", signed: SIGNER, complete: true,
+  ticked: true, passed: true, photo: true, count: "412.60", signed: SIGNER, complete: true,
 };
 
 // ---------------------------------------------------------------- component
@@ -506,7 +508,7 @@ export default function ChecklistsHeroTour() {
           patch({ items: i + 1 });
           await wait(i === ITEMS.length - 1 ? 260 : 420);
         }
-        await wait(1500);
+        await wait(1250);
 
         // --- 3. Settings: a cadence, and who hears about a finished run
         if (!(await tap("stage-settings", 620))) return;
@@ -514,7 +516,7 @@ export default function ChecklistsHeroTour() {
         await wait(760);
         if (!(await tap("cadence", 560))) return;
         patch({ cadence: "Every Friday at 9:00 AM" });
-        await wait(1900);
+        await wait(1600);
 
         // --- 4. run it
         if (!(await tap("run-checklist", 640))) return;
@@ -527,7 +529,13 @@ export default function ChecklistsHeroTour() {
 
         if (!(await tap("pass", 520))) return;
         patch({ passed: true });
-        await wait(560);
+        await wait(520);
+
+        // --- 5. the photo. Pass on its own is a claim; the picture is the proof,
+        // and this is the item that was flagged Photo back in the editor.
+        if (!(await tap("add-photo", 500))) return;
+        patch({ photo: true });
+        await wait(1250);
 
         // a reading, typed in
         await glide(pointAt("count"), 520);
@@ -537,7 +545,7 @@ export default function ChecklistsHeroTour() {
         if (!alive()) return;
         await wait(560);
 
-        // --- 5. sign off. The payoff: a name, not a tickbox.
+        // --- 6. sign off. The payoff: a name, not a tickbox.
         await glide(pointAt("sign"), 540);
         if (!alive()) return;
         await click();
@@ -547,7 +555,7 @@ export default function ChecklistsHeroTour() {
 
         if (!(await tap("complete", 560))) return;
         patch({ complete: true });
-        await wait(2900);
+        await wait(2600);
 
         if (!alive()) return;
         // Fade the card out before the loop restarts, rather than cutting.
@@ -1092,13 +1100,50 @@ function SettingsPane({ scene }: { scene: Scene }) {
   );
 }
 
+// The attached photo, drawn rather than photographed. Same call as the QR code on
+// the Forms page: a real photo here would be a stock kitchen, which is somebody
+// else's business rather than the reader's. The item is a walk-in temperature
+// check, so the evidence is the reading itself, which is what corroborates Pass.
+function PhotoArt() {
+  return (
+    <svg viewBox="0 0 60 44" className="h-full w-full" aria-hidden="true">
+      <defs>
+        <linearGradient id="ck-evidence" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#3C4657" />
+          <stop offset="1" stopColor="#1F2732" />
+        </linearGradient>
+      </defs>
+      <rect width="60" height="44" fill="url(#ck-evidence)" />
+      {/* the walk-in door edge, so it reads as a place and not a floating panel */}
+      <rect x="0" y="0" width="13" height="44" fill="#4A5566" opacity="0.5" />
+      <rect x="10.4" y="17" width="2" height="10" rx="1" fill="#8C97A6" opacity="0.8" />
+      {/* the thermometer */}
+      <rect x="21" y="13" width="30" height="18" rx="2.6" fill="#10141A" stroke="#5A6675" />
+      <text
+        x="36"
+        y="25.6"
+        textAnchor="middle"
+        fontSize="10.5"
+        fontWeight="700"
+        fill="#3FD07A"
+        fontFamily="ui-monospace, SFMono-Regular, monospace"
+      >
+        37&#176;
+      </text>
+      <path d="M21 13h30l-30 18z" fill="#fff" opacity="0.05" />
+    </svg>
+  );
+}
+
 // ---------------------------------------------------------------- the runner
 // A focused mode, not the editor. The sign-off card is the whole reason the page
 // exists, so the loop ends here and holds.
 function RunView({ scene }: { scene: Scene }) {
   const done = (scene.ticked ? 1 : 0) + (scene.passed ? 1 : 0) + (scene.count ? 1 : 0);
   const pct = Math.round((done / ITEMS.length) * 100);
-  const allRequired = scene.ticked && scene.passed;
+  // The photo counts towards being done, because the item was flagged Photo in
+  // the editor and a tick on its own is the thing this feature exists to stop.
+  const allRequired = scene.ticked && scene.passed && scene.photo;
 
   return (
     <div className="sop-view flex h-full flex-col bg-[#FAF9F7]">
@@ -1181,11 +1226,47 @@ function RunView({ scene }: { scene: Scene }) {
                   </span>
                 );
               })}
-              <span className="ml-1 flex items-center gap-1 text-[9px] text-brand-gray">
-                <Camera className="h-2.5 w-2.5" />
-                Photo required
-              </span>
             </div>
+
+            {/* The evidence. This item carried a Photo chip back in the editor,
+                so the run asks for the picture rather than trusting the tick. */}
+            {scene.photo ? (
+              <div className="sop-pop mt-2 flex items-center gap-2 rounded-lg border border-[#BFE5CD] bg-[#F2FBF6] px-2 py-1">
+                <span className="h-[26px] w-[36px] flex-none overflow-hidden rounded-md border border-[#CDD4DD]">
+                  <PhotoArt />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[10px] font-semibold leading-tight">
+                    walk-in-temp.jpg
+                  </span>
+                  <span className="block text-[8.5px] text-brand-gray">
+                    Attached 9:38 PM, kept with this run
+                  </span>
+                </span>
+                <span
+                  className="flex flex-none items-center gap-1 text-[9px] font-semibold"
+                  style={{ color: GREEN }}
+                >
+                  <Tick className="h-2.5 w-2.5" />
+                  Photo attached
+                </span>
+              </div>
+            ) : (
+              <div className="mt-2 flex items-center gap-2">
+                <span
+                  data-t="add-photo"
+                  className={`flex flex-none items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[10px] font-semibold text-brand-charcoal transition-all duration-200 ${
+                    scene.hot === "add-photo"
+                      ? "border-brand-orange/60 bg-[#FFF6EC] shadow-[0_0_0_3px_rgba(234,123,27,0.22)]"
+                      : "border-[#E6E2DB] bg-white"
+                  }`}
+                >
+                  <Camera className="h-2.5 w-2.5" />
+                  Add photo
+                </span>
+                <span className="text-[9px] text-brand-gray">Photo required on this item</span>
+              </div>
+            )}
           </div>
 
           {/* 3. a reading */}
@@ -1245,11 +1326,15 @@ function RunView({ scene }: { scene: Scene }) {
         {scene.complete ? (
           <span className="flex items-center gap-1.5 text-[10.5px] font-semibold" style={{ color: GREEN }}>
             <Tick className="h-3 w-3" />
-            Signed by {SIGNER} &middot; 9:41 PM &middot; kept in History
+            Signed by {SIGNER} &middot; 9:41 PM &middot; 1 photo &middot; kept in History
           </span>
         ) : (
           <span className="text-[10.5px] text-brand-gray">
-            {allRequired ? "All required items are done." : "Two items are required."}
+            {allRequired
+              ? "All required items are done."
+              : scene.ticked && scene.passed
+                ? "One item still needs its photo."
+                : "Two items are required."}
           </span>
         )}
         <span

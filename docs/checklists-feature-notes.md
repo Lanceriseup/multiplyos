@@ -245,3 +245,35 @@ Dashboard mockups across the site use **Skylar Lewis (SL)** as the owner persona
   that a run **covers a named date** rather than just a timestamp.
 - The empty-state copy about "the killer items, not every step that exists" is the strongest line
   in the product. It is quoted on the page and should survive any copy edit.
+
+### The photo beat, September 2026
+
+The client asked for the hero tour to show a photo being attached during a run. It sits between
+the Pass beat and the reading, on the walk-in temperature item, which is the one already carrying
+a `Photo` chip in the editor two beats earlier. That through-line is the point of putting it
+there: you flag the item, the run then refuses to call itself done on a tick alone, and the
+picture ends up in the permanent record.
+
+What the beat shows: an `Add photo` button with `Photo required on this item` beside it, then a
+thumbnail, `walk-in-temp.jpg`, `Attached 9:38 PM, kept with this run`, and a green
+`Photo attached`. The signed footer now reads `Signed by Skylar Lewis · 9:41 PM · 1 photo · kept
+in History`.
+
+The photo is **drawn, not photographed** (`PhotoArt` in `ChecklistsHeroTour.tsx`), the same call
+as the QR code on the Forms page. A real photo would be a stock kitchen, which is somebody else's
+business rather than the reader's. It draws the walk-in door edge and a thermometer reading 37°,
+so the evidence is the thing that corroborates Pass rather than generic scenery.
+
+**Two things to verify against the product**, because the screenshots did not cover the runner's
+photo control:
+
+- The exact affordance is assumed to be an `Add photo` button on the item card. If the live
+  runner uses a camera icon, a drop target, or a separate modal, the mockup should follow it.
+- The run's footer now treats a missing photo as blocking: it reads `One item still needs its
+  photo.` until the picture lands, and only then `All required items are done.` The notes confirm
+  **Required** blocks completion but say only that **Photo** attaches "a picture as evidence". The
+  runner already carried a `Photo required` label before this change, so the two are consistent,
+  but whether a required photo genuinely blocks `Complete Checklist` is worth confirming.
+
+Loop length went from about 29 seconds to about 30: the beat costs roughly 1.8 seconds and about
+0.9 was trimmed back out of the build, cadence, and closing holds.

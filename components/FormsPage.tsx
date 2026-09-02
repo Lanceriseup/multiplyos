@@ -986,8 +986,9 @@ export default function FormsPage() {
 
           <Reveal delay={0.12} className="mt-6 sm:mt-12">
             {/* The chip goes in a relative wrapper alongside the panel rather
-                than inside it: the panel clips to its rounded corners, and the
-                claim has to hang over its top edge. */}
+                than inside it: the panel clips to its rounded corners, and from
+                sm up the claim has to hang over its top edge. On a phone it sits
+                in normal flow above the panel instead. See ReplacesChip. */}
             <div className="relative">
               <ReplacesChip names={REPLACES.forms} />
               <div

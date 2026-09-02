@@ -831,27 +831,27 @@ export default function AgreementsPage() {
               </span>
             </span>
             <h1 className="text-[24px] font-extrabold leading-[1.1] tracking-tight text-brand-ink sm:text-[66px] sm:leading-[1.04]">
-              Signed, tracked, and
+              Signed, tracked and
               <br />
-              <span className="text-brand-orange">already working.</span>
+              <span className="text-brand-orange">securely stored.</span>
             </h1>
             <p className="mx-auto mt-3.5 max-w-2xl text-[14.5px] leading-relaxed text-brand-charcoal sm:mt-7 sm:text-xl">
               <span className="sm:hidden">
-                An agreement is a form with a signature on it. So the moment it is signed, it can
-                start the work.
+                Build a custom agreement, send it for signature, and store the signed copy, all
+                without leaving Multiply OS.
               </span>
               <span className="hidden sm:inline">
-                An agreement is a form with a signature on it. Which means the contract you send is
-                built out of real fields, and the moment somebody signs it, it can open the task,
-                create the contact, and fill the spreadsheet by itself.
+                Build a custom agreement or contract, send it for signature, and store the signed
+                copy, all without leaving Multiply OS.
               </span>
             </p>
           </Reveal>
 
           <Reveal delay={0.12} className="mt-6 sm:mt-12">
             {/* The chip goes in a relative wrapper alongside the panel rather
-                than inside it: the panel clips to its rounded corners, and the
-                claim has to hang over its top edge. */}
+                than inside it: the panel clips to its rounded corners, and from
+                sm up the claim has to hang over its top edge. On a phone it sits
+                in normal flow above the panel instead. See ReplacesChip. */}
             <div className="relative">
               <ReplacesChip names={REPLACES.agreements} />
               <div
@@ -886,8 +886,8 @@ export default function AgreementsPage() {
       <Section
         id="form"
         eyebrow="A form with a signature on it"
-        title="Not a PDF with boxes dragged"
-        swash="onto it."
+        title="Customize your agreement exactly"
+        swash="how you need it."
         body="Creating an agreement builds the whole document for you: a terms section, the signer's name and email, the date, and a signature that cannot be removed. Then it is an ordinary form, so it can ask anything a form can ask."
         points={[
           "The signature block is placed for you, and it is not optional",
