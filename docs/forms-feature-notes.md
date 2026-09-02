@@ -35,6 +35,20 @@ The last two are the ones worth leading on. A standalone form tool cannot open a
 project board or push a number onto your scoreboard, because it does not own either one. That is
 the whole argument of this page.
 
+### A later ask, September 2026
+
+The client came back wanting the hero to carry two more things, both of them what happens
+*after* a submission rather than part of building one:
+
+| Ask | Where |
+| --- | --- |
+| A submission emails the response summary to somebody | Hero tour, the Email Notifications stage |
+| Sheets, a webhook, and Ontraport as destinations | Hero tour, the Integrations stage |
+
+Both were built as extra beats on the existing hero tour rather than as a new section, because
+the tour already draws the builder chrome those two stages live inside. The loop now runs about
+36 seconds. See [Page status](#9-page-status) for what that bought and what it cost.
+
 ---
 
 ## 2. The form library
@@ -310,6 +324,41 @@ Open items:
   sellable.
 - Sheets sync being Admin-gated and tied to one person's Google account is a real constraint. The
   page must not imply every user can wire it up.
+
+### What the hero tour now covers, September 2026
+
+Two stages were added to `FormsHeroTour.tsx` between the builder and Preview.
+
+**Email Notifications.** Drawn from the live stage: the reply-to field sitting on
+`Use the company default`, the `Also notify me in the app` toggle with its own copy verbatim,
+and the paste area. The tour types `skylar@yourcompany.com, ops@yourcompany.com` as one comma
+separated string, because that is what the placeholder asks for and the comma doing the splitting
+is worth showing. The left rail's `N addresses` count updates with the list, as it does in the
+product.
+
+The in-app inbox is the half of this that is not generic. Every form tool emails you. Only one
+that owns an inbox can put the submission in it, on web and mobile.
+
+**Integrations.** All five toggle destinations are drawn in the product's own order, with the
+gate copy verbatim. The tour flips **Google Sheets** and **Ontraport**, then adds a webhook. Task,
+Scoreboard, and CRM stay off, matching the screenshots and leaving them to the Integrations
+section further down the page, which already covers them.
+
+Three things to hold to:
+
+- The panel is **taller than the stage**, exactly as in the product, so the tour scrolls it. The
+  scroll runs on the real scroll container via `scrollTo`, not a transform, so the browser clamps
+  the bottom and the beat cannot overshoot if the layout drifts. Anything added to that panel
+  needs no re-tuning.
+- The Google account select is drawn **already connected**, to an Admin's address, because a
+  toggle cannot switch on until it is. The Admin-gating helper line sits directly under it, so the
+  shot does not imply every user can wire it up.
+- The webhook row's `Only an Admin or the business owner can manage webhooks` line stays. The
+  endpoint shown is `https://api.yourcompany.com/hooks/forms`, on the placeholder domain.
+
+**The cost.** The loop went from about 26 seconds to about 36. Existing beats were trimmed by
+roughly 3 seconds to pay for part of it. If it needs to come down further, the cheapest cut is the
+QR beat, which the Share section further down the page already covers in full.
 
 ---
 

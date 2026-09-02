@@ -19,6 +19,15 @@ the product's own em dashes. Do not copy that punctuation onto the page.
 > (Show the main DISC page, show a user and how you can see their DISC profile, talk about using
 > personality assessments for your team and having it built in)
 
+A follow-up brief added the org chart, and then Hiring:
+
+> (on the disc assessment page video animation lets add an additional animation that shows that the
+> disc assessment can be sent in the Hiring tab [...] after showing the org chart, and how disc works
+> on that page then switch to the hire page choose an applicant then theres going to be a scroll
+> animation that goes to the send disc assessment)
+
+Both are in the hero tour, as beats 5-6 and 7-9. Section 8 has the shot list.
+
 **Replaces nothing**, per the client. So this is the second feature page with **no `ReplacesStrip`
 and no `ActZero` opening beat**, after CFO Analytics. Do not add one.
 
@@ -222,8 +231,22 @@ find it holds.
 Two people are deliberately unassessed, the same two the Org Chart page shows as a grey dash, so the
 "send an invite" beat in the hero tour has somebody real to send to.
 
+The **hiring applicants are invented too**, and for a sharper version of the same reason. The real
+board is a live pipeline: a candidate's name, inbox and phone number are not ours to publish
+anywhere, least of all on the page selling the tool that holds them. The mockup uses seven fictional
+people on `@example.com`, and no phone numbers at all.
+
+The **open positions and their counts are real** — `Bookkeeper VA 0`, `Sales Setter 1`, `Financial
+Controller 2`, `Inventory Manager 6`, `Senior Developer & Technical Project Manager 39`. Those are
+facts about the company's hiring rather than about any person, so they carry across as they are.
+
 Credit counters in the mockups run `10 available / 0 held`, moving to `9 / 1` the moment an invite is
 sent. That is the mechanic doing exactly what the product says it does.
+
+The pool then **carries across the whole tour instead of resetting per beat**. Beat 2 spends one on
+Sam Okafor, so the hiring card in beat 9 opens on **9 available** and goes to **8** when the
+candidate's assessment goes out. One company pool, employees and candidates alike, which is the only
+claim neither half of the tour can make on its own.
 
 ---
 
@@ -239,5 +262,44 @@ sent. That is the mechanic doing exactly what the product says it does.
 - The four dimension colours match the Org Chart legend exactly: D red, I amber, S green, C blue,
   with grey for not assessed.
 - Not claimed anywhere, all real: pricing and packs, Stripe checkout, the `Show contractors` toggle,
-  `Allow retake`, downloading an individual report, the module dependency being an admin setting,
-  and the `Multiply Hiring` module.
+  `Allow retake`, downloading an individual report, and the module dependency being an admin setting.
+- The `Multiply Hiring` module **is now claimed**, by beats 7-9 of the hero tour and nowhere else.
+  The page copy still does not mention it. If Hiring ever gets its own feature page, both tours will
+  be drawing the same DISC card and they must not be allowed to drift.
+
+---
+
+## 8. The hero tour
+
+Nine beats, one loop, in `components/DiscHeroTour.tsx`.
+
+| # | Beat | What it has to prove |
+| --- | --- | --- |
+| 1 | The assessments page | Who has taken it, who has not, credits available |
+| 2 | Send an invite | Pending goes up and a credit moves to held |
+| 3 | The Team Members tab | DISC is a column here, not a separate report |
+| 4 | Open somebody | Four dimensions, scored, inside their own record |
+| 5 | Zoom out to the rail | Org Chart is the area next door |
+| 6 | Show DISC | Badges land on a chart the viewer has already read |
+| 7 | Zoom out again | Hiring is an area too, reached the same way |
+| 8 | Open an applicant | DISC sits inside a live hiring record |
+| 9 | Scroll to the card | And you send it from there, off the same pool |
+
+Two rules the tour keeps, both worth not breaking:
+
+**One gesture for changing area.** Beats 5 and 7 are the same move — the plate pulls back to `ZOOM`
+and shifts right until its left edge clears the rail, every rail row sits soft, and only the pair
+that matters racks into focus once the pull-back has settled. It is lifted from
+`TeamMeetingsHeroTour` and reused rather than reinvented, so a viewer learns to read it once. Beat 5
+sharpens Team + Org Chart, beat 7 sharpens Org Chart + Hiring. Always a **pair**: the claim is "this
+area, and the one beside it", never "go here".
+
+**Beat 9 is a scroll, not a click.** The DISC card is deliberately below the fold of the candidate's
+record, because the point is that the assessment lives inside the hiring record you were already
+working in — you get to it by scrolling that record, not by leaving for another part of the product.
+Opening a view with the card already on screen would make a weaker claim, and an easier one.
+
+Only the **left detail rail** travels, though the real record scrolls whole. At 500px of hero,
+scrolling everything drags the funnel panel off with it and leaves half the frame empty on the beat
+that matters most. Moving one column says the same thing and gives the eye exactly one thing to
+follow. `APPL_SCROLL` is tuned so the card lands mid-panel rather than against the bottom edge.

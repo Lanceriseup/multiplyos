@@ -219,42 +219,65 @@ export function ReplacesChip({
   const last = items.length - 1;
 
   return (
-    <div className="pointer-events-none absolute left-1/2 top-0 z-10 w-full -translate-x-1/2 -translate-y-1/2 px-4">
-      {/* wraps rather than overflowing: Agreements names three tools, which is
-          wider than a phone at one line */}
-      <p className="mx-auto flex w-fit max-w-full flex-wrap items-center justify-center gap-x-3 gap-y-1.5 rounded-[20px] border border-[#F0E4D3] bg-white px-4 py-2 shadow-[0_8px_20px_-12px_rgba(40,30,15,0.5)] sm:gap-x-3.5 sm:rounded-full sm:px-5 sm:py-2.5">
+    // Two placements, because one does not work at both widths.
+    //
+    // From sm up the chip straddles the panel's top edge, half on the page and
+    // half on the panel, which is the look the pages were designed around.
+    //
+    // On a phone that fails: the panel carries 8px of padding there rather than
+    // 32px, so the chip's lower half lands on the app card's own header instead
+    // of on tinted background, covering the title and the button beside it. So
+    // below sm it drops out of the overlay and sits in normal flow above the
+    // panel. That also costs nothing when the chip wraps to two lines, which
+    // Agreements does: it names three tools, and a straddling two-line chip
+    // would need clearance that changes per page.
+    <div className="pointer-events-none mb-3 w-full px-4 sm:absolute sm:left-1/2 sm:top-0 sm:z-10 sm:mb-0 sm:-translate-x-1/2 sm:-translate-y-1/2">
+      {/* Two lines on a phone, one line from sm up.
+
+          Agreements and Forms each name three tools, which is wider than a
+          phone. Letting the pill wrap put the break in whatever arbitrary place
+          the widths landed on, so the second line read as the pill running out
+          of room. Stacking it puts the break where it means something: the
+          label takes the top line, and the marks sit in a row underneath it.
+
+          The marks live in their own row for that reason, and that row goes
+          `display: contents` at sm so they become direct children of the pill
+          again and the desktop layout is exactly what it always was. */}
+      <p className="mx-auto flex w-fit max-w-full flex-col items-center justify-center gap-y-[5px] rounded-[20px] border border-[#F0E4D3] bg-white px-4 py-[7px] shadow-[0_8px_20px_-12px_rgba(40,30,15,0.5)] sm:flex-row sm:flex-wrap sm:gap-x-3.5 sm:gap-y-1.5 sm:rounded-full sm:px-5 sm:py-2.5">
         {/* ink rather than grey: at this size, in caps, on white, brand-gray
             read as a watermark next to the wordmark it introduces */}
         <span className="text-[9.5px] font-bold uppercase tracking-[0.15em] text-brand-ink sm:text-[11px]">
           {label}
         </span>
 
-        {items.map((item, i) => (
-          <span key={item.name} className="flex items-center gap-x-3 sm:gap-x-3.5">
-            <span
-              // inline-flex, not inline: see note 2 above.
-              //
-              // The type size is for the fallback: with no artwork, the name
-              // has to carry the weight the logo will. An <img> ignores it.
-              className="relative inline-flex items-center whitespace-nowrap text-[15px] font-[650] tracking-[-0.01em] text-brand-charcoal sm:text-[19px]"
-            >
-              <ReplacedLogo
-                src={item.logo}
-                name={item.name}
-                className="h-[20px] w-auto sm:h-[26px]"
-              />
-              <Strike delay={0} still />
-            </span>
-
-            {/* Two names take an ampersand. Three or more read as a list, so
-                everything but the last join is a comma. */}
-            {i < last && (
-              <span className="text-[12px] font-medium text-brand-gray sm:text-[14px]">
-                {last > 1 && i < last - 1 ? "," : "&"}
+        <span className="flex max-w-full flex-wrap items-center justify-center gap-x-3 gap-y-1.5 sm:contents">
+          {items.map((item, i) => (
+            <span key={item.name} className="flex items-center gap-x-3 sm:gap-x-3.5">
+              <span
+                // inline-flex, not inline: see note 2 above.
+                //
+                // The type size is for the fallback: with no artwork, the name
+                // has to carry the weight the logo will. An <img> ignores it.
+                className="relative inline-flex items-center whitespace-nowrap text-[15px] font-[650] tracking-[-0.01em] text-brand-charcoal sm:text-[19px]"
+              >
+                <ReplacedLogo
+                  src={item.logo}
+                  name={item.name}
+                  className="h-[18px] w-auto sm:h-[26px]"
+                />
+                <Strike delay={0} still />
               </span>
-            )}
-          </span>
-        ))}
+
+              {/* Two names take an ampersand. Three or more read as a list, so
+                  everything but the last join is a comma. */}
+              {i < last && (
+                <span className="text-[12px] font-medium text-brand-gray sm:text-[14px]">
+                  {last > 1 && i < last - 1 ? "," : "&"}
+                </span>
+              )}
+            </span>
+          ))}
+        </span>
       </p>
     </div>
   );

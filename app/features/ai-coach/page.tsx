@@ -4,11 +4,11 @@ import AiCoachPage from "@/components/AiCoachPage";
 export const metadata: Metadata = {
   title: "AI Coach & Agent · Multiply OS",
   description:
-    "Multi AI runs on Claude and GPT with your live company data already in the room. Two coaches, answers that name the actual record, charts and calculators built on request, and memory that means you stop explaining yourself at the top of every chat.",
+    "The AI learns your business as you use it. Better insights, smarter advice, zero reprompting. Two coaches, answers that name the actual record, charts and calculators built on request, and memory that means you stop explaining yourself at the top of every chat.",
   openGraph: {
     title: "AI Coach & Agent · Multiply OS",
     description:
-      "Same models. They can see your business. Multi AI opens with your overdue tasks, your margin, and your open seats, instead of an empty box you have to explain your company to.",
+      "Your business brain, and it gets smarter every day. The AI learns your business as you use it, so it opens with your overdue tasks, your margin, and your open seats instead of an empty box.",
     url: "https://www.multiplyos.com/features/ai-coach",
     siteName: "Multiply OS",
     type: "website",
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "AI Coach & Agent · Multiply OS",
     description:
-      "Same models. They can see your business. An AI chief of staff that reads your numbers, your plan, and your people.",
+      "Your business brain, and it gets smarter every day. The more you work in Multiply OS, the more aligned the coaching becomes.",
     images: ["/og-image.png"],
   },
 };

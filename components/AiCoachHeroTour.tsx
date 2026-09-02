@@ -145,6 +145,44 @@ const COACHES = {
 
 type Which = keyof typeof COACHES;
 
+// The model picker, verbatim from the product, minus its em dashes per house
+// style. The point of drawing all five is the second group: the same chat runs
+// on Anthropic or OpenAI, and the product is candid that the OpenAI ones lose
+// the business tools.
+const MODELS: {
+  group: string;
+  icon: (p: IconProps) => React.JSX.Element;
+  items: { key: string; label: string; short: string; sub: string }[];
+}[] = [
+  {
+    group: "Claude (Anthropic)",
+    icon: Spark,
+    items: [
+      { key: "haiku", label: "Claude Haiku 4.5", short: "Haiku 4.5", sub: "Default. Haiku is fast, cost effective, and comprehensive." },
+      { key: "sonnet", label: "Claude Sonnet 4.6", short: "Sonnet 4.6", sub: "Use Sonnet for your deepest work." },
+      { key: "opus", label: "Claude Opus 4.8", short: "Opus 4.8", sub: "Anthropic flagship, deepest reasoning for your hardest strategic work (slower, costlier)." },
+    ],
+  },
+  {
+    group: "GPT (OpenAI)",
+    icon: Bot,
+    items: [
+      { key: "gpt5", label: "OpenAI GPT-5", short: "GPT-5", sub: "OpenAI flagship. Text in, text out, with no business tools, web search, or images." },
+      { key: "gpt5mini", label: "OpenAI GPT-5 mini", short: "GPT-5 mini", sub: "OpenAI value tier. Faster and cheaper than GPT-5 with the same constraints." },
+    ],
+  },
+];
+
+const ALL_MODELS = MODELS.flatMap((g) => g.items);
+
+// What the tour writes into Saved Memory. All three are durable preferences or
+// standing facts rather than anything about a project, because that is exactly
+// the line the product's own guidance draws: one-off project facts belong in
+// project instructions instead, and anything that will change soon does not
+// belong here at all.
+const PRIMARY_TEXT = "Answer concisely. Plain English, not jargon.";
+const MEMS = ["We price in tiers, never hourly.", "Our fiscal year starts in April."];
+
 // The chat history, grouped the way the product groups it.
 const HISTORY = [
   { g: "Today", items: ["Q3 goals at risk", "Draft the Monday update", "Where cash actually went"] },
@@ -224,19 +262,33 @@ type Scene = {
   tool: boolean; // "read your P&L and scoreboard"
   chart: boolean;
   hot: string;
+  // --- the model picker
+  model: string; // key into ALL_MODELS
+  picker: boolean;
+  // --- Saved Memory
+  memory: boolean; // the modal is open
+  primary: string; // tier one, the standing instructions
+  primaryCaret: boolean;
+  primarySaved: boolean;
+  memDraft: string; // the memory being typed
+  memCaret: boolean;
+  mems: string[]; // tier two, the shared list as it fills
 };
 
 const BLANK: Scene = {
   dim: false,
   who: "assistant", view: "home", aTool: false, aLines: 0,
   lead: "", points: 0, closed: false, typed: "", tool: false, chart: false, hot: "",
+  model: "haiku", picker: false,
+  memory: false, primary: "", primaryCaret: false, primarySaved: false,
+  memDraft: "", memCaret: false, mems: [],
 };
 
 // Under prefers-reduced-motion: the finished answer with the chart under it,
 // which is both of the client's headline asks in one frame.
 const STILL: Scene = {
   ...BLANK, who: "coach", view: "chat", lead: LEAD, points: POINTS.length,
-  closed: true, typed: FOLLOW_UP, tool: true, chart: true,
+  closed: true, typed: FOLLOW_UP, tool: true, chart: true, model: "opus",
 };
 
 // ---------------------------------------------------------------- component
@@ -420,50 +472,60 @@ export default function AiCoachHeroTour() {
         await fade(1);
 
         // --- 1. the home screen, on the assistant
-        await wait(1700);
+        await wait(1200);
 
         // --- 2. the Assistant does the errand: it reads, then it writes
         if (!(await tap("prompt-1", 700))) return;
         patch({ view: "chat" });
         await wait(700);
         patch({ aTool: true });
-        await wait(1000);
+        await wait(800);
 
         for (let i = 1; i <= 3; i++) {
           patch({ aLines: i });
-          await wait(520);
+          await wait(440);
           if (!alive()) return;
         }
-        await wait(2600);
+        await wait(1300);
 
         // --- 3. same product, different job
         if (!(await tap("new-chat", 700))) return;
         patch({ view: "home", aTool: false, aLines: 0 });
-        await wait(800);
+        await wait(650);
 
         if (!(await tap("coach-coach", 620))) return;
         patch({ who: "coach" });
-        await wait(2200);
+        await wait(1150);
 
-        // --- 4. and this one asks something uncomfortable
+        // --- 4. the hard question earns a deeper model. The picker is the beat
+        // where "runs on Claude and GPT" stops being a footnote and becomes a
+        // choice you make per question.
+        if (!(await tap("model", 620))) return;
+        patch({ picker: true });
+        await wait(1300);
+        if (!(await tap("m-opus", 540))) return;
+        patch({ model: "opus", picker: false });
+        await wait(800);
+
+        // --- 5. and this one asks something uncomfortable
         if (!(await tap("prompt-2", 700))) return;
         patch({ view: "chat" });
         await wait(700);
 
         await type(LEAD, (v) => patch({ lead: v }), 15);
         if (!alive()) return;
-        await wait(500);
+        await wait(400);
 
         for (let i = 0; i < POINTS.length; i++) {
           patch({ points: i + 1 });
-          await wait(560);
+          await wait(480);
           if (!alive()) return;
         }
         await wait(400);
         patch({ closed: true });
-        await wait(3400);
+        await wait(1700);
 
-        // --- 5. and it can draw what it just said
+        // --- 6. and it can draw what it just said
         await glide(pointAt("composer"), 620);
         if (!alive()) return;
         await click();
@@ -475,7 +537,50 @@ export default function AiCoachHeroTour() {
         patch({ tool: true });
         await wait(1100);
         patch({ chart: true });
-        await wait(4200);
+        await wait(1900);
+
+        // --- 7. and why none of that had to be explained first. Memory is the
+        // reason the coach opened already knowing the business, so it closes the
+        // loop rather than opening it. This is the longest beat in the tour on
+        // purpose: it is the one the hero copy promises.
+        if (!(await tap("memory", 660))) return;
+        patch({ memory: true });
+        await wait(1500);
+
+        // tier one: the standing instruction every answer has to obey. The
+        // counter running up to its 5000 ceiling is the detail that makes this
+        // read as a real field rather than a label.
+        await glide(pointAt("primary"), 520);
+        if (!alive()) return;
+        await click();
+        patch({ primaryCaret: true });
+        await wait(200);
+        await type(PRIMARY_TEXT, (v) => patch({ primary: v }), 24);
+        if (!alive()) return;
+        await wait(300);
+
+        if (!(await tap("save-primary", 500))) return;
+        patch({ primarySaved: true, primaryCaret: false });
+        await wait(750);
+
+        // tier two: the shared list, filled one at a time so the count moves
+        for (let i = 0; i < MEMS.length; i++) {
+          if (!(await tap("add-memory", i === 0 ? 540 : 480))) return;
+          patch({ memCaret: true });
+          await wait(200);
+          await type(MEMS[i], (v) => patch({ memDraft: v }), 26);
+          if (!alive()) return;
+          await wait(240);
+
+          if (!(await tap("save-memory", 460))) return;
+          patch({
+            mems: MEMS.slice(0, i + 1),
+            memDraft: "",
+            memCaret: false,
+          });
+          await wait(i === MEMS.length - 1 ? 2200 : 620);
+          if (!alive()) return;
+        }
 
         if (!alive()) return;
         // Fade the card out before the loop restarts, rather than cutting.
@@ -519,6 +624,7 @@ export default function AiCoachHeroTour() {
               )}
             </div>
 
+            {scene.memory && <MemoryModal scene={scene} />}
           </div>
 
           <span
@@ -574,7 +680,12 @@ function Sidebar({ scene }: { scene: Scene }) {
           <Search className="h-2.5 w-2.5" />
           Search chats...
         </span>
-        <span className="mt-1.5 flex items-center gap-1.5 px-1 py-1 text-[10px] font-medium text-brand-charcoal">
+        <span
+          data-t="memory"
+          className={`mt-1.5 flex items-center gap-1.5 rounded-lg px-1 py-1 text-[10px] font-medium text-brand-charcoal transition-all duration-200 ${
+            scene.hot === "memory" ? "bg-[#FFF6EC] shadow-[0_0_0_2px_rgba(234,123,27,0.3)]" : ""
+          }`}
+        >
           <Brain className="h-3 w-3" />
           Memory
         </span>
@@ -643,8 +754,11 @@ function TopBar({ scene }: { scene: Scene }) {
 
 // ---------------------------------------------------------------- composer
 function Composer({ scene }: { scene: Scene }) {
+  const model = ALL_MODELS.find((m) => m.key === scene.model) ?? ALL_MODELS[0];
+  const isGpt = scene.model.startsWith("gpt");
   return (
-    <div className="flex-none">
+    <div className="relative flex-none">
+      {scene.picker && <ModelPicker scene={scene} />}
       <div
         data-t="composer"
         className="flex items-center gap-2 rounded-xl border border-[#E6E2DB] bg-white px-3 py-2 shadow-[0_2px_10px_-6px_rgba(40,30,15,0.28)]"
@@ -660,9 +774,20 @@ function Composer({ scene }: { scene: Scene }) {
             <span className="text-brand-gray">Ask Multi...</span>
           )}
         </span>
-        <span className="flex flex-none items-center gap-1 rounded-lg bg-[#F4F1EC] px-1.5 py-1 text-[9px] font-medium">
-          <Spark className="h-2.5 w-2.5" style={{ color: ASSISTANT }} />
-          Sonnet 4.6
+        <span
+          data-t="model"
+          className={`flex flex-none items-center gap-1 rounded-lg border px-1.5 py-1 text-[9px] font-medium transition-all duration-200 ${
+            scene.hot === "model" || scene.picker
+              ? "border-brand-orange/60 bg-[#FFF6EC] shadow-[0_0_0_2px_rgba(234,123,27,0.22)]"
+              : "border-transparent bg-[#F4F1EC]"
+          }`}
+        >
+          {isGpt ? (
+            <Bot className="h-2.5 w-2.5" style={{ color: "#1A7F64" }} />
+          ) : (
+            <Spark className="h-2.5 w-2.5" style={{ color: ASSISTANT }} />
+          )}
+          {model.short}
           <Chevron className="h-2 w-2 text-brand-gray" />
         </span>
         <span className="grid h-[20px] w-[20px] flex-none place-items-center rounded-full bg-[#F4F1EC] text-brand-charcoal">
@@ -682,6 +807,197 @@ function Composer({ scene }: { scene: Scene }) {
         Coach responses are based on your live company data. Always verify important decisions with
         your team.
       </p>
+    </div>
+  );
+}
+
+// The model picker. It opens downward, the way the product does: on the home
+// screen the composer sits mid-page with the suggested prompts under it, which
+// is where this beat runs.
+function ModelPicker({ scene }: { scene: Scene }) {
+  return (
+    <div className="sop-view absolute top-full right-0 z-[60] mt-2 w-[286px] overflow-hidden rounded-xl border border-[#E6E2DB] bg-white shadow-[0_22px_46px_-18px_rgba(40,30,15,0.5)]">
+      {MODELS.map((g) => {
+        const GIco = g.icon;
+        return (
+          <div key={g.group} className="border-b border-[#F1EEE9] px-2.5 py-2 last:border-b-0">
+            <p className="mb-1 flex items-center gap-1.5 px-1 text-[8px] font-bold uppercase tracking-[0.12em] text-brand-gray">
+              <GIco className="h-2.5 w-2.5" />
+              {g.group}
+            </p>
+            {g.items.map((m) => {
+              const on = scene.model === m.key;
+              const hot = scene.hot === `m-${m.key}`;
+              return (
+                <div
+                  key={m.key}
+                  data-t={`m-${m.key}`}
+                  className={`flex items-start gap-1.5 rounded-lg px-1.5 py-1 transition-all duration-200 ${
+                    hot ? "bg-[#FFF6EC] shadow-[0_0_0_2px_rgba(234,123,27,0.26)]" : ""
+                  }`}
+                >
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[10px] font-bold leading-tight">{m.label}</span>
+                    <span className="mt-px block text-[8.5px] leading-snug text-brand-gray">{m.sub}</span>
+                  </span>
+                  {on && <Tick className="mt-px h-2.5 w-2.5 flex-none text-brand-ink" />}
+                </div>
+              );
+            })}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------- saved memory
+// Why it does not need telling twice. Three tiers, all with their real caps, and
+// the privacy line, which is the objection everybody raises about AI memory in a
+// work tool.
+function MemoryModal({ scene }: { scene: Scene }) {
+  const writing = scene.memCaret || scene.memDraft.length > 0;
+  return (
+    <div className="absolute inset-0 z-[70] grid place-items-center bg-[rgba(24,19,12,0.42)] px-6">
+      <div className="sop-view w-[524px] rounded-2xl bg-white px-5 py-3.5 shadow-[0_24px_60px_-18px_rgba(20,14,6,0.5)]">
+        <div className="flex items-start gap-2.5">
+          <span className="grid h-[28px] w-[28px] flex-none place-items-center rounded-xl bg-[#FFF1E2]">
+            <Brain className="h-4 w-4" style={{ color: "#C9650F" }} />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-[14px] font-extrabold leading-tight tracking-tight">
+              Saved Memory for Multi AI
+            </span>
+            <span className="block text-[9px] text-brand-gray">(Saved only for your chats)</span>
+          </span>
+        </div>
+        <p className="mt-1.5 text-[9.5px] leading-snug text-brand-charcoal">
+          Durable facts Multi uses in every conversation.{" "}
+          <b className="font-semibold">Private to you, never shared with teammates.</b>
+        </p>
+
+        {/* tier one: the standing instructions every answer obeys */}
+        <div className="mt-2 rounded-xl border border-[#EBE7E0] p-2.5">
+          <p className="text-[10.5px] font-bold">Primary instructions</p>
+          <p className="text-[8.5px] text-brand-gray">
+            Primary instructions your AI Agent will utilize for chat.
+          </p>
+          <div
+            data-t="primary"
+            className={`mt-1.5 min-h-[32px] rounded-lg border px-2 py-1.5 text-[9.5px] leading-snug transition-all duration-200 ${
+              scene.primaryCaret
+                ? "border-brand-orange/60 bg-white shadow-[0_0_0_3px_rgba(234,123,27,0.14)]"
+                : "border-[#E6E2DB] bg-[#FBFAF8]"
+            }`}
+          >
+            {scene.primary ? (
+              <span className="text-brand-ink">
+                {scene.primary}
+                {scene.primaryCaret && <span className="tour-caret" />}
+              </span>
+            ) : (
+              <span className="text-brand-gray">
+                {scene.primaryCaret ? (
+                  <span className="tour-caret" />
+                ) : (
+                  "e.g. Always answer concisely. Show concrete numbers. Use plain English, not jargon."
+                )}
+              </span>
+            )}
+          </div>
+          <div className="mt-1.5 flex items-center justify-between">
+            <span
+              data-t="save-primary"
+              className={`flex items-center gap-1.5 rounded-lg px-2 py-1 text-[9px] font-semibold text-white transition-all duration-200 ${
+                scene.hot === "save-primary" ? "shadow-[0_0_0_3px_rgba(234,123,27,0.4)]" : ""
+              }`}
+              style={{
+                background: scene.primarySaved ? "#2BA463" : scene.primary ? "#16233D" : "#B7B2AA",
+              }}
+            >
+              {scene.primarySaved && <Tick className="h-2.5 w-2.5" />}
+              {scene.primarySaved ? "Saved" : "Save primary instructions"}
+            </span>
+            <span className="text-[8.5px] tabular-nums text-brand-gray">
+              {scene.primary.length}/5000
+            </span>
+          </div>
+        </div>
+
+        {/* the product being opinionated about what belongs here */}
+        <div className="mt-1.5 rounded-xl bg-[#F7F5F1] p-2">
+          <p className="flex items-center gap-1.5 text-[9.5px] font-bold">
+            <Spark className="h-2.5 w-2.5" style={{ color: "#C9650F" }} />
+            What works well as a memory
+          </p>
+          <p className="mt-0.5 text-[8.5px] leading-snug text-brand-gray">
+            Durable facts and working preferences the coach should know without being reminded. Not
+            one-off facts about a project, and nothing that will change soon.
+          </p>
+        </div>
+
+        {/* tier two: the shared list */}
+        <div className="mt-1.5 flex items-center gap-2">
+          <span className="min-w-0 flex-1">
+            <span className="block text-[10.5px] font-bold leading-tight">Shared with every coach</span>
+            <span className="block text-[8.5px] tabular-nums text-brand-gray">
+              {scene.mems.length} of 25 memories
+            </span>
+          </span>
+          <span
+            data-t="add-memory"
+            className={`flex flex-none items-center gap-1.5 rounded-lg bg-[#16233D] px-2.5 py-1.5 text-[10px] font-semibold text-white transition-shadow duration-200 ${
+              scene.hot === "add-memory" ? "shadow-[0_0_0_3px_rgba(234,123,27,0.4)]" : ""
+            }`}
+          >
+            <Plus className="h-2.5 w-2.5" />
+            Add memory
+          </span>
+        </div>
+
+        <div className="mt-1.5 space-y-1">
+          {scene.mems.map((m) => (
+            <div
+              key={m}
+              className="sop-pop flex items-center gap-2 rounded-lg border border-[#E6E2DB] bg-white px-2 py-1"
+            >
+              <Brain className="h-2.5 w-2.5 flex-none" style={{ color: "#C9650F" }} />
+              <span className="min-w-0 flex-1 truncate text-[9.5px] text-brand-ink">{m}</span>
+              <Tick className="h-2.5 w-2.5 flex-none" style={{ color: "#2BA463" }} />
+            </div>
+          ))}
+
+          {writing && (
+            <div className="flex items-center gap-2 rounded-lg border border-brand-orange/60 bg-white px-2 py-1 shadow-[0_0_0_3px_rgba(234,123,27,0.14)]">
+              <Brain className="h-2.5 w-2.5 flex-none" style={{ color: "#C9650F" }} />
+              <span className="min-w-0 flex-1 text-[9.5px] text-brand-ink">
+                {scene.memDraft}
+                {scene.memCaret && <span className="tour-caret" />}
+              </span>
+              <span
+                data-t="save-memory"
+                className={`flex-none rounded-md px-2 py-[2px] text-[8.5px] font-semibold text-white transition-shadow duration-200 ${
+                  scene.hot === "save-memory" ? "shadow-[0_0_0_3px_rgba(234,123,27,0.4)]" : ""
+                }`}
+                style={{ background: scene.memDraft ? "#16233D" : "#B7B2AA" }}
+              >
+                Save
+              </span>
+            </div>
+          )}
+
+          {!writing && scene.mems.length === 0 && (
+            <div className="grid place-items-center rounded-lg border border-dashed border-[#DED9D0] py-1.5 text-[9px] text-brand-gray">
+              No shared memories yet.
+            </div>
+          )}
+        </div>
+
+        <p className="mt-1.5 text-[8.5px] leading-snug text-brand-gray">
+          <b className="font-semibold text-brand-charcoal">Memory for each coach</b>, 0 of 8 each.
+          Kept short on purpose so each coach stays fast.
+        </p>
+      </div>
     </div>
   );
 }

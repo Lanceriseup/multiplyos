@@ -4,11 +4,11 @@ import AgreementsPage from "@/components/AgreementsPage";
 export const metadata: Metadata = {
   title: "Agreements \u00b7 Multiply OS",
   description:
-    "An agreement is a form with a signature on it. Send a contract built from real fields, get a legally-binding signature, and have the signed result open the task, create the contact, and fill the spreadsheet by itself.",
+    "Build a custom agreement or contract, send it for signature, and store the signed copy, all without leaving Multiply OS. Every executed document tracked in one place.",
   openGraph: {
     title: "Agreements \u00b7 Multiply OS",
     description:
-      "Signed, tracked, and already working. Legally-binding e-signature on documents you build yourself, with every executed copy in one place.",
+      "Signed, tracked and securely stored. Build a custom agreement, send it for signature, and keep every executed copy in one place.",
     url: "https://www.multiplyos.com/features/agreements",
     siteName: "Multiply OS",
     type: "website",
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Agreements \u00b7 Multiply OS",
     description:
-      "Signed, tracked, and already working. Legally-binding e-signature, and the signed result starts the work.",
+      "Signed, tracked and securely stored. Build it, send it for signature, and keep the signed copy in one place.",
     images: ["/og-image.png"],
   },
 };
