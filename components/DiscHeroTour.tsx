@@ -14,6 +14,12 @@
 //                              and Org Chart racks into focus beside Team
 //   6. Show DISC               the chart arrives plain, then every seat gets
 //                              its badge on one click
+//   7. the second zoom out     the plate pulls back again and Hiring racks into
+//                              focus beside Org Chart
+//   8. an applicant's record   open one candidate who is mid-interview
+//   9. Send DISC assessment    the record scrolls down to the DISC card, and the
+//                              same invite goes to somebody who does not work
+//                              here yet, out of the same credit pool
 //
 // The profile beat holds longest. It is the client's actual ask and the only
 // frame that shows what you get for the credit.
@@ -35,6 +41,24 @@
 // whole company's behaviour, including which seats have no reading at all. Sam
 // Okafor and Theo Barnes carry the grey dash, exactly as they do on the Org
 // Chart page, so the coverage gap arrives by itself here too.
+//
+// Beats 7 to 9 were added on the client's follow-up brief: show that the same
+// assessment can be sent from Hiring. The route there reuses beat 5's gesture
+// rather than inventing a second one, so the whole tour has exactly one way of
+// changing area: pull back, reveal the rail, rack the destination into focus,
+// click it. A viewer learns that grammar once and then reads it the second time
+// without having to work anything out.
+//
+// The last beat is a scroll rather than a click, and that is the point of it.
+// The DISC card sits below the fold of a candidate's record, so getting to it is
+// a scroll of the record you are already in, not a trip somewhere else in the
+// product. Scrolling to it says that. Opening a view with the card already on
+// screen would not.
+//
+// The credit counter carries across the whole tour. Beat 2 spends one on Sam
+// Okafor, so the hiring card reads 9 available, and sending there takes it to 8.
+// One company pool, employees and candidates alike, which is the single thing
+// neither half of the tour can say on its own.
 //
 // No ActZero opening: the client is explicit that DISC replaces nothing, so
 // there is nothing to cross out. Same as the CFO Analytics tour.
@@ -80,6 +104,13 @@ const RACK = `filter 620ms ${EASE}, opacity 620ms ${EASE}`;
 const PLUM = "#8A3F6D"; // the feature's own tile colour, from the navbar
 const GREEN = "#2BA463";
 const AMBER = "#C9832B";
+const INK = "#1E2A44"; // the hiring area's own dark, from the product's buttons
+
+// How far the candidate's record travels in beat 9. Enough to lift the DISC card
+// from below the fold into the middle of the panel and no further, and the
+// header stays put, so it reads as movement inside a record rather than as yet
+// another view arriving.
+const APPL_SCROLL = 252;
 
 // The four dimensions, with the product's own descriptors and the same colours
 // the Org Chart legend uses.
@@ -202,6 +233,50 @@ const Search = ({ className, style }: IconProps) => (
   </svg>
 );
 
+const Star = ({ className, style, on }: IconProps & { on?: boolean }) => (
+  <svg
+    className={className}
+    style={style}
+    viewBox="0 0 24 24"
+    fill={on ? "currentColor" : "none"}
+    stroke="currentColor"
+    strokeWidth={1.8}
+    strokeLinejoin="round"
+  >
+    <path d="M12 3.6l2.6 5.5 5.8.8-4.2 4.2 1 6-5.2-2.9-5.2 2.9 1-6L3.6 9.9l5.8-.8z" />
+  </svg>
+);
+const Hire = ({ className, style }: IconProps) => (
+  <svg className={className} style={style} {...ico}>
+    <circle cx="9.6" cy="8" r="3.4" />
+    <path d="M3.4 19.4c0-3 2.8-5 6.2-5 1.3 0 2.5.3 3.5.8" />
+    <path d="M17.4 13.6v5.8M14.5 16.5h5.8" />
+  </svg>
+);
+const Mail = ({ className, style }: IconProps) => (
+  <svg className={className} style={style} {...ico}>
+    <rect x="3.4" y="5.4" width="17.2" height="13.2" rx="2" />
+    <path d="M3.8 6.6L12 12.6l8.2-6" />
+  </svg>
+);
+const Phone = ({ className, style }: IconProps) => (
+  <svg className={className} style={style} {...ico}>
+    <path d="M7.6 3.8l2.2 3.4-1.9 1.9a12 12 0 0 0 5 5l1.9-1.9 3.4 2.2v3a1.6 1.6 0 0 1-1.8 1.6C10.4 18.4 5.6 13.6 4.8 5.6A1.6 1.6 0 0 1 6.4 3.8z" />
+  </svg>
+);
+const Pin = ({ className, style }: IconProps) => (
+  <svg className={className} style={style} {...ico}>
+    <path d="M12 21c4-4.4 6-7.6 6-10.2A6 6 0 0 0 6 10.8C6 13.4 8 16.6 12 21z" />
+    <circle cx="12" cy="10.6" r="2.2" />
+  </svg>
+);
+const Tag = ({ className, style }: IconProps) => (
+  <svg className={className} style={style} {...ico}>
+    <path d="M3.8 11.4V4.6h6.8l9 9-6.8 6.8z" />
+    <circle cx="7.6" cy="8.4" r="1.3" />
+  </svg>
+);
+
 // ---------------------------------------------------------------- data
 // The profiles match the badges the Org Chart page already publishes, and in
 // every row the two highest scores are the two badge letters, in order. Notes 6.
@@ -246,6 +321,7 @@ const NAV = [
   { label: "Projects", icon: Board },
   { label: "Team", icon: People, key: "team" },
   { label: "Org Chart", icon: Tree, key: "org" },
+  { label: "Hiring", icon: Hire, key: "hiring" },
 ];
 
 // The same reporting lines the Org Chart page publishes, by name so the two
@@ -281,11 +357,63 @@ const primary = (p: Person) => {
   return b ? DIM_C[b[0]] : "#A6A6A6";
 };
 
+// ---------------------------------------------------------------- hiring data
+// Beats 7-9. The applicants are invented, for exactly the reason the roster is:
+// a live pipeline is somebody's job search, and a candidate's name, inbox and
+// phone number are not ours to publish. The positions and their counts are the
+// client's real board, which is a fact about the company rather than about a
+// person, so those carry over as they are. Notes 6.
+type Applicant = {
+  name: string;
+  init: string;
+  role: string;
+  mail: string;
+  stars: number;
+  step: number;
+  age: string;
+};
+
+const APPLICANTS: Applicant[] = [
+  { name: "Ava Restrepo", init: "AR", role: "Senior Developer & Technical Project Manager", mail: "ava.restrepo@example.com", stars: 3, step: 1, age: "3d" },
+  { name: "Nils Eriksen", init: "NE", role: "Inventory Manager", mail: "n.eriksen@example.com", stars: 3, step: 1, age: "17d" },
+  { name: "Simone Haywood", init: "SH", role: "Inventory Manager", mail: "simone.haywood@example.com", stars: 3, step: 1, age: "17d" },
+  { name: "Sebastian Cortez", init: "SC", role: "Inventory Manager", mail: "s.cortez@example.com", stars: 3, step: 1, age: "17d" },
+  { name: "Renzo Peralta", init: "RP", role: "Senior Developer & Technical Project Manager", mail: "renzo.peralta@example.com", stars: 3, step: 2, age: "18d" },
+  { name: "Delphine Adeyemi", init: "DA", role: "Financial Controller", mail: "d.adeyemi@example.com", stars: 4, step: 2, age: "21d" },
+  { name: "Tomas Bergstrom", init: "TB", role: "Sales Setter / Business Development Manager", mail: "tomas.b@example.com", stars: 2, step: 1, age: "24d" },
+];
+
+// The candidate whose record the tour opens.
+const CANDIDATE = APPLICANTS[0];
+
+const POSITIONS = [
+  { title: "Bookkeeper VA", n: 0, age: "5d" },
+  { title: "Sales Setter / Business Development Manager", n: 1, age: "24d" },
+  { title: "Financial Controller", n: 2, age: "26d" },
+  { title: "Inventory Manager", n: 6, age: "40d" },
+  { title: "Senior Developer & Technical Project Manager", n: 39, age: "76d" },
+];
+
+const STEPS = ["1. Plan", "2. Source", "3. Applicants", "4. Interview", "5. Offer", "6. Onboarding"];
+
+// The funnel in the product's own words. Stage 4 names DISC in its own
+// description, which is the whole reason this beat belongs in this tour: the
+// assessment is a step of the hiring process, not a side errand.
+const FUNNEL = [
+  { n: 1, l: "Plan", d: "Shape the position: title, responsibilities, competencies, comp, and 90-day scorecard." },
+  { n: 2, l: "Source", d: "Post the job, blast referrals, and pull candidates into the pipeline." },
+  { n: 3, l: "Applicants", d: "Triage applicants \u2014 resume read, gut check, decide who advances to interviews." },
+  { n: 4, l: "Interview", d: "Phone screen \u2192 DISC \u2192 1st / 2nd / final interviews. Capture answers and gut signals." },
+  { n: 5, l: "Reference Check", d: "Talk to former managers and peers. Validate or surface concerns before offer." },
+  { n: 6, l: "Offer Letter", d: "Draft terms, send for digital signature, track until accepted or declined." },
+  { n: 7, l: "Onboarding", d: "Add to Multiply OS, assign SOPs, build their onboarding tasks project." },
+];
+
 // ---------------------------------------------------------------- scene
 type Scene = {
   // The whole card faded out, so the loop restarts on a fade rather than a cut.
   dim: boolean;
-  view: "disc" | "team" | "org";
+  view: "disc" | "team" | "org" | "hiring" | "applicant";
   sent: boolean;
   modal: boolean;
   bars: boolean;
@@ -296,14 +424,20 @@ type Scene = {
   racked: boolean;
   // DISC is switched on inside the chart, not carried in with it
   discOn: boolean;
+  // which pair the rail racks into focus: beat 5's, or beat 7's
+  rack: "team" | "hiring";
+  // beat 9: the candidate's record has travelled down to the DISC card
+  scrolled: boolean;
+  // and the assessment has gone out to them
+  discReq: boolean;
 };
 
-const BLANK: Scene = { view: "disc", sent: false, modal: false, bars: false, hot: "", dim: false, zoomed: false, racked: false, discOn: false };
+const BLANK: Scene = { view: "disc", sent: false, modal: false, bars: false, hot: "", dim: false, zoomed: false, racked: false, discOn: false, rack: "team", scrolled: false, discReq: false };
 
 // Under prefers-reduced-motion: the org chart with every badge on it. The
 // profile was the still frame before beat 5 existed, but the chart carries the
 // same claim and shows nine readings instead of one.
-const STILL: Scene = { view: "org", sent: true, modal: false, bars: true, hot: "", dim: false, zoomed: false, racked: false, discOn: true };
+const STILL: Scene = { view: "org", sent: true, modal: false, bars: true, hot: "", dim: false, zoomed: false, racked: false, discOn: true, rack: "team", scrolled: false, discReq: false };
 
 // ---------------------------------------------------------------- component
 export default function DiscHeroTour() {
@@ -517,7 +651,37 @@ export default function DiscHeroTour() {
         await wait(1300);
         if (!(await tap("show-disc", 660))) return;
         patch({ discOn: true });
-        await wait(3600);
+        await wait(3400);
+
+        // --- 7. the same gesture a second time, now to Hiring. Beat 5 already
+        //        taught the viewer what a pull-back means, so this one needs
+        //        less time on screen than the first did.
+        patch({ zoomed: true, rack: "hiring" });
+        await wait(540);
+        patch({ racked: true });
+        await wait(700);
+        if (!alive()) return;
+
+        if (!(await tap("nav-hiring", 700))) return;
+        patch({ view: "hiring", zoomed: false, racked: false });
+        await wait(880);
+
+        // --- 8. pick somebody who is mid-interview
+        await wait(1500);
+        if (!(await tap("appl-row", 700))) return;
+        patch({ view: "applicant" });
+        await wait(1600);
+
+        // --- 9. travel down the record to the DISC card, and send it. The
+        //        cursor waits the scroll out rather than racing it, so the move
+        //        reads as the page travelling rather than as the pointer
+        //        dragging the card up to meet itself.
+        patch({ scrolled: true });
+        await wait(1180);
+        if (!alive()) return;
+        if (!(await tap("send-disc-hire", 620))) return;
+        patch({ discReq: true });
+        await wait(3400);
 
         if (!alive()) return;
         // Fade the card out before the loop restarts, rather than cutting.
@@ -533,6 +697,10 @@ export default function DiscHeroTour() {
       rippleRef.current?.getAnimations().forEach((a) => a.cancel());
     };
   }, [inView, reduce]);
+
+  // The Team / DISC tab strip belongs to those two views. Hiring is its own
+  // area of the product and does not sit underneath them.
+  const hasTabs = scene.view === "disc" || scene.view === "team";
 
   return (
     <div ref={hostRef} className="w-full">
@@ -556,7 +724,17 @@ export default function DiscHeroTour() {
                 trick: the one cursor target used while zoomed lives on the rail,
                 so its rect still measures true and nothing has to be corrected
                 for the scale. */}
-            <NavRail active="team" racked={scene.racked} />
+            <NavRail
+              active={
+                scene.view === "org"
+                  ? "org"
+                  : scene.view === "hiring" || scene.view === "applicant"
+                    ? "hiring"
+                    : "team"
+              }
+              racked={scene.racked}
+              rack={scene.rack}
+            />
 
             {/* The plate. Scaling the content rather than the card keeps the
                 card's own edge still, so it reads as stepping back inside the
@@ -573,14 +751,18 @@ export default function DiscHeroTour() {
                 borderRadius: scene.zoomed ? 14 : 0,
               }}
             >
-              <Tabs scene={scene} />
-              <div className="mt-3 min-h-0 flex-1 overflow-hidden">
+              {hasTabs && <Tabs scene={scene} />}
+              <div className={`${hasTabs ? "mt-3" : ""} min-h-0 flex-1 overflow-hidden`}>
                 {scene.view === "disc" ? (
                   <DiscView scene={scene} />
                 ) : scene.view === "team" ? (
                   <TeamView scene={scene} />
-                ) : (
+                ) : scene.view === "org" ? (
                   <OrgView scene={scene} />
+                ) : scene.view === "hiring" ? (
+                  <HiringView scene={scene} />
+                ) : (
+                  <ApplicantView scene={scene} />
                 )}
               </div>
             </div>
@@ -1186,6 +1368,407 @@ function OrgView({ scene }: { scene: Scene }) {
   );
 }
 
+// ---------------------------------------------------------------- hiring
+// Beat 7. The hiring dashboard: who is mid-interview on the left, what is open
+// on the right. It is on screen only long enough to establish where we are and
+// to give the cursor a row to pick, so it is built for legibility at a glance
+// rather than for completeness.
+function Stars({ n }: { n: number }) {
+  return (
+    <span className="flex flex-none items-center gap-px">
+      {[0, 1, 2, 3, 4].map((i) => (
+        <Star
+          key={i}
+          on={i < n}
+          className="h-[9px] w-[9px]"
+          style={{ color: i < n ? "#E9A21B" : "#D9D4CC" }}
+        />
+      ))}
+    </span>
+  );
+}
+
+function HiringView({ scene }: { scene: Scene }) {
+  return (
+    <div className="pt-view flex h-full flex-col">
+      <div className="flex flex-none items-start gap-3 pb-2.5">
+        <span className="min-w-0 flex-1">
+          <h3 className="text-[19px] font-extrabold tracking-tight">Multiply Hiring</h3>
+          <p className="mt-0.5 text-[10.5px] text-brand-charcoal">
+            Plan a position, source applicants, run interviews, and onboard the new hire.
+          </p>
+        </span>
+        <span className="flex flex-none items-center gap-1.5">
+          {["Interview Templates", "Settings"].map((l) => (
+            <span
+              key={l}
+              className="rounded-lg border border-[#E6E2DB] bg-white px-2 py-[5px] text-[9.5px] font-semibold text-brand-charcoal"
+            >
+              {l}
+            </span>
+          ))}
+          <span
+            className="flex items-center gap-1 rounded-lg px-2 py-[5px] text-[9.5px] font-bold text-white"
+            style={{ background: INK }}
+          >
+            <Hire className="h-[11px] w-[11px]" />
+            Start Hiring
+          </span>
+        </span>
+      </div>
+
+      <div className="flex min-h-0 flex-1 gap-3">
+        <div className="flex min-w-0 flex-1 flex-col rounded-xl border border-[#EBE7E0] bg-white p-2.5">
+          <div className="flex flex-none items-center gap-1.5">
+            <span className="rounded-full px-2 py-[3px] text-[9px] font-bold text-white" style={{ background: INK }}>
+              Currently Being Interviewed (15)
+            </span>
+            <span className="rounded-full bg-[#F1EEE9] px-2 py-[3px] text-[9px] font-semibold text-brand-charcoal">
+              Hired &amp; Onboarding (6)
+            </span>
+          </div>
+
+          <div className="mt-1 min-h-0 flex-1 overflow-hidden">
+            {APPLICANTS.map((a, i) => {
+              const target = i === 0;
+              return (
+                <div
+                  key={a.name}
+                  data-t={target ? "appl-row" : undefined}
+                  className={`flex items-center gap-2 border-b border-[#F5F2ED] px-1 py-[6px] transition-all duration-200 last:border-b-0 ${
+                    target && scene.hot === "appl-row"
+                      ? "rounded-lg bg-[#FFF6EC] shadow-[0_0_0_3px_rgba(234,123,27,0.4)]"
+                      : ""
+                  }`}
+                >
+                  <span className="grid h-[22px] w-[22px] flex-none place-items-center rounded-full bg-[#F1EEE9] text-[8px] font-bold text-brand-charcoal">
+                    {a.init}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="flex items-center gap-1.5">
+                      <span className="truncate text-[10.5px] font-bold leading-tight">{a.name}</span>
+                      <Stars n={a.stars} />
+                    </span>
+                    <span className="flex items-center gap-1 text-[8.5px] text-brand-gray">
+                      <Mail className="h-2.5 w-2.5 flex-none" />
+                      <span className="truncate">{a.mail}</span>
+                    </span>
+                    <span className="block truncate text-[8.5px] text-brand-charcoal">{a.role}</span>
+                  </span>
+                  <span className="flex flex-none items-center gap-1.5">
+                    <span className="rounded-md bg-[#F1EEE9] px-1.5 py-px text-[8.5px] font-bold text-brand-charcoal">
+                      #4 Interview
+                    </span>
+                    <span className="flex items-center gap-[3px]">
+                      {[0, 1, 2, 3, 4].map((d) => (
+                        <span
+                          key={d}
+                          className="h-[4px] w-[4px] rounded-full"
+                          style={{ background: d < a.step ? INK : "#DCD7CE" }}
+                        />
+                      ))}
+                    </span>
+                    <span className="flex items-center gap-0.5 text-[8.5px] text-brand-gray">
+                      <Clock className="h-2.5 w-2.5" />
+                      {a.age}
+                    </span>
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="flex w-[254px] flex-none flex-col rounded-xl border border-[#EBE7E0] bg-white p-2.5">
+          <div className="flex flex-none items-center gap-1.5">
+            <span className="rounded-full px-2 py-[3px] text-[9px] font-bold text-white" style={{ background: INK }}>
+              Open Positions
+            </span>
+            <span className="rounded-full bg-[#F1EEE9] px-2 py-[3px] text-[9px] font-semibold text-brand-charcoal">
+              Draft
+            </span>
+            <span className="rounded-full bg-[#F1EEE9] px-2 py-[3px] text-[9px] font-semibold text-brand-charcoal">
+              Closed
+            </span>
+          </div>
+          <div className="mt-1.5 min-h-0 flex-1 space-y-1.5">
+            {POSITIONS.map((p) => (
+              <div key={p.title} className="rounded-lg border border-[#EBE7E0] px-2 py-1.5">
+                <span className="flex items-start gap-1.5">
+                  <span className="min-w-0 flex-1 text-[9.5px] font-bold leading-tight">{p.title}</span>
+                  <span
+                    className="flex-none rounded-full px-1.5 py-px text-[7.5px] font-bold"
+                    style={{ background: `${GREEN}1A`, color: GREEN }}
+                  >
+                    OPEN
+                  </span>
+                </span>
+                <span className="mt-0.5 flex items-center gap-1 text-[8px] text-brand-gray">
+                  {p.n} applicant{p.n === 1 ? "" : "s"}
+                  <span className="text-[#C4BFB6]">&middot;</span>
+                  <Clock className="h-2 w-2" />
+                  {p.age}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------- the record
+// Beats 8 and 9. One candidate, and the scroll down their record to the DISC
+// card.
+//
+// The scroll is the beat. The card is deliberately BELOW the fold on arrival,
+// because the point being made is that DISC sits inside the hiring record you
+// were already working in, and you get to it by scrolling the record rather
+// than by leaving for another area of the product. A view that opened with the
+// card already showing would be making a weaker claim, and an easier one.
+//
+// The credit line reads 9, not 10, because beat 2 already spent one on Sam
+// Okafor and the pool is company-wide. Sending here takes it to 8. That is the
+// argument the two halves of the tour make together that neither makes alone:
+// one pool, whether the person works here yet or not.
+function Card({ title, children }: { title?: string; children: React.ReactNode }) {
+  return (
+    <div className="rounded-xl border border-[#EBE7E0] bg-white p-2.5">
+      {title && (
+        <p className="mb-1 text-[8px] font-bold uppercase tracking-[0.12em] text-brand-gray">{title}</p>
+      )}
+      {children}
+    </div>
+  );
+}
+
+function ApplicantView({ scene }: { scene: Scene }) {
+  const a = CANDIDATE;
+  const avail = scene.discReq ? 8 : 9;
+
+  return (
+    <div className="pt-view flex h-full flex-col">
+      <div className="flex flex-none items-center gap-3 rounded-xl border border-[#EBE7E0] bg-white px-2.5 py-2">
+        <span className="min-w-0 flex-1">
+          <span className="block text-[7.5px] font-bold uppercase tracking-[0.12em] text-brand-gray">
+            Multiply Hiring
+          </span>
+          <span className="block truncate text-[11px] font-extrabold leading-tight">{a.role}</span>
+        </span>
+        <span className="flex flex-none items-center gap-1">
+          {STEPS.map((l, i) => {
+            const done = i < 3;
+            const cur = i === 3;
+            return (
+              <span
+                key={l}
+                className="flex items-center gap-0.5 rounded-md px-1.5 py-[3px] text-[8.5px] font-bold"
+                style={
+                  cur
+                    ? { background: INK, color: "#fff" }
+                    : done
+                      ? { background: `${GREEN}14`, color: GREEN }
+                      : { background: "#F4F1EC", color: "#A6A19A" }
+                }
+              >
+                {done && <Tick className="h-2 w-2" />}
+                {l}
+              </span>
+            );
+          })}
+        </span>
+      </div>
+
+      {/* The scroll body. Only the detail rail travels. In the product the whole
+          record scrolls, but at 500px of hero that drags the funnel panel off
+          with it and leaves half the frame empty for the beat that matters most.
+          Moving the one column the card is in says the same thing and says it
+          more clearly: the eye has exactly one thing to follow, and it follows
+          it straight to the button. */}
+      <div className="mt-2 min-h-0 flex-1 overflow-hidden">
+        <div className="flex gap-3">
+          <div
+            className="w-[258px] flex-none space-y-2"
+            style={{
+              transform: `translateY(${scene.scrolled ? -APPL_SCROLL : 0}px)`,
+              transition: `transform 900ms ${EASE}`,
+            }}
+          >
+            <Card title="Collaborators">
+              <p className="text-[9px] italic text-brand-gray">No collaborators yet.</p>
+            </Card>
+
+            <Card title="Status">
+              <span className="flex items-center justify-between rounded-lg border border-[#E6E2DB] px-2 py-1 text-[9.5px] text-brand-charcoal">
+                &mdash; No status set &mdash;
+                <Down className="h-2.5 w-2.5" />
+              </span>
+              <span className="mt-1 flex items-center gap-1.5 rounded-lg bg-[#F6F4F0] px-2 py-1 text-[9px]">
+                <span className="font-bold uppercase tracking-[0.1em] text-brand-gray">Stage</span>
+                <span className="font-semibold text-brand-ink">Interviewing &middot; Video Interview</span>
+              </span>
+            </Card>
+
+            <Card>
+              <span className="flex items-center gap-2">
+                <span className="grid h-[26px] w-[26px] flex-none place-items-center rounded-full bg-[#F1EEE9] text-[9px] font-bold text-brand-charcoal">
+                  {a.init}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[7.5px] font-bold uppercase tracking-[0.1em] text-brand-gray">
+                    {a.role}
+                  </span>
+                  <span className="block truncate text-[11px] font-extrabold leading-tight">{a.name}</span>
+                </span>
+              </span>
+              <span className="mt-1.5 flex items-center gap-2 rounded-lg border border-dashed border-[#E6E2DB] px-2 py-1">
+                <span className="text-[8px] font-bold uppercase tracking-[0.1em] text-brand-gray">Rating</span>
+                <span className="ml-auto">
+                  <Stars n={a.stars} />
+                </span>
+              </span>
+              <div className="mt-1.5 space-y-[3px] text-[9px] text-brand-charcoal">
+                <p className="flex items-center gap-1.5">
+                  <Mail className="h-2.5 w-2.5 flex-none text-brand-gray" />
+                  <span className="truncate">{a.mail}</span>
+                </p>
+                <p className="flex items-center gap-1.5">
+                  <Phone className="h-2.5 w-2.5 flex-none text-brand-gray" />
+                  <span className="text-brand-gray">Add phone</span>
+                </p>
+                <p className="flex items-center gap-1.5">
+                  <Pin className="h-2.5 w-2.5 flex-none text-brand-gray" />
+                  <span className="text-brand-gray">Add location</span>
+                </p>
+                <p className="flex items-center gap-1.5">
+                  <Doc className="h-2.5 w-2.5 flex-none text-brand-gray" />
+                  View resume
+                </p>
+                <p className="flex items-center gap-1.5">
+                  <Tag className="h-2.5 w-2.5 flex-none text-brand-gray" />
+                  manual
+                </p>
+              </div>
+            </Card>
+
+            <Card title="Custom fields">
+              <span className="block rounded-md border border-[#E6E2DB] px-2 py-1 text-[9px] font-semibold text-brand-charcoal">
+                Loom Video
+              </span>
+              <span className="mt-1 block truncate rounded-md border border-[#E6E2DB] px-2 py-1 text-[8.5px] text-brand-gray">
+                loom.com/share/ridgeline-intro
+              </span>
+              <span className="mt-1 flex items-center gap-1 text-[8.5px] font-semibold text-brand-charcoal">
+                <Ext className="h-2.5 w-2.5" />
+                Loom Video
+              </span>
+            </Card>
+
+            {/* Beat 9's target. */}
+            <div
+              className="rounded-xl border p-2.5 transition-colors duration-300"
+              style={
+                scene.discReq
+                  ? { borderColor: `${AMBER}55`, background: `${AMBER}0D` }
+                  : { borderColor: "#EBE7E0", background: "#fff" }
+              }
+            >
+              <p className="mb-1 flex items-center gap-1.5 text-[8px] font-bold uppercase tracking-[0.12em] text-brand-gray">
+                <DiscIcon className="h-2.5 w-2.5" />
+                DISC
+              </p>
+              <span
+                data-t="send-disc-hire"
+                className={`flex items-center gap-1.5 rounded-md px-2 py-[5px] text-[10px] font-bold transition-all duration-200 ${
+                  scene.hot === "send-disc-hire" ? "shadow-[0_0_0_3px_rgba(234,123,27,0.4)]" : ""
+                }`}
+                style={
+                  scene.discReq
+                    ? { background: "#F4F1EC", color: "#8A857D" }
+                    : { background: PLUM, color: "#fff" }
+                }
+              >
+                {scene.discReq ? <Clock className="h-3 w-3" /> : <SendIcon className="h-3 w-3" />}
+                {scene.discReq ? "DISC assessment pending" : "Send DISC assessment"}
+              </span>
+              <p className="mt-1.5 text-[8.5px] leading-snug text-brand-charcoal">
+                <b className="font-bold tabular-nums">{avail}</b> credits available. Sending holds 1
+                while the request is pending.
+              </p>
+              {scene.discReq && (
+                <p
+                  className="sop-pop mt-1 flex items-center gap-1 text-[8.5px] font-semibold"
+                  style={{ color: AMBER }}
+                >
+                  <Tick className="h-2.5 w-2.5 flex-none" />
+                  Invite sent to {a.name.split(" ")[0]} &middot; link open 30 days
+                </p>
+              )}
+            </div>
+
+            <Card title="Strengths &amp; concerns">
+              <p className="text-[8px] font-bold uppercase tracking-[0.1em] text-brand-gray">Strengths</p>
+              <span className="mt-0.5 block rounded-md border border-[#E6E2DB] px-2 py-1.5 text-[9px] text-brand-gray">
+                What stood out as a clear fit?
+              </span>
+              <p className="mt-1.5 text-[8px] font-bold uppercase tracking-[0.1em] text-brand-gray">Concerns</p>
+              <span className="mt-0.5 block rounded-md border border-[#E6E2DB] px-2 py-1.5 text-[9px] text-brand-gray">
+                What are the risks or open questions?
+              </span>
+            </Card>
+          </div>
+
+          <div className="min-w-0 flex-1 rounded-xl border border-[#EBE7E0] bg-white p-2.5">
+            <p className="text-[11.5px] font-extrabold tracking-tight">Where this applicant is headed</p>
+            <p className="mt-0.5 text-[8.5px] text-brand-charcoal">
+              Each stage of the Multiply Hiring funnel and what it&rsquo;s for. The highlighted row is
+              where this applicant sits today.
+            </p>
+            <div className="mt-1.5 space-y-1">
+              {FUNNEL.map((f) => {
+                const done = f.n < 4;
+                const cur = f.n === 4;
+                return (
+                  <div
+                    key={f.n}
+                    className="flex items-start gap-1.5 rounded-lg border px-2 py-1.5"
+                    style={cur ? { borderColor: INK, background: "#F7F8FA" } : { borderColor: "#EFECE6" }}
+                  >
+                    <span
+                      className="grid h-[14px] w-[14px] flex-none place-items-center rounded-full text-[7.5px] font-bold"
+                      style={
+                        done
+                          ? { background: `${GREEN}1A`, color: GREEN }
+                          : cur
+                            ? { background: INK, color: "#fff" }
+                            : { background: "#F1EEE9", color: "#A6A19A" }
+                      }
+                    >
+                      {done ? <Tick className="h-2 w-2" /> : f.n}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="flex items-center gap-1.5">
+                        <span className="text-[9.5px] font-bold leading-tight">{f.l}</span>
+                        {cur && (
+                          <span className="rounded-full bg-[#F1EEE9] px-1.5 py-px text-[7px] font-bold uppercase tracking-[0.08em] text-brand-charcoal">
+                            Current
+                          </span>
+                        )}
+                      </span>
+                      <span className="block text-[8px] leading-snug text-brand-gray">{f.d}</span>
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ---------------------------------------------------------------- the nav rail
 // Revealed by the pull-back in beat 5, and lifted from TeamMeetingsHeroTour so
 // the two tours share one gesture rather than each inventing their own.
@@ -1198,7 +1781,20 @@ function OrgView({ scene }: { scene: Scene }) {
 // The blur is per row and never on the rail, because a filter on a parent
 // rasterises its children with it and a child cannot un-blur itself back out of
 // an ancestor's filter.
-function NavRail({ active, racked }: { active: string; racked: boolean }) {
+function NavRail({
+  active,
+  racked,
+  rack,
+}: {
+  active: string;
+  racked: boolean;
+  rack: "team" | "hiring";
+}) {
+  // Beat 5 sharpens Team and Org Chart, beat 7 sharpens Org Chart and Hiring.
+  // Either way it is a PAIR, because the claim being made is always "this area,
+  // and the one next to it", never "go here".
+  const focusKeys = rack === "team" ? ["team", "org"] : ["org", "hiring"];
+  const target = rack === "team" ? "org" : "hiring";
   return (
     <div
       className="absolute inset-y-0 left-0 z-0 flex flex-col border-r border-[#E7E4DE] bg-white"
@@ -1214,12 +1810,12 @@ function NavRail({ active, racked }: { active: string; racked: boolean }) {
       <div className="px-2 pb-2">
         {NAV.map((n) => {
           const on = n.key === active;
-          const focus = n.key === "team" || n.key === "org";
+          const focus = !!n.key && focusKeys.includes(n.key);
           const Icon = n.icon;
           return (
             <div
               key={n.label}
-              data-t={n.key === "org" ? "nav-org" : undefined}
+              data-t={n.key === "org" ? "nav-org" : n.key === "hiring" ? "nav-hiring" : undefined}
               className="mb-0.5 flex items-center gap-2 rounded-[9px] px-2 py-[7px]"
               style={{
                 background: on ? "#F6EDF3" : "transparent",
@@ -1230,7 +1826,7 @@ function NavRail({ active, racked }: { active: string; racked: boolean }) {
             >
               <Icon className="h-[13px] w-[13px] flex-none" />
               <span className="whitespace-nowrap text-[11px] font-semibold">{n.label}</span>
-              {n.key === "org" && (
+              {n.key === target && (
                 <span
                   className="ml-auto h-[6px] w-[6px] flex-none rounded-full transition-opacity duration-500"
                   style={{ background: "#E2703A", opacity: racked ? 1 : 0 }}
