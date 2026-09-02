@@ -8,7 +8,7 @@ import AppMockup from "./AppMockup";
 
 export default function OsOverview() {
   return (
-    <section className="relative hidden overflow-hidden px-5 pb-24 pt-2 sm:px-8 md:block">
+    <section className="relative hidden overflow-hidden px-5 pb-24 pt-0 sm:px-8 md:block">
       {/* soft dotted backdrop */}
       <div
         className="pointer-events-none absolute inset-0 opacity-70"
