@@ -29,9 +29,15 @@
 // step at the top of the wash.
 //
 // The height is set so the fade finishes before the table does. From the top of
-// the section to the top of the table is about 203px on a phone and 274px on a
-// desktop, so at 160px and 220px the cream is solid by the time the table
-// lands on it, and the table never sits half on a gradient.
+// the section to the top of the table is about 187px on a phone and 238px on a
+// desktop, so at 148px and 190px the cream is solid by the time the table lands
+// on it, and the table never sits half on a gradient.
+//
+// Those four numbers move together. The section's top padding came down in
+// September 2026 to close the gap under the hero, which shortened the run-up to
+// the table, and the wash came down with it to hold the same proportion. Change
+// the top padding again and the wash has to follow, or the eyebrow and heading
+// end up sitting on a ground that is still fading.
 //
 // The heading is an h2. Hero owns the h1 on this page, which is the difference
 // between this and the pricing page, where the same block leads and carries the
@@ -51,14 +57,14 @@ export default function StackStrip() {
   return (
     <section
       id="replaces"
-      className="relative scroll-mt-24 px-5 py-12 sm:px-8 sm:py-[76px]"
+      className="relative scroll-mt-24 px-5 pb-12 pt-8 sm:px-8 sm:pb-[76px] sm:pt-10"
       style={{ backgroundColor: "#F6F3EE" }}
     >
       {/* A texture, not a layer with anything in it, so it is aria-hidden and
           the container below picks up relative to sit over it. */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 top-0 h-[160px] sm:h-[220px]"
+        className="pointer-events-none absolute inset-x-0 top-0 h-[148px] sm:h-[190px]"
         style={{ background: "linear-gradient(#FFFFFF, #F6F3EE)" }}
       />
 

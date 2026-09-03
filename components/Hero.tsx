@@ -15,7 +15,7 @@ export default function Hero() {
     <section className="relative overflow-x-clip">
       <div className="bg-dotted pointer-events-none absolute inset-0 opacity-60" />
 
-      <div className="relative z-10 mx-auto max-w-container px-5 pb-20 pt-10 text-center sm:px-8 sm:pt-14 md:pb-4">
+      <div className="relative z-10 mx-auto max-w-container px-5 pb-12 pt-10 text-center sm:px-8 sm:pt-14 md:pb-4">
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
