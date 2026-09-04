@@ -1,0 +1,36 @@
+name: Vercel Production
+
+# Triggers a production deployment for every push to main. Promotes the
+# build to the production URL of the linked Vercel project. The actual
+# build/deploy logic lives in the reusable workflow
+# `_vercel-build-deploy.yml` so the preview caller can share it; keeping
+# the trigger and the work in separate files is what stops PRs from
+# showing a "Production deployment (skipped)" check.
+#
+# Mirrors vercel-preview.yml in this repo: same reusable workflow, same
+# secrets, same project resolution. Only the trigger and the environment
+# differ.
+
+on:
+  push:
+    branches: [main]
+
+# Serialize production deploys on main so a faster commit can't race ahead
+# of an older one and ship stale code.
+concurrency:
+  group: vercel-production-${{ github.ref }}
+  cancel-in-progress: false
+
+# Production only needs to checkout the repo - no PR comments here.
+permissions:
+  contents: read
+
+jobs:
+  production:
+    uses: ./.github/workflows/_vercel-build-deploy.yml
+    with:
+      environment: production
+    secrets:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}

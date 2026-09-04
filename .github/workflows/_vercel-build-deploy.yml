@@ -1,0 +1,238 @@
+name: Vercel build + deploy (reusable)
+
+# -----------------------------------------------------------------------------
+# Reusable Vercel build + deploy. Not triggered directly — called by
+# vercel-preview.yml (on PRs). Keeping the trigger and reusable job separate
+# keeps PR check lists clean and leaves room for a separately reviewed caller
+# if another deployment environment is added later.
+#
+# Required secrets (declared below and explicitly mapped by callers):
+#   - VERCEL_TOKEN      (org-level, shared across all repos)
+#   - VERCEL_ORG_ID     (org-level, shared across all repos)
+#   - VERCEL_PROJECT_ID (repo-level, OPTIONAL — only needed when the GitHub
+#                        repo name doesn't match the Vercel project name)
+#
+# Project resolution:
+#   1. If VERCEL_PROJECT_ID secret is set → use that (explicit override).
+#   2. Otherwise, if project_name input is set → use that explicit name.
+#   3. Otherwise → derive project name from the GitHub repo (lowercased) and
+#      have `vercel link` resolve the ID dynamically. For new repos, just
+#      name the Vercel project the same as the GitHub repo (lowercased) and
+#      no per-repo secret is needed.
+#
+# IMPORTANT - VITE_*/NEXT_PUBLIC_* env vars MUST NOT be marked "Sensitive"
+# in Vercel. Sensitive vars cannot be decrypted by `vercel pull` when run
+# outside Vercel infra (i.e. here, in GitHub Actions), so the build sees
+# empty strings and ships a broken bundle. The pre-build check below catches
+# this — but it's faster to just not mark them sensitive in the first place.
+# -----------------------------------------------------------------------------
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: 'Vercel environment to pull/build/deploy against. "preview" or "production".'
+        required: true
+        type: string
+      comment_pr:
+        description: 'When true, post a sticky preview-URL comment on the PR. Only meaningful for preview deploys triggered by pull_request.'
+        required: false
+        default: false
+        type: boolean
+      project_name:
+        description: 'Optional Vercel project name. Leave empty to derive it from the lowercased GitHub repository name.'
+        required: false
+        default: ''
+        type: string
+    secrets:
+      VERCEL_TOKEN:
+        description: 'Vercel access token used only for this deployment.'
+        required: true
+      VERCEL_ORG_ID:
+        description: 'Vercel organization/team ID for the target project.'
+        required: true
+      VERCEL_PROJECT_ID:
+        description: 'Optional explicit project ID when repository-name resolution is not used.'
+        required: false
+
+jobs:
+  deploy:
+    name: ${{ inputs.environment == 'production' && 'Production deployment' || 'Preview deployment' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      DEPLOY_ENVIRONMENT: ${{ inputs.environment }}
+    # Permissions are NOT declared here on purpose. A reusable workflow
+    # cannot grant itself permissions the caller hasn't already given —
+    # if it tries, the workflow fails to start with `startup_failure`.
+    # Each caller declares exactly what it needs at the workflow level, and
+    # those permissions flow through to this job.
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+
+      - name: Validate deployment environment
+        shell: bash
+        run: |
+          case "$DEPLOY_ENVIRONMENT" in
+            preview|production) ;;
+            *)
+              echo "::error::Unsupported deployment environment: $DEPLOY_ENVIRONMENT"
+              exit 1
+              ;;
+          esac
+
+      - name: Resolve Vercel project
+        env:
+          VERCEL_PROJECT_ID_SECRET: ${{ secrets.VERCEL_PROJECT_ID }}
+          VERCEL_PROJECT_NAME_INPUT: ${{ inputs.project_name }}
+          VERCEL_ORG_ID_SECRET: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          if [ -n "$VERCEL_PROJECT_ID_SECRET" ]; then
+            echo "Using VERCEL_PROJECT_ID secret"
+            mkdir -p .vercel
+            printf '{"projectId":"%s","orgId":"%s"}' \
+              "$VERCEL_PROJECT_ID_SECRET" "$VERCEL_ORG_ID_SECRET" > .vercel/project.json
+          else
+            if [ -n "$VERCEL_PROJECT_NAME_INPUT" ]; then
+              PROJECT_NAME="$VERCEL_PROJECT_NAME_INPUT"
+              echo "No VERCEL_PROJECT_ID set — linking by explicit project name: $PROJECT_NAME"
+            else
+              PROJECT_NAME=$(echo "${{ github.event.repository.name }}" | tr '[:upper:]' '[:lower:]')
+              echo "No VERCEL_PROJECT_ID or project_name set — linking by repo name: $PROJECT_NAME"
+            fi
+            vercel link --yes --project="$PROJECT_NAME" --token="$VERCEL_TOKEN"
+          fi
+
+      - name: Pull Vercel environment
+        run: vercel pull --yes --environment="$DEPLOY_ENVIRONMENT" --token=${{ secrets.VERCEL_TOKEN }}
+
+      # Pre-build sanity check: catch the "Sensitive env var" trap before
+      # we hand a silently-empty .env to vite/next. Sensitive vars in Vercel
+      # cannot be decrypted by `vercel pull` when running outside Vercel
+      # infra, so the build receives empty strings and ships a broken bundle
+      # (the consumer code throws or tree-shakes to a runtime error). This
+      # check fails the build with a clear error instead.
+      #
+      # A var is treated as REQUIRED only if it's referenced at least once
+      # WITHOUT a `|| fallback` or `?? fallback` — references like
+      # `import.meta.env.X || ''` are intentional opt-in optional vars and
+      # are skipped, otherwise we'd false-positive on every optional var.
+      - name: Verify build-time env vars are present (sensitive-var trap)
+        shell: bash
+        env:
+          LC_ALL: C.UTF-8
+        run: |
+          set -eo pipefail
+          ENV_FILE=".vercel/.env.${DEPLOY_ENVIRONMENT}.local"
+          if [ ! -f "$ENV_FILE" ]; then
+            echo "::warning::No env file at $ENV_FILE — skipping check (vercel pull may have written elsewhere)."
+            exit 0
+          fi
+          SCAN_ROOTS=()
+          for dir in app components lib pages src; do
+            [ -d "$dir" ] && SCAN_ROOTS+=("$dir")
+          done
+          if [ "${#SCAN_ROOTS[@]}" -eq 0 ]; then
+            SCAN_ROOTS=(.)
+          fi
+          GREP_OPTS=(-rPho
+            --include='*.ts' --include='*.tsx' --include='*.js' --include='*.jsx' --include='*.mjs' --include='*.cjs'
+            --exclude='*.test.*' --exclude='*.spec.*'
+            --exclude-dir=node_modules --exclude-dir=.next --exclude-dir=dist --exclude-dir=.vercel --exclude-dir=build
+            --exclude-dir=__tests__ --exclude-dir=test --exclude-dir=tests --exclude-dir=scripts)
+          # Pass 1: list every distinct VITE_*/NEXT_PUBLIC_* var referenced.
+          set +e
+          ALL_VARS=$(grep "${GREP_OPTS[@]}" \
+            "(import\.meta\.env\.|process\.env\.)(VITE_|NEXT_PUBLIC_)[A-Z0-9_]+" "${SCAN_ROOTS[@]}" 2>/dev/null \
+            | sed -E 's/^(import\.meta\.env\.|process\.env\.)//' \
+            | sort -u)
+          set -e
+          if [ -z "${ALL_VARS:-}" ]; then
+            echo "No VITE_*/NEXT_PUBLIC_* references found — nothing to check."
+            exit 0
+          fi
+          MISSING=()
+          OPTIONAL_SKIPPED=0
+          while IFS= read -r var; do
+            [ -n "$var" ] || continue
+            # Vercel auto-injects framework vars at build (not in pull output).
+            case "$var" in VITE_VERCEL_*|NEXT_PUBLIC_VERCEL_*) continue ;; esac
+            # Pass 2: is there at least one reference of this var WITHOUT a
+            # `||` or `??` fallback immediately after? `\b` ensures we don't
+            # match VITE_X when looking for VITE_X_Y. Negative lookahead
+            # `(?!\s*(\|\||\?\?))` excludes references that DO have a fallback.
+            set +e
+            grep "${GREP_OPTS[@]}" \
+              "(import\.meta\.env\.|process\.env\.)${var}\b(?!\s*(\|\||\?\?))" "${SCAN_ROOTS[@]}" 2>/dev/null \
+              | head -1 > /dev/null
+            REQUIRED=$?
+            set -e
+            if [ "$REQUIRED" -ne 0 ]; then
+              OPTIONAL_SKIPPED=$((OPTIONAL_SKIPPED + 1))
+              continue
+            fi
+            grep -qE "^${var}=." "$ENV_FILE" || MISSING+=("$var")
+          done <<< "$ALL_VARS"
+          if [ "${#MISSING[@]}" -gt 0 ]; then
+            echo "::error::Build-time env vars referenced in source (without || fallback) but missing from vercel pull output:"
+            printf '  - %s\n' "${MISSING[@]}"
+            echo ""
+            echo "Most common cause: these vars are marked 'Sensitive' in Vercel."
+            echo "vercel pull cannot decrypt sensitive vars when running outside Vercel infra,"
+            echo "so the build sees empty strings and ships a broken bundle."
+            echo ""
+            echo "Fix: in the Vercel project's Environment Variables settings, remove and"
+            echo "re-add each missing var with the Sensitive toggle OFF. Encrypted-at-rest"
+            echo "is fine for VITE_*/NEXT_PUBLIC_* vars — they ship in the client bundle anyway."
+            echo ""
+            echo "Alternative: if a var is genuinely optional, add a fallback in source"
+            echo "(e.g. 'import.meta.env.X || \"default\"') and this check will skip it."
+            exit 1
+          fi
+          TOTAL=$(printf '%s\n' "$ALL_VARS" | grep -cv '^$' || true)
+          echo "All required VITE_*/NEXT_PUBLIC_* vars present in $ENV_FILE."
+          echo "  Total referenced: $TOTAL"
+          echo "  Skipped (optional with || fallback or framework): $OPTIONAL_SKIPPED"
+
+      - name: Build project
+        run: |
+          if [ "$DEPLOY_ENVIRONMENT" = "production" ]; then
+            vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+          else
+            vercel build --token=${{ secrets.VERCEL_TOKEN }}
+          fi
+
+      - name: Deploy to Vercel
+        id: deploy
+        run: |
+          if [ "$DEPLOY_ENVIRONMENT" = "production" ]; then
+            vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+          else
+            DEPLOY_URL=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
+            echo "url=$DEPLOY_URL" >> $GITHUB_OUTPUT
+            echo "Preview URL: $DEPLOY_URL"
+          fi
+
+      - name: Comment preview URL on PR
+        if: ${{ inputs.comment_pr && github.event_name == 'pull_request' }}
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: vercel-preview
+          message: |
+            ### Vercel Preview Ready
+
+            | Status | URL | Commit |
+            |--------|-----|--------|
+            | Ready  | [${{ steps.deploy.outputs.url }}](${{ steps.deploy.outputs.url }}) | `${{ github.event.pull_request.head.sha }}` |
+
+            *Updated automatically on every push to this PR.*

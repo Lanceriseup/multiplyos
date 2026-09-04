@@ -7,6 +7,8 @@ import { useDemo } from "./DemoModal";
 
 const APP_URL = "https://app.multiplyos.com";
 
+// NOTE: /implementation is intentionally NOT listed here. The page is still live
+// and fully accessible via its direct link — it is just not advertised in the menu.
 const navItems: { label: string; href: string }[] = [
   { label: "Platform", href: "/" },
   { label: "AI", href: "#ai" },
