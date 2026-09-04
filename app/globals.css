@@ -18,6 +18,17 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+/* Hides the scrollbar on rows that scroll sideways inside a mockup, where a
+   grey bar reads as a rendering fault rather than a control. The row still
+   scrolls; only the indicator is suppressed. */
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
 /* Subtle Notion-style dotted/grid backdrop helper */
 .bg-dotted {
   background-image: radial-gradient(#e5e5e5 1px, transparent 1px);
@@ -198,6 +209,54 @@ body {
   .testi-halo { display: none; }
 }
 
+/* ---- Scoreboard hero tour: series draw, typing caret, new-row flash ---- */
+.tour-series { stroke-dasharray: 1400; stroke-dashoffset: 1400; }
+.tour-series-draw { transition: stroke-dashoffset 1.15s cubic-bezier(0.32, 0.72, 0.35, 1); stroke-dashoffset: 0; }
+@keyframes tour-pop-in { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: none; } }
+@keyframes tour-caret { 50% { opacity: 0; } }
+.tour-caret {
+  display: inline-block;
+  width: 1.5px;
+  height: 12px;
+  margin-left: 1px;
+  vertical-align: -2px;
+  background: #ea7b1b;
+  animation: tour-caret 1s steps(1) infinite;
+}
+@keyframes tour-rowin { from { background-color: #ffe9cc; } to { background-color: transparent; } }
+.tour-landed { animation: tour-rowin 0.9s ease forwards; }
+@media (prefers-reduced-motion: reduce) {
+  .tour-caret { animation: none; }
+  .tour-series { stroke-dashoffset: 0; }
+  .tour-landed { animation: none; }
+}
+
+/* ---- SOP HQ hero tour: each view fades up as it swaps in ---- */
+@keyframes sop-view-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.sop-view { animation: sop-view-in 0.34s cubic-bezier(0.22, 1, 0.36, 1) both; }
+/* Recording dot on the video-SOP mockup. */
+@keyframes sop-rec { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
+.sop-rec { animation: sop-rec 1.4s ease-in-out infinite; }
+/* The AI SOP Agent's spinner while it drafts, and the mic level meter beside
+   the recorder. Both only run while the tour is in those states. */
+.sop-spin { animation: spin-cw 0.9s linear infinite; }
+@keyframes sop-lvl { 0%, 100% { transform: scaleY(0.4); } 50% { transform: scaleY(1); } }
+.sop-lvl { transform-origin: bottom; animation: sop-lvl 0.7s ease-in-out infinite; }
+/* Screenshots landing in the draft, and each countdown digit. */
+@keyframes sop-pop { from { opacity: 0; transform: scale(0.86); } to { opacity: 1; transform: none; } }
+.sop-pop { animation: sop-pop 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.3) both; }
+/* The marker crossing out the replaced tool, in the tour's opening beat. The
+   dash length is comfortably longer than the path, so 0 offset is fully drawn. */
+@keyframes sop-strike { to { stroke-dashoffset: 0; } }
+.sop-strike { stroke-dasharray: 130; stroke-dashoffset: 130; }
+.sop-strike-go { animation: sop-strike 0.42s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+@media (prefers-reduced-motion: reduce) {
+  .sop-view, .sop-rec, .sop-spin, .sop-lvl, .sop-pop { animation: none; }
+  /* struck already, rather than mid-stroke */
+  .sop-strike { stroke-dashoffset: 0; }
+  .sop-strike-go { animation: none; }
+}
+
 /* ---- Booking confirmation: pop-in + confetti ---- */
 @keyframes book-pop { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 .book-pop { animation: book-pop 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.3) both; }
@@ -211,3 +270,14 @@ body {
   .book-pop { animation: none; }
   .book-confetti-piece { display: none; }
 }
+
+/* ---- Projects & Tasks hero tour: view swap + the checkbox tick ---- */
+@keyframes pt-view-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.pt-view { animation: pt-view-in 0.34s cubic-bezier(0.22, 1, 0.36, 1) both; }
+@keyframes pt-pop { from { transform: scale(0.2); } to { transform: scale(1); } }
+.pt-pop { animation: pt-pop 0.28s cubic-bezier(0.2, 0.9, 0.3, 1.35) both; }
+@media (prefers-reduced-motion: reduce) {
+  .pt-view, .pt-pop { animation: none; }
+}
+
+

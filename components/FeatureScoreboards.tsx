@@ -10,14 +10,27 @@ import { useEffect, useRef, useState } from "react";
 import { useDemo } from "./DemoModal";
 
 type Cur = { prefix: string; to: number; dec: number; suffix: string };
-type Metric = { name: string; goal: string; prev: string; cur: Cur };
+type Metric = { name: string; owner: Who; goal: string; prev: string; cur: Cur };
+
+// One accountable person per metric. Every row used to render the same "SL"
+// badge, which quietly contradicted the proof point sitting right beside it:
+// "Owners on every metric, so nothing slips".
+const PEOPLE = {
+  SL: { from: "#F49230", to: "#D8563F" },
+  DW: { from: "#6C5CE0", to: "#3B2EA6" },
+  PN: { from: "#2E9E7A", to: "#1F7F4C" },
+  MH: { from: "#C9832B", to: "#9A6115" },
+  JR: { from: "#C9663A", to: "#8E3F1D" },
+} as const;
+
+type Who = keyof typeof PEOPLE;
 
 const METRICS: Metric[] = [
-  { name: "Revenue", goal: "$50,000", prev: "$30.0k", cur: { prefix: "$", to: 51.0, dec: 1, suffix: "k" } },
-  { name: "New Customers", goal: "10", prev: "8", cur: { prefix: "", to: 12, dec: 0, suffix: "" } },
-  { name: "Cash Balance", goal: "$100,000", prev: "$96k", cur: { prefix: "$", to: 108.9, dec: 1, suffix: "k" } },
-  { name: "Customer Satisfaction", goal: "90%", prev: "88%", cur: { prefix: "", to: 93, dec: 0, suffix: "%" } },
-  { name: "Team Tasks Completed", goal: "25", prev: "21", cur: { prefix: "", to: 28, dec: 0, suffix: "" } },
+  { name: "Revenue", owner: "SL", goal: "$50,000", prev: "$30.0k", cur: { prefix: "$", to: 51.0, dec: 1, suffix: "k" } },
+  { name: "New Customers", owner: "JR", goal: "10", prev: "8", cur: { prefix: "", to: 12, dec: 0, suffix: "" } },
+  { name: "Cash Balance", owner: "DW", goal: "$100,000", prev: "$96k", cur: { prefix: "$", to: 108.9, dec: 1, suffix: "k" } },
+  { name: "Customer Satisfaction", owner: "PN", goal: "90%", prev: "88%", cur: { prefix: "", to: 93, dec: 0, suffix: "%" } },
+  { name: "Team Tasks Completed", owner: "MH", goal: "25", prev: "21", cur: { prefix: "", to: 28, dec: 0, suffix: "" } },
 ];
 
 const WEEKS = [["7/6", "7/12"], ["7/13", "7/19"], ["7/20", "7/26"]];
@@ -267,7 +280,12 @@ function ScoreboardVisual({ play, instant }: { play: boolean; instant: boolean }
                 </span>
               </div>
               <div className="hidden items-center justify-center px-2.5 py-2 sm:flex">
-                <span className="inline-grid h-5 w-5 place-items-center rounded-[5px] bg-gradient-to-br from-[#F49230] to-[#D8563F] text-[8.5px] font-bold text-white">SL</span>
+                <span
+                  className="inline-grid h-5 w-5 place-items-center rounded-[5px] text-[8.5px] font-bold text-white"
+                  style={{ background: `linear-gradient(135deg, ${PEOPLE[m.owner].from}, ${PEOPLE[m.owner].to})` }}
+                >
+                  {m.owner}
+                </span>
               </div>
               <div className="flex items-center justify-center border-l border-[#ECEAE6] px-2.5 py-2">
                 <span className="inline-block rounded-[5px] border border-[#E3E0DA] px-2 py-1 font-bold">{m.goal}</span>
