@@ -405,7 +405,7 @@ export default function PricingPage() {
 
           The strip geometry, which is tight and worth writing down. The two
           numbers move together and are set so the strip's top edge lands 68px
-          above the end of the content: calc(100% - 332px) against 264px of
+          above the end of the content: calc(100% - 266px) against 198px of
           bottom padding. Change the padding and the offset changes with it, or
           the strip slides into the price card.
 
@@ -416,12 +416,21 @@ export default function PricingPage() {
           1920px the faded end finishes about 27px above where the FAQ's own
           padding starts.
 
+          The padding came down from 264px in September 2026, on the client's
+          note that the gap to the FAQ read as unbalanced. The 27px of clearance
+          was the whole budget, so the padding could not simply be cut: the
+          strip's own fade was tightened first, from 30% to 44%, which pulls its
+          visible low end up and to the right and bought back about 66px. That
+          is what paid for the padding. The two are a pair now as well: widen
+          the fade again and this padding has to go back up, or the strip's ink
+          reaches the section edge and gets cut off square by the overflow.
+
           Below lg the rules and the strip come off and it stacks. That is not a
           fallback, it is the design: the grid is the idea, and there is no grid
           on a phone. */}
       <section
         id="pricing"
-        className="relative z-10 -mt-9 scroll-mt-24 overflow-hidden rounded-t-[22px] bg-[#F6F3EE] px-5 pb-[76px] pt-12 shadow-[0_-18px_36px_-22px_rgba(40,30,15,0.26)] sm:px-8 sm:pb-20 sm:pt-20 lg:pb-[264px]"
+        className="relative z-10 -mt-9 scroll-mt-24 overflow-hidden rounded-t-[22px] bg-[#F6F3EE] px-5 pb-[76px] pt-12 shadow-[0_-18px_36px_-22px_rgba(40,30,15,0.26)] sm:px-8 sm:pb-20 sm:pt-20 lg:pb-[198px]"
       >
         {/* the grabber. Without it the section reads as a box with two rounded
             corners; with it, it reads as a sheet that has been pulled up.
@@ -466,7 +475,7 @@ export default function PricingPage() {
             arithmetic. */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute left-[-16%] top-[calc(100%-332px)] hidden h-[148px] w-[132%] lg:block"
+          className="pointer-events-none absolute left-[-16%] top-[calc(100%-266px)] hidden h-[148px] w-[132%] lg:block"
           style={{
             transform: "rotate(-10.5deg)",
             background:
@@ -474,16 +483,24 @@ export default function PricingPage() {
             // The low end fades rather than stopping. It is the one part of this
             // strip whose position is not ours to choose: the bar is 132% of the
             // viewport and rotated about its centre, so its low end drops further
-            // the wider the screen gets. Measured, it finishes 12px below the FAQ
-            // edge at 1440px, 69px at 1920px, and about 147px at 2560px.
+            // the wider the screen gets. Measured at the original 5%/30% fade, it
+            // finished 12px below the FAQ edge at 1440px, 69px at 1920px, and
+            // about 147px at 2560px.
+            //
+            // The fade now runs 12% to 44% rather than 5% to 30%. That is not a
+            // taste change: it moves the point where the ink is actually visible
+            // further right, and because the bar is rotated, further right means
+            // higher. It is what let the section's bottom padding come down by
+            // 66px without the visible ink meeting the section edge. See the
+            // arithmetic on the section.
             //
             // A full-bleed sheet could cover that by overlapping far enough. The
             // FAQ is an inset card now and covers nothing at the margins, so
             // instead of racing the geometry the strip dissolves into the ground
             // before it ever reaches a boundary. Viewport independent, and it
             // reads as a fade rather than as something ending.
-            WebkitMaskImage: "linear-gradient(90deg, transparent 5%, #000 30%)",
-            maskImage: "linear-gradient(90deg, transparent 5%, #000 30%)",
+            WebkitMaskImage: "linear-gradient(90deg, transparent 12%, #000 44%)",
+            maskImage: "linear-gradient(90deg, transparent 12%, #000 44%)",
           }}
         />
 
@@ -668,7 +685,7 @@ export default function PricingPage() {
           So the gap is made entirely of the price section's bottom padding plus
           this section's top padding. The bulk of it is the strip's clearance,
           which is why the number up there is large and why it is on lg only. */}
-      <section className="bg-[#F6F3EE] px-5 pb-14 pt-6 sm:px-8 sm:pb-20 sm:pt-10">
+      <section className="bg-[#F6F3EE] px-5 pb-14 pt-6 sm:px-8 sm:pb-20 sm:pt-6">
         <div className="mx-auto max-w-container">
           <Reveal className="mb-8 text-center sm:mb-10">
             <h2 className="text-[26px] font-extrabold leading-[1.1] tracking-tight text-brand-ink sm:text-[38px]">
