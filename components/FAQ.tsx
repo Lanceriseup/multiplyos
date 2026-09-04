@@ -56,8 +56,14 @@ const ITEMS: Item[] = [
 export default function FAQ() {
   const [open, setOpen] = useState<Record<number, boolean>>({ 0: true });
 
+  // The section's top padding is deliberately smaller than its bottom. CTA sits
+  // directly above and is a filled card with its own 48px of inner padding and a
+  // glow past its edge, so it already reads as finished; a full 96px on top of
+  // CTA's own 96px left about 190px of white before the eyebrow. Trimmed here
+  // rather than on CTA, which is shared by twelve other pages where it is
+  // followed by the footer instead.
   return (
-    <section id="faq" className="scroll-mt-24 px-5 py-8 sm:px-8 sm:py-24">
+    <section id="faq" className="scroll-mt-24 px-5 py-8 sm:px-8 sm:pb-24 sm:pt-6">
       <div className="mx-auto max-w-[720px]">
         <Reveal className="mb-4 text-center sm:mb-8">
           <p className="text-xs font-semibold uppercase tracking-wider text-brand-orange sm:text-sm">
