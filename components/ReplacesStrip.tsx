@@ -331,4 +331,8 @@ export const REPLACES = {
     { name: "EOS One", logo: "/replaces-eosone.png" },
   ],
   teamMeetings: [{ name: "ninety.io", logo: "/replaces-ninety.png" }],
+  // Added September 2026 with the Whiteboards module. Miro only: the client
+  // supplied that one logo and named no other tool, so FigJam and Mural are
+  // deliberately absent rather than assumed.
+  whiteboards: [{ name: "Miro", logo: "/replaces-miro.png" }],
 } satisfies Record<string, Replaced[]>;
