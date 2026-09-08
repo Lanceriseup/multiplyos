@@ -20,15 +20,22 @@
 //   DANA (mateScript, concurrent, started the moment she is invited)
 //     arrives             her cursor comes in from the edge and settles
 //     her first sticky    added and typed while we are still on our second
+//     an arrow across     from OUR sticky to hers, drawn as she travels it
 //     her second sticky   the one we then comment on
+//     a second arrow      joining her own two
 //     rests               she is present, not performing
 //
-// SHE MOVES FOUR TIMES IN THE WHOLE LOOP and is still in between. The previous
-// cut had her drifting through seven waypoints while nothing happened, and the
+// EVERY MOVE SHE MAKES DOES SOMETHING, and she is still in between. An early cut
+// had her drifting through seven waypoints while nothing happened, and the
 // client's note was blunt: "there's a lot of unnecessary movements". They were
-// right, and the fix is not less presence but less motion. A real collaborator's
-// cursor sits still most of the time; presence is her being there, not her
-// being busy.
+// right, but the answer was not less presence, it was less AIMLESS motion. When
+// they later asked for "a little bit of animation ... like adding some arrows",
+// the two arrows were the way to give her more to do without giving her more to
+// wander: she travels each arrow while it draws, so the stroke reads as her hand
+// rather than as something that appeared on its own.
+//
+// Her cursor also sits at MATE_CURSOR_OPACITY rather than full. At parity the
+// eye cannot tell which of the two cursors to follow.
 //
 // Nothing but mateScript ever animates mateRef, and nothing but the main loop
 // ever animates cursorRef. That split is load-bearing: two callers animating
@@ -264,6 +271,25 @@ const D = { x: 648, y: 262, text: "Q1 budget" };
 // aside so the comment bubble has room. Everything else is stillness.
 type Way = [number, number, number, number];
 
+// Dana draws two arrows of her own, in her colour so they can never be read as
+// ours. They are the reason her cursor moves at all after her stickies land:
+// the client asked for "a little bit of animation ... like adding some arrows",
+// and an arrow is a move that does something, which is the distinction that
+// matters here. Aimless drifting was the thing they objected to.
+//
+// The first reaches ACROSS from our sticky to hers, so the board reads as two
+// people thinking about the same thing rather than two people working in
+// parallel columns. The second joins her own two.
+const MATE_ARROW_1 = `M${B.x + NOTE_W} ${B.y + NOTE_H / 2} C${B.x + NOTE_W + 56} ${B.y + NOTE_H / 2} ${D.x - 56} ${D.y + NOTE_H / 2} ${D.x - 5} ${D.y + NOTE_H / 2}`;
+const MATE_ARROW_1_LEN = 150;
+const MATE_ARROW_2 = `M${C.x + NOTE_W / 2} ${C.y + NOTE_H} V${D.y - 5}`;
+const MATE_ARROW_2_LEN = 60;
+
+/** Her cursor is somebody else's, so it sits back from ours rather than
+ * competing with it. Enough to read as secondary, not so little that the name
+ * flag stops being legible. */
+const MATE_CURSOR_OPACITY = 0.72;
+
 /**
  * Where she lands when she joins. Clear of our pointer's work on the left, of
  * the photo strip along the bottom, and of the minimap in the bottom right.
@@ -324,6 +350,8 @@ type Scene = {
   mate: boolean;
   /** Hers: D first, then C. */
   mateNotes: number;
+  /** How many of her two arrows are drawn. */
+  mateArrows: number;
   /** Selection chrome on the collaborator's sticky. */
   selected: boolean;
   pin: boolean;
@@ -345,6 +373,7 @@ const BLANK: Scene = {
   share: false,
   mate: false,
   mateNotes: 0,
+  mateArrows: 0,
   selected: false,
   pin: false,
   comment: "",
@@ -365,6 +394,7 @@ const STILL: Scene = {
   share: false,
   mate: true,
   mateNotes: 2,
+  mateArrows: 2,
   pin: true,
   comment: COMMENT,
   tool: "select",
@@ -621,11 +651,25 @@ export default function WhiteboardsHeroTour() {
           await type(D.text, "dText", 54);
           if (!alive()) return;
 
-          // Still. This is most of the loop, and it is deliberate.
-          await wait(9500);
+          // Still, while we write our second sticky and join the two.
+          await wait(2300);
           if (!alive()) return;
 
-          // MOVE 3: her second sticky, the one we pin a comment to.
+          // MOVE 3: an arrow from OUR sticky across to hers. She travels the
+          // arrow while it draws, so the stroke reads as her hand rather than
+          // as something that appeared. Both ends exist by now: our B is typed
+          // at about 6.6s and this runs at about 8.
+          await glideMate(canvasPt(B.x + NOTE_W + 6, B.y + NOTE_H / 2), 520);
+          if (!alive()) return;
+          patch({ mateArrows: 1 });
+          await glideMate(canvasPt(D.x - 8, D.y + NOTE_H / 2), 760);
+          if (!alive()) return;
+
+          // Still. This is most of the loop, and it is deliberate.
+          await wait(5400);
+          if (!alive()) return;
+
+          // MOVE 4: her second sticky, the one we pin a comment to.
           await glideMate(canvasPt(C.x + NOTE_W / 2, C.y + NOTE_H / 2), 780);
           if (!alive()) return;
           patch({ mateNotes: 2 });
@@ -635,7 +679,15 @@ export default function WhiteboardsHeroTour() {
           patch({ selected: true });
           mateAddedC = true;
 
-          // MOVE 4: one step aside, so the comment bubble has room to open.
+          // MOVE 5: a second arrow, joining her own two, drawn downward.
+          await wait(260);
+          await glideMate(canvasPt(C.x + NOTE_W / 2, C.y + NOTE_H + 4), 420);
+          if (!alive()) return;
+          patch({ mateArrows: 2 });
+          await glideMate(canvasPt(D.x + NOTE_W / 2, D.y - 6), 520);
+          if (!alive()) return;
+
+          // MOVE 6: one step aside, so the comment bubble has room to open.
           await glideMate(canvasPt(MATE_REST[0], MATE_REST[1]), MATE_REST[2]);
 
           // And then she simply stays, which is what presence looks like.
@@ -936,10 +988,13 @@ export default function WhiteboardsHeroTour() {
                       transition: "stroke-dashoffset 2300ms cubic-bezier(0.4,0.1,0.3,1)",
                     }}
                   />
-                  {/* the connector */}
+                  {/* the connectors, ours in ink and hers in her own colour */}
                   <defs>
                     <marker id="wb-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
                       <path d="M0 0L9 5L0 10z" fill={INK} />
+                    </marker>
+                    <marker id="wb-arrow-mate" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                      <path d="M0 0L9 5L0 10z" fill={MATE} />
                     </marker>
                   </defs>
                   <path
@@ -954,6 +1009,27 @@ export default function WhiteboardsHeroTour() {
                       transition: "stroke-dashoffset 820ms cubic-bezier(0.3,0.1,0.3,1)",
                     }}
                   />
+                  {/* Dana's two. The first reaches across from our sticky to
+                      hers, the second joins her own pair. */}
+                  {[
+                    { d: MATE_ARROW_1, len: MATE_ARROW_1_LEN, at: 1, ms: 760 },
+                    { d: MATE_ARROW_2, len: MATE_ARROW_2_LEN, at: 2, ms: 520 },
+                  ].map((a) => (
+                    <path
+                      key={a.at}
+                      d={a.d}
+                      fill="none"
+                      stroke={MATE}
+                      strokeWidth={1.7}
+                      strokeLinecap="round"
+                      markerEnd={scene.mateArrows >= a.at ? "url(#wb-arrow-mate)" : undefined}
+                      style={{
+                        strokeDasharray: a.len,
+                        strokeDashoffset: scene.mateArrows >= a.at ? 0 : a.len,
+                        transition: `stroke-dashoffset ${a.ms}ms cubic-bezier(0.3,0.1,0.3,1)`,
+                      }}
+                    />
+                  ))}
                 </svg>
 
                 {/* the dropped photos */}
@@ -1063,7 +1139,9 @@ export default function WhiteboardsHeroTour() {
                   aria-hidden="true"
                   className="pointer-events-none absolute left-0 top-0 z-40 transition-opacity duration-300"
                   style={{
-                    opacity: scene.mate ? 1 : 0,
+                    // Held back from full: it is somebody else's cursor, and at
+                    // parity with ours the eye cannot tell which one to follow.
+                    opacity: scene.mate ? MATE_CURSOR_OPACITY : 0,
                     // The mate travels in STAGE units like our own pointer, so
                     // it is offset back out of the canvas's own origin.
                     marginLeft: -RAIL_W,

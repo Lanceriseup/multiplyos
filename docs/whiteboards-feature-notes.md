@@ -75,10 +75,21 @@ Where it landed, and the two notes that shaped it:
   that we added someone in, in the first place"*: you see the board gain a
   person rather than finding one already there. The role is **Can edit**,
   matching the sharing section further down the page.
-- **She moves exactly four times in the whole loop** and is still in between:
-  in from the edge, to her first sticky, to her second, and one step aside so
-  the comment bubble has room. A real collaborator's cursor sits still most of
-  the time. Presence is her being there, not her being busy.
+- **Every move she makes does something**, and she is still in between: in from
+  the edge, to her first sticky, along an arrow, to her second sticky, along a
+  second arrow, and one step aside so the comment bubble has room. A real
+  collaborator's cursor sits still most of the time. Presence is her being there,
+  not her being busy.
+- **She draws two arrows of her own**, added on a later note asking for *"a
+  little bit of animation for Dana W like adding some arrows"*. They were the
+  way to give her more to do without giving her more to wander. The first
+  reaches across from OUR sticky to hers, so the board reads as two people
+  thinking about the same thing rather than two people working in parallel
+  columns; the second joins her own pair. Both are in her teal with her own
+  arrowhead marker, and **she travels each one while it draws**, so the stroke
+  reads as her hand rather than as something that appeared on its own.
+- **Her cursor sits at 0.72 opacity**, ours at 1, from the same note. At parity
+  the eye cannot tell which of the two cursors it is meant to follow.
 
 **Ours,** the main loop:
 
@@ -93,9 +104,11 @@ Where it landed, and the two notes that shaped it:
 sticky ("Q1 budget") while we are still writing ours, her second ("Pricing
 page"), then rest.
 
-Measured on the built page over 44 samples of one loop: she is off the board for
-the first three samples while we invite her, then on it for the remaining 41,
-across **8 distinct positions** (the drifting version was 33).
+Measured on the built page: she is off the board only while we are inviting her,
+then on it for the rest; her cursor computes to 0.72 against ours at 1; both
+arrows reach fully drawn at about 19.2s; and the hero's own pinned comment still
+finishes typing at about 27.6s, so nothing downstream got squeezed out by the
+extra beats.
 
 ### Why two drivers and not one sequence
 
