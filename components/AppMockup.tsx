@@ -1,5 +1,14 @@
 "use client";
 
+// NOT CURRENTLY MOUNTED. The home page's main animation is components/home-tour
+// as of the September 2026 update, and this is the implementation it replaced.
+//
+// Kept on purpose, not left behind: the new tour is a client-facing change that
+// is still being reviewed, and reverting to the old eight-tab iframe is a
+// two-line swap in Hero.tsx and OsOverview.tsx while this file and
+// public/mockup/dashboard.html are both still here. Delete both once the new
+// tour is signed off.
+//
 // Shared, self-contained embed of the interactive Multiply OS app mockup
 // (/public/mockup/dashboard.html). The mockup auto-scales to this container's
 // width and reports its true rendered height back via postMessage, so the frame
