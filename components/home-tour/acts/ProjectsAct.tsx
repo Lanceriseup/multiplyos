@@ -1,6 +1,6 @@
 "use client";
 
-// Tab 6 of 10 — Projects.
+// Tab 6 of 10: Projects.
 //
 // The client's line for this one was "Projects (show tasks in projects)", so the
 // tab has to end up inside a project looking at its work, not on the gallery.

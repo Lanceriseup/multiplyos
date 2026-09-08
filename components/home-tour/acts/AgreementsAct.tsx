@@ -1,6 +1,6 @@
 "use client";
 
-// Tab 9 of 10 — Agreements.
+// Tab 9 of 10: Agreements.
 //
 // Short cut of AgreementsHeroTour, which alternates two full passes (the form
 // path and the document path). Neither pass fits here, so this is a round trip

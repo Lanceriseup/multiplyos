@@ -1,6 +1,6 @@
 "use client";
 
-// Tab 2 of 10 — Scoreboard.
+// Tab 2 of 10: Scoreboard.
 //
 // Short cut of ScoreboardHeroTour. That tour runs four acts; this keeps the one
 // the client's own screenshot is of, and the one that proves the column means

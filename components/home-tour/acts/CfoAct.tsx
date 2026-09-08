@@ -1,6 +1,6 @@
 "use client";
 
-// Tab 7 of 10 — CFO Dashboard.
+// Tab 7 of 10: CFO Dashboard.
 //
 // Short cut of CfoAnalyticsHeroTour, which runs seven beats over about forty
 // seconds. Four survive, and they walk the tab strip left to right:

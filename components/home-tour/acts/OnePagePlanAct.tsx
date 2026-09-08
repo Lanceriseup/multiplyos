@@ -1,6 +1,6 @@
 "use client";
 
-// Tab 3 of 10 — One Page Plan.
+// Tab 3 of 10: One Page Plan.
 //
 // Short cut of TeamAccountabilityHeroTour's second half. That tour runs the plan
 // in five beats and all five survive here, because the scroll alone only proved
@@ -25,8 +25,8 @@
 // The pointer is hidden for the scroll and faded back in once it settles. A
 // cursor parked over prose while the prose slides under it reads as a mistake.
 //
-// One goal is carried through every part of this act — the plan row, the modal
-// header, the milestone list, the update text and the chip — so the numbers can
+// One goal is carried through every part of this act (the plan row, the modal
+// header, the milestone list, the update text and the chip) so the numbers can
 // be followed rather than just glanced at.
 import { useRef, useState } from "react";
 import { useAct, type Rig } from "../rig";

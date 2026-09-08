@@ -1,6 +1,6 @@
 "use client";
 
-// Tab 4 of 10 — 12 Week Year.
+// Tab 4 of 10: 12 Week Year.
 //
 // TeamAccountabilityHeroTour's opening act is only "this week's priorities,
 // ticked one at a time", so unlike the other nine tabs there was no longer beat

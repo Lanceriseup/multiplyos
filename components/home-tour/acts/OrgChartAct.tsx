@@ -1,6 +1,6 @@
 "use client";
 
-// Tab 1 of 10 — Org Chart.
+// Tab 1 of 10: Org Chart.
 //
 // Short cut of OrgChartHeroTour, which runs seven beats. Three survive, and the
 // middle one is the reason this act got longer than the other nine:
