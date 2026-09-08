@@ -189,15 +189,80 @@ const TOOL_CHIPS = [
   "Images",
   "Comments",
 ];
+/**
+ * How many chips a phone shows before "+N more".
+ *
+ * All nine wrap to FOUR rows and 113px at 390px wide, which is a lot of a
+ * 380px card spent listing tool names nobody taps, and it was the main reason
+ * the board underneath looked squeezed.
+ *
+ * Five, not six: six fits two rows at 390 but pushes the counter onto a third
+ * row at 360, where the row is only 272px wide. Five holds two rows at both,
+ * and "+4 more" still makes the point that the rail is deep.
+ */
+const CHIPS_ON_PHONE = 5;
+
+// The board's drawing, in the coordinate space it was composed in. Given to the
+// mobile SVG as a viewBox so the strokes scale instead of running off the edge;
+// the desktop copy keeps drawing at raw pixel coordinates, exactly as it always
+// has, so nothing about the signed-off desktop composition moves.
+const BOARD_W = 364;
+const BOARD_H = 258;
+const BOARD_LINK = "M118 78 V150 H236 V180";
+const BOARD_LOOP =
+  "M64 44c92-30 260-16 292 26 30 40-14 122-78 150-66 30-198 24-232-26-32-46 6-122 18-150z";
+/**
+ * The two stickies, as pixels for desktop and as percentages of the same space
+ * for mobile. One source, so the two copies cannot drift apart.
+ */
+const BOARD_NOTES = [
+  { x: 62, y: 30, t: "Ship v2 in Q1" },
+  { x: 186, y: 176, t: "Hiring plan" },
+];
+const NOTE_PX = { w: 112, h: 76 };
+const pct = (n: { x: number; y: number }) => ({
+  left: `${(n.x / BOARD_W) * 100}%`,
+  top: `${(n.y / BOARD_H) * 100}%`,
+  width: `${(NOTE_PX.w / BOARD_W) * 100}%`,
+  height: `${(NOTE_PX.h / BOARD_H) * 100}%`,
+});
+
+/** One sticky, at whatever position the caller measures it in. */
+function BoardNote({ t, style }: { t: string; style: React.CSSProperties }) {
+  return (
+    <div
+      className="absolute grid place-items-center rounded-[3px] px-2 text-center"
+      style={{
+        ...style,
+        background: STICKY,
+        border: "1px solid #F0D96A",
+        boxShadow: "0 6px 14px -8px rgba(40,30,15,0.35)",
+      }}
+    >
+      {/* w-full so the label wraps inside the note. `place-items-center` sizes
+          its child to max-content, so without this a label wider than the note
+          runs straight out over the edge, which it does at phone width where
+          the notes are narrower. */}
+      <span className="w-full text-[11.5px] font-semibold leading-snug" style={{ color: "#4A4432" }}>
+        {t}
+      </span>
+    </div>
+  );
+}
 
 function CanvasDemo() {
   const [tool, setTool] = useState(0);
+  const [allChips, setAllChips] = useState(false);
   return (
+    // flex-col so the board can take the room that is actually left. It used to
+    // be sized `calc(100% - 118px)`, a constant that assumed the chips sat on
+    // one or two rows; on a phone they wrapped to four and the board's bottom
+    // 34px was clipped away by the card.
     <div
-      className={`relative overflow-hidden rounded-[18px] border bg-white ${CARD_CLS}`}
+      className={`relative flex flex-col overflow-hidden rounded-[18px] border bg-white ${CARD_CLS}`}
       style={{ borderColor: HAIR }}
     >
-      <div className="flex items-center gap-2 border-b px-4 py-2.5" style={{ borderColor: HAIR }}>
+      <div className="flex flex-none items-center gap-2 border-b px-4 py-2.5" style={{ borderColor: HAIR }}>
         <BoardIcon className="h-[15px] w-[15px]" style={{ color: TEAL }} />
         <span className="text-[12.5px] font-bold">Q1 planning session</span>
         <span className="ml-auto flex items-center gap-1.5 text-[10.5px] font-semibold" style={{ color: MUTED }}>
@@ -206,13 +271,18 @@ function CanvasDemo() {
         </span>
       </div>
 
-      <div className="flex flex-wrap gap-1.5 px-4 py-3">
+      <div className="flex flex-none flex-wrap gap-1.5 px-4 py-3">
         {TOOL_CHIPS.map((t, i) => (
           <button
             key={t}
             type="button"
             onClick={() => setTool(i)}
-            className="rounded-full border px-2.5 py-1 text-[10.5px] font-semibold transition-colors"
+            // Chips past the sixth are hidden on a phone until asked for. See
+            // CHIPS_ON_PHONE: all nine cost four rows there, and the board is
+            // what pays for them.
+            className={`rounded-full border px-2.5 py-1 text-[10.5px] font-semibold transition-colors ${
+              i >= CHIPS_ON_PHONE && !allChips ? "hidden sm:inline-block" : ""
+            }`}
             style={
               i === tool
                 ? { borderColor: TEAL, background: `${TEAL}12`, color: TEAL }
@@ -222,50 +292,66 @@ function CanvasDemo() {
             {t}
           </button>
         ))}
+        {!allChips && (
+          <button
+            type="button"
+            onClick={() => setAllChips(true)}
+            className="px-1 py-1 text-[10.5px] font-semibold sm:hidden"
+            style={{ color: MUTED2 }}
+          >
+            +{TOOL_CHIPS.length - CHIPS_ON_PHONE} more
+          </button>
+        )}
       </div>
 
       <div
-        className="relative mx-4 mb-4 flex-1 overflow-hidden rounded-[12px] border"
+        className="relative mx-4 mb-4 min-h-0 flex-1 overflow-hidden rounded-[12px] border"
         style={{
-          height: "calc(100% - 118px)",
           borderColor: HAIR2,
           backgroundColor: "#FDFDFC",
           backgroundImage: "radial-gradient(#DCD9D2 1px, transparent 1px)",
           backgroundSize: "20px 20px",
         }}
       >
-        <svg className="absolute inset-0 h-full w-full" aria-hidden="true">
-          <path d="M118 78 V150 H236 V180" fill="none" stroke={INK} strokeWidth={1.4} />
-          <path
-            d="M64 44c92-30 260-16 292 26 30 40-14 122-78 150-66 30-198 24-232-26-32-46 6-122 18-150z"
-            fill="none"
-            stroke="#EA7B1B"
-            strokeWidth={2.2}
-            opacity={0.7}
-          />
-        </svg>
-        {[
-          { x: 62, y: 30, t: "Ship v2 in Q1" },
-          { x: 186, y: 176, t: "Hiring plan" },
-        ].map((n) => (
-          <div
-            key={n.t}
-            className="absolute grid place-items-center rounded-[3px] px-2 text-center"
-            style={{
-              left: n.x,
-              top: n.y,
-              width: 112,
-              height: 76,
-              background: STICKY,
-              border: "1px solid #F0D96A",
-              boxShadow: "0 6px 14px -8px rgba(40,30,15,0.35)",
-            }}
+        {/* Desktop: raw pixel coordinates, exactly as this has always drawn. */}
+        <div className="absolute inset-0 hidden sm:block">
+          <svg className="absolute inset-0 h-full w-full" aria-hidden="true">
+            <path d={BOARD_LINK} fill="none" stroke={INK} strokeWidth={1.4} />
+            <path d={BOARD_LOOP} fill="none" stroke="#EA7B1B" strokeWidth={2.2} opacity={0.7} />
+          </svg>
+          {BOARD_NOTES.map((n) => (
+            <BoardNote key={n.t} t={n.t} style={{ left: n.x, top: n.y, width: NOTE_PX.w, height: NOTE_PX.h }} />
+          ))}
+        </div>
+
+        {/* Phone: the same drawing, mapped to whatever size the board ends up.
+            The viewBox lets the strokes scale rather than run off the right
+            edge, and the stickies are placed as percentages of the same space
+            so they land where they do on desktop. preserveAspectRatio="none"
+            because the board is not the same shape at both widths, and a loop
+            drawn by hand can stretch a little without anyone noticing; the
+            strokes stay their true weight via non-scaling-stroke. */}
+        <div className="absolute inset-0 sm:hidden">
+          <svg
+            className="absolute inset-0 h-full w-full"
+            viewBox={`0 0 ${BOARD_W} ${BOARD_H}`}
+            preserveAspectRatio="none"
+            aria-hidden="true"
           >
-            <span className="text-[11.5px] font-semibold leading-snug" style={{ color: "#4A4432" }}>
-              {n.t}
-            </span>
-          </div>
-        ))}
+            <path d={BOARD_LINK} fill="none" stroke={INK} strokeWidth={1.4} vectorEffect="non-scaling-stroke" />
+            <path
+              d={BOARD_LOOP}
+              fill="none"
+              stroke="#EA7B1B"
+              strokeWidth={2.2}
+              opacity={0.7}
+              vectorEffect="non-scaling-stroke"
+            />
+          </svg>
+          {BOARD_NOTES.map((n) => (
+            <BoardNote key={n.t} t={n.t} style={pct(n)} />
+          ))}
+        </div>
         <span
           className="absolute right-3 top-3 rounded-full border bg-white px-2 py-[3px] font-mono text-[9.5px] font-semibold"
           style={{ borderColor: HAIR2, color: MUTED }}

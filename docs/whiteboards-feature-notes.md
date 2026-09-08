@@ -247,6 +247,46 @@ Three smaller things went with it:
   shared the board, which the line under the title already says, and the 36px it
   cost was the difference between an 88px board name and a 52px one.
 
+### The canvas mockup, and the two faults under it
+
+The section 1 visual read as though somebody had zoomed in on it. Measured at
+390, that was **two independent faults**, and they needed different fixes.
+
+**Fault 1: the board was taller than the room left for it.** Its height was
+hardcoded `calc(100% - 118px)`, a constant that assumed the nine tool chips sat
+on one or two rows. On a phone they wrapped to **four rows, 113px**: header 40 +
+chips 113 + board 262 + margin 16 came to **431px inside a 380px card**, so the
+bottom **34px of the board was clipped away**. The card is now `flex flex-col`
+and the board is `flex-1 min-h-0`, so it takes whatever is actually left. Worth
+having fixed on its own account: any future change to the chip list or the card
+height would have re-broken that constant.
+
+**Fault 2: the board was drawn in fixed pixels.** Stickies at `left: 62` and
+`left: 186` at a fixed 112px, and an SVG with **no `viewBox`**, so nothing could
+scale. Content composed for a ~364px board was being shown in 300px, which is
+why the orange loop ran off the edge.
+
+Presented as four options (`design/whiteboard-canvas-mobile-options.html`) and
+the client picked **D**, the fullest one:
+
+- **The chips stop eating the card.** Five on a phone plus a quiet **+4 more**
+  that reveals the rest on tap. Five rather than six because six holds two rows
+  at 390 but pushes the counter onto a third row at 360, where the row is only
+  272px wide. This alone hands **31px** back to the board.
+- **The board is responsive below `sm`**: the same drawing, given a `viewBox`
+  so the strokes scale, with the stickies placed as percentages of that same
+  space so they land where they do on desktop. `preserveAspectRatio="none"`,
+  because the board is not the same shape at both widths and a hand-drawn loop
+  can stretch a little without anyone noticing; `vector-effect="non-scaling-stroke"`
+  keeps the strokes their true weight.
+- **Desktop is untouched.** It keeps drawing at raw pixel coordinates in its own
+  layer, so the composition everyone signed off does not move. The two layers
+  read their geometry from one set of constants, so they cannot drift apart.
+
+One thing that fell out of it: sticky labels are now `w-full`. `place-items-center`
+sizes its child to max-content, so a label wider than its note ran straight out
+over the edge, which it did at phone width where the notes are narrower.
+
 **Known and left alone:** at 360px the Multi AI swash still runs about 5px past
 the edge. It is `whitespace-nowrap` so its underline stays on one line, and the
 constraint lives in the shared `MultiAiWired`, not here. Our swash was shortened
