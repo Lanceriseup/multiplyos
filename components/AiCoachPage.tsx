@@ -20,7 +20,7 @@
 //   3. grounded       it names the record, counts the days, and does not flatter you
 //   4. it builds      charts, dashboards, and calculators you can put on your site
 //   5. memory         three tiers, private to you, never shared with teammates
-//   6. everywhere     the one section that ties the other eleven features together
+//   6. everywhere     the one section that ties the other twelve features together
 //
 // This is the only feature page that does NOT end with MultiAiWired, because the
 // whole page is Multi AI and the component would be arguing with itself.
@@ -584,7 +584,9 @@ function MemoryDemo() {
 
 // ---------------------------------------------------------------- 6. everywhere
 // This page's closer, in place of MultiAiWired. It is the section that ties the
-// other eleven features together, which only this page can do.
+// other twelve features together, which only this page can do. (Whiteboards
+// took the count from eleven to twelve in September 2026; REACH itself is a
+// curated six, so it did not need a new row.)
 const REACH = [
   { icon: Chart, label: "Metrics Scoreboard", c: "#EA7B1B", t: "13 weeks of every board, 3 years for a single metric, and it can log this week's number for you." },
   { icon: Ledger, label: "Finance HQ", c: "#A16207", t: "P&L, margin, balance sheet, and cash flow, for the people whose permissions include it." },

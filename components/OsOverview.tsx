@@ -3,8 +3,8 @@
 // Product preview section (desktop only): a faithful, interactive mockup of the
 // real Multiply OS app. On mobile this section is hidden — the mockup instead
 // lives inside the Hero (between the tagline and the CTAs) so there's no large
-// empty section on small screens. See components/Hero.tsx and AppMockup.tsx.
-import AppMockup from "./AppMockup";
+// empty section on small screens. See components/Hero.tsx and home-tour/index.tsx.
+import HomeOsTour from "./home-tour";
 
 export default function OsOverview() {
   return (
@@ -21,7 +21,7 @@ export default function OsOverview() {
       />
 
       <div className="relative mx-auto max-w-container">
-        <AppMockup />
+        <HomeOsTour />
       </div>
     </section>
   );

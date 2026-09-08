@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import WordSwap from "./WordSwap";
 import SystemTokens from "./SystemTokens";
-import AppMockup from "./AppMockup";
+import HomeOsTour from "./home-tour";
 import { useDemo } from "./DemoModal";
 
 const APP_URL = "https://app.multiplyos.com";
@@ -59,7 +59,7 @@ export default function Hero() {
           transition={{ duration: 0.6, delay: 0.18 }}
           className="mx-auto mt-6 w-full max-w-[560px] md:hidden"
         >
-          <AppMockup initialHeight={240} />
+          <HomeOsTour />
         </motion.div>
 
         <motion.div

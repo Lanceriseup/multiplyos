@@ -232,18 +232,29 @@ export function ReplacesChip({
     // Agreements does: it names three tools, and a straddling two-line chip
     // would need clearance that changes per page.
     <div className="pointer-events-none mb-3 w-full px-4 sm:absolute sm:left-1/2 sm:top-0 sm:z-10 sm:mb-0 sm:-translate-x-1/2 sm:-translate-y-1/2">
-      {/* Two lines on a phone, one line from sm up.
+      {/* One line from sm up, and on a phone it depends on how many tools the
+          page names.
 
-          Agreements and Forms each name three tools, which is wider than a
-          phone. Letting the pill wrap put the break in whatever arbitrary place
-          the widths landed on, so the second line read as the pill running out
-          of room. Stacking it puts the break where it means something: the
-          label takes the top line, and the marks sit in a row underneath it.
+          Agreements and Forms each name three, which is wider than a phone.
+          Letting the pill wrap put the break in whatever arbitrary place the
+          widths landed on, so the second line read as the pill running out of
+          room. Stacking it puts the break where it means something: the label
+          takes the top line, and the marks sit in a row underneath it.
 
-          The marks live in their own row for that reason, and that row goes
-          `display: contents` at sm so they become direct children of the pill
-          again and the desktop layout is exactly what it always was. */}
-      <p className="mx-auto flex w-fit max-w-full flex-col items-center justify-center gap-y-[5px] rounded-[20px] border border-[#F0E4D3] bg-white px-4 py-[7px] shadow-[0_8px_20px_-12px_rgba(40,30,15,0.5)] sm:flex-row sm:flex-wrap sm:gap-x-3.5 sm:gap-y-1.5 sm:rounded-full sm:px-5 sm:py-2.5">
+          But a page naming ONE tool has nothing to break. Org Chart, Scoreboard,
+          SOP HQ, Team Meetings and Whiteboards were each stacking a label over a
+          single wordmark that had room to sit beside it, which reads as a pill
+          that could not cope rather than as a deliberate two-line pill. Those
+          five stay on one line at every width.
+
+          The marks live in their own row for the stacking case, and that row
+          goes `display: contents` at sm so they become direct children of the
+          pill again and the desktop layout is exactly what it always was. */}
+      <p
+        className={`mx-auto flex w-fit max-w-full items-center justify-center rounded-[20px] border border-[#F0E4D3] bg-white px-4 py-[7px] shadow-[0_8px_20px_-12px_rgba(40,30,15,0.5)] sm:flex-row sm:flex-wrap sm:gap-x-3.5 sm:gap-y-1.5 sm:rounded-full sm:px-5 sm:py-2.5 ${
+          items.length === 1 ? "flex-row gap-x-2.5 rounded-full" : "flex-col gap-y-[5px]"
+        }`}
+      >
         {/* ink rather than grey: at this size, in caps, on white, brand-gray
             read as a watermark next to the wordmark it introduces */}
         <span className="text-[9.5px] font-bold uppercase tracking-[0.15em] text-brand-ink sm:text-[11px]">
@@ -331,4 +342,8 @@ export const REPLACES = {
     { name: "EOS One", logo: "/replaces-eosone.png" },
   ],
   teamMeetings: [{ name: "ninety.io", logo: "/replaces-ninety.png" }],
+  // Added September 2026 with the Whiteboards module. Miro only: the client
+  // supplied that one logo and named no other tool, so FigJam and Mural are
+  // deliberately absent rather than assumed.
+  whiteboards: [{ name: "Miro", logo: "/replaces-miro.png" }],
 } satisfies Record<string, Replaced[]>;
