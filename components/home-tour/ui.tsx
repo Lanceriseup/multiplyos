@@ -168,6 +168,13 @@ export const IPlay = mk(
     <path d="M8 5.4l10.4 6.6L8 18.6z" />
   </>,
 );
+/** A microphone on its stand, for the recorder's Record microphone toggle. */
+export const IMic = mk(
+  <>
+    <rect x="9.2" y="2.6" width="5.6" height="10.4" rx="2.8" />
+    <path d="M5.6 11.2a6.4 6.4 0 0 0 12.8 0M12 17.6V21M9 21h6" />
+  </>,
+);
 export const IGear = mk(
   <>
     <circle cx="12" cy="12" r="3.2" />

@@ -15,20 +15,30 @@
 //   5. New SOP                the block palette, all ten of them
 //   6. Screen Record          picked out of the palette, so the recorder is a
 //                             block in a SOP rather than a separate tool
-//   7. record it              capture source, a running timer, stop and publish
+//   7. record it              Start recording, a running duration, Stop & save
 //   8. the published SOP      with the chapters it generated
 //
-// Beats 5 to 8 are the authoring half, which the earlier cut dropped on the
+// Beats 5 to 8 are the authoring half, which the earliest cut dropped on the
 // grounds that it reads badly when rushed. That was the right call at six
 // seconds and the wrong one at sixteen: recording your screen is the thing
 // people do not expect a SOP tool to do, so it earns the length.
 //
-// Everything here traces to SopHqPage.tsx rather than being invented. The ten
-// block names, the three capture sources, "Records in the browser, and keeps
-// running while you work", the generated chapters and the 23-step count with
-// only the first seven shown are all the product's own. The one deliberate
-// change is the step and chapter wording, which is client-onboarding flavoured
-// so it sits under Operations -> Onboarding where the drill actually lands.
+// THE RECORDER is traced from a screenshot of the real thing, supplied by the
+// client in September 2026 with the note "make it look similar to this": the
+// SCREEN RECORD block label, the dark capture frame with its own browser chrome
+// and a REC flag, the camera bubble in the corner, and a control column holding
+// DURATION, a Record microphone checkbox over a device picker and a live input
+// level, a Record me on camera checkbox, and a red Stop & save.
+//
+// It is ONE block that changes state, not two screens. Start recording and
+// Stop & save are the same control in the same place, which is why the pointer
+// presses the same spot twice and the layout never jumps under it.
+//
+// The rest traces to SopHqPage.tsx rather than being invented: the ten block
+// names, the generated chapters, and the 23-step count with only the first
+// seven shown. The one deliberate change is the step and chapter wording, which
+// is client-onboarding flavoured so it sits under Operations -> Onboarding
+// where the drill actually lands.
 //
 // Departments, subjects and SOP titles stay generic. They are the ones any
 // business would recognise, not the ones in the demo account, and the author is
@@ -39,9 +49,11 @@ import {
   Av,
   IBook,
   ICamera,
+  ICheck,
   IChevron,
   IClock,
   IPlay,
+  IMic,
   IPlus,
   IScreen,
   ISearch,
@@ -117,13 +129,21 @@ const BLOCKS = [
 /** The one the pointer picks. Its position drives nothing, but it is real. */
 const REC_BLOCK = "Screen Record";
 
-const SOURCES = [
-  { k: "Screen", I: IScreen },
-  { k: "Screen + camera", I: ICamera },
-  { k: "Camera", I: ICamera },
-];
-/** Screen + camera, so the camera bubble has a reason to be on the capture. */
-const SRC_PICK = 1;
+// Bar heights for the microphone input level, as percentages. Fixed rather than
+// random so the shape is the same on every loop and on the server render.
+const WAVE = [38, 62, 100, 74, 46, 88, 58, 100, 70, 34, 80, 52, 92, 44];
+
+/** The recorder's two toggles are on, so both are drawn checked. */
+function CheckBox({ on }: { on: boolean }) {
+  return (
+    <span
+      className="grid h-[13px] w-[13px] flex-none place-items-center rounded-[3px]"
+      style={{ background: on ? T.blue : "#fff", border: on ? "none" : `1.5px solid ${T.hair2}` }}
+    >
+      <ICheck className="h-[9px] w-[9px] text-white" style={{ opacity: on ? 1 : 0 }} />
+    </span>
+  );
+}
 
 const VIDEO_TITLE = "Setting Up a New Client Workspace";
 const CHAPTERS = [
@@ -133,9 +153,10 @@ const CHAPTERS = [
   { at: "0:52", t: "Set folder permissions" },
 ];
 
-const clock = (n: number) => `00:${String(n).padStart(2, "0")}`;
+/** The product prints the duration as 0:01, not 00:01. */
+const clock = (n: number) => `0:${String(n).padStart(2, "0")}`;
 
-type Level = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+type Level = 0 | 1 | 2 | 3 | 4 | 5;
 type Scene = {
   lvl: Level;
   hot: string | null;
@@ -143,11 +164,12 @@ type Scene = {
   ticked: boolean;
   /** The Screen Record block has been added to the new SOP. */
   block: boolean;
-  src: number;
+  /** The block is rolling. Swaps Start recording for Stop & save. */
+  rec: boolean;
   /** Seconds on the recording clock. */
   secs: number;
 };
-const BLANK: Scene = { lvl: 0, hot: null, ticked: false, block: false, src: 0, secs: 0 };
+const BLANK: Scene = { lvl: 0, hot: null, ticked: false, block: false, rec: false, secs: 0 };
 
 export default function SopAct({ active, rig }: { active: boolean; rig: Rig }) {
   const [s, setScene] = useState<Scene>(BLANK);
@@ -186,20 +208,20 @@ export default function SopAct({ active, rig }: { active: boolean; rig: Rig }) {
     if (!(await press("new", 540, { lvl: 4 }, 520))) return;
     if (!(await press("block", 540, { block: true }, 560))) return;
 
-    // ---- 7. pick the capture source, then roll
-    if (!(await press("src", 400, { src: SRC_PICK }, 400))) return;
-    if (!(await press("rec", 440, { lvl: 5 }, 260))) return;
+    // ---- 7. roll. Start recording and Stop & save are the same control in the
+    // same place, so the pointer barely moves between them, which is the point.
+    if (!(await press("rec", 440, { rec: true }, 300))) return;
 
-    // The clock runs faster than real time on purpose: a mockup that ticks in
-    // true seconds spends four of them proving it can count.
-    for (const n of [2, 4, 6, 8]) {
+    // The clock runs faster than real time on purpose: a mockup that counts in
+    // true seconds spends six of them proving it can count.
+    for (const n of [1, 2, 3, 4, 5, 6]) {
       if (!alive()) return;
       setScene((x) => ({ ...x, secs: n }));
-      await wait(360);
+      await wait(320);
     }
 
     // ---- 8. stop, and it is a published SOP with chapters
-    if (!(await press("stop", 460, { lvl: 6 }, 1700))) return;
+    if (!(await press("stop", 300, { lvl: 5, rec: false }, 1700))) return;
 
     await r.fade(0, 340);
   });
@@ -210,7 +232,6 @@ export default function SopAct({ active, rig }: { active: boolean; rig: Rig }) {
   );
   const doneCount = MSTEPS.filter((m) => m.done).length + (s.ticked ? 1 : 0);
   const pct = Math.round((doneCount / TOTAL_STEPS) * 100);
-  const recording = s.lvl === 5;
 
   return (
     <div ref={rootRef} className="flex h-full flex-col gap-[10px]">
@@ -506,188 +527,161 @@ export default function SopAct({ active, rig }: { active: boolean; rig: Rig }) {
             </div>
           </div>
 
-          {/* the Screen Record block, once it is in the document */}
+          {/* The Screen Record block, once it is in the document. It does not
+              hand off to a separate screen when it starts: the block itself
+              becomes the recorder, which is how the product does it. */}
           <div
-            className="mx-5 mt-3.5 flex-none rounded-[10px] border p-3 transition-all duration-[320ms]"
+            className="mx-5 mt-3.5 flex h-[252px] flex-none flex-col transition-all duration-[320ms]"
             style={{
-              borderColor: T.hair2,
               opacity: s.block ? 1 : 0,
               transform: s.block ? "translateY(0)" : "translateY(6px)",
             }}
           >
-            <div className="text-[8.5px] font-bold uppercase tracking-[0.12em]" style={{ color: T.muted }}>
+            <div
+              className="flex flex-none items-center gap-[6px] text-[8.5px] font-bold uppercase tracking-[0.12em]"
+              style={{ color: T.muted }}
+            >
+              <IScreen className="h-[12px] w-[12px]" />
               Screen Record
             </div>
-            <div className="mt-[9px] flex items-center gap-2">
-              <span className="inline-flex rounded-[8px] p-[3px]" style={{ background: "#EDEAE4" }}>
-                {SOURCES.map((src, i) => (
-                  <span
-                    key={src.k}
-                    data-sop={i === SRC_PICK ? "src" : undefined}
-                    className="inline-flex items-center gap-[5px] rounded-[6px] px-[9px] py-[5px] text-[11px] transition-all duration-200"
-                    style={
-                      i === s.src
-                        ? { background: "#fff", color: T.ink, fontWeight: 650, boxShadow: "0 1px 2px rgba(0,0,0,0.06)" }
-                        : { color: T.muted }
-                    }
-                  >
-                    <src.I className="h-[12px] w-[12px]" />
-                    {src.k}
-                  </span>
-                ))}
-              </span>
-              <span
-                data-sop="rec"
-                className="ml-auto inline-flex flex-none items-center gap-[7px] rounded-[8px] px-[12px] py-[7px] text-[11.5px] font-semibold text-white transition-all duration-200"
-                style={{
-                  background: T.navy,
-                  boxShadow: s.hot === "rec" ? "0 0 0 3px rgba(31,41,55,0.18)" : undefined,
-                }}
+
+            <div
+              className="mt-[7px] flex min-h-0 flex-1 rounded-[10px] border bg-white p-2.5"
+              style={{ borderColor: T.hair2 }}
+            >
+              {/* ---- what is being captured ---- */}
+              <div
+                className="relative min-h-0 min-w-0 flex-1 overflow-hidden rounded-[8px] p-[7px]"
+                style={{ background: "#22201D" }}
               >
-                <span className="h-[7px] w-[7px] rounded-full" style={{ background: "#E8574A" }} />
-                Start recording
-              </span>
-            </div>
-            <p className="mt-[9px] text-[11px]" style={{ color: T.muted }}>
-              Records in the browser, and keeps running while you work.
-            </p>
-          </div>
-        </div>
-
-        {/* ---- level 5: recording ---- */}
-        <div
-          className="absolute inset-0 flex flex-col overflow-hidden rounded-[12px] border bg-white transition-all duration-[300ms]"
-          style={{
-            borderColor: T.hair,
-            opacity: recording ? 1 : 0,
-            transform: recording ? "scale(1)" : "scale(0.99)",
-          }}
-        >
-          <div
-            className="flex flex-none items-center gap-2 border-b px-4 py-[10px]"
-            style={{ borderColor: T.hair }}
-          >
-            <b className="text-[13px]">Record a video SOP</b>
-            <span className="ml-auto inline-flex rounded-[8px] p-[3px]" style={{ background: "#EDEAE4" }}>
-              {SOURCES.map((src, i) => (
-                <span
-                  key={src.k}
-                  className="inline-flex items-center gap-[5px] rounded-[6px] px-[9px] py-[5px] text-[11px]"
-                  style={
-                    i === s.src
-                      ? { background: "#fff", color: T.ink, fontWeight: 650, boxShadow: "0 1px 2px rgba(0,0,0,0.06)" }
-                      : { color: T.muted }
-                  }
-                >
-                  <src.I className="h-[12px] w-[12px]" />
-                  {src.k}
-                </span>
-              ))}
-            </span>
-          </div>
-
-          {/* what is being captured */}
-          <div className="min-h-0 flex-1 p-3">
-            <div className="relative h-full overflow-hidden rounded-[10px]" style={{ background: "#2E2C28" }}>
-              {/* The app window being captured. Greyed-out furniture rather than
-                  a real screen: what matters is that the frame reads as somebody
-                  working, and a half-empty box does not. */}
-              <div className="absolute inset-[14px] flex flex-col overflow-hidden rounded-[7px] bg-white/95">
-                <div
-                  className="flex flex-none items-center gap-[5px] border-b px-2.5 py-[6px]"
-                  style={{ borderColor: T.hair }}
-                >
-                  <span className="h-[7px] w-[7px] rounded-full" style={{ background: "#E4E0D9" }} />
-                  <span className="h-[7px] w-[7px] rounded-full" style={{ background: "#E4E0D9" }} />
-                  <span className="h-[7px] w-[7px] rounded-full" style={{ background: "#E4E0D9" }} />
-                  <span className="ml-2 text-[9px]" style={{ color: T.muted2 }}>
-                    Client workspace
-                  </span>
-                </div>
-
-                <div className="flex min-h-0 flex-1">
+                <div className="flex h-full flex-col overflow-hidden rounded-[5px] bg-[#FAF9F7]">
                   <div
-                    className="flex w-[112px] flex-none flex-col gap-[9px] border-r p-2.5"
-                    style={{ borderColor: T.hair }}
+                    className="flex flex-none items-center gap-[5px] border-b px-2 py-[5px]"
+                    style={{ borderColor: "#EDEAE6" }}
                   >
-                    <div className="h-[9px] w-[64%] rounded-full" style={{ background: "#E2DDD4" }} />
-                    {[74, 62, 80, 56, 70, 50, 66].map((w, i) => (
-                      <div key={i} className="h-[7px] rounded-full" style={{ width: `${w}%`, background: "#EEEAE3" }} />
-                    ))}
+                    <span className="h-[6px] w-[6px] rounded-full" style={{ background: "#E8574A" }} />
+                    <span className="h-[6px] w-[6px] rounded-full" style={{ background: "#EBB84B" }} />
+                    <span className="h-[6px] w-[6px] rounded-full" style={{ background: "#4FB477" }} />
+                    <span
+                      className="ml-1.5 rounded-[4px] px-[7px] py-[2px] text-[8px]"
+                      style={{ background: "#EFECE6", color: T.muted }}
+                    >
+                      app.yourcrm.com
+                    </span>
                   </div>
-
-                  <div className="flex min-w-0 flex-1 flex-col gap-2.5 p-3">
-                    <div className="h-[11px] w-[38%] flex-none rounded-full" style={{ background: "#DED9D0" }} />
-                    <div className="flex flex-none gap-2.5">
-                      {[0, 1, 2].map((i) => (
-                        <div
-                          key={i}
-                          className="flex flex-1 flex-col gap-[6px] rounded-[6px] border p-2"
-                          style={{ borderColor: T.hair }}
-                        >
-                          <div className="h-[6px] w-[52%] rounded-full" style={{ background: "#EEEAE3" }} />
-                          <div className="h-[12px] w-[36%] rounded-[3px]" style={{ background: "#E2DDD4" }} />
-                        </div>
+                  <div className="flex min-h-0 flex-1">
+                    <div className="flex w-[62px] flex-none flex-col gap-[6px] p-2">
+                      {[78, 62, 70, 54].map((w, i) => (
+                        <span key={i} className="h-[5px] rounded-full" style={{ width: `${w}%`, background: "#E6E2DA" }} />
                       ))}
                     </div>
-                    <div
-                      className="flex min-h-0 flex-1 flex-col justify-around rounded-[6px] border px-2.5 py-2"
-                      style={{ borderColor: T.hair }}
-                    >
-                      {[92, 78, 86, 70, 82, 74].map((w, i) => (
-                        <div key={i} className="flex items-center gap-2">
-                          <span className="h-[8px] w-[8px] flex-none rounded-[2px]" style={{ background: "#EEEAE3" }} />
-                          <span className="h-[7px] rounded-full" style={{ width: `${w}%`, background: "#EFECE6" }} />
-                        </div>
+                    <div className="grid min-w-0 flex-1 grid-cols-3 grid-rows-2 gap-[7px] p-2">
+                      {[0, 1, 2, 3, 4, 5].map((i) => (
+                        <span
+                          key={i}
+                          className="rounded-[4px] border"
+                          style={{ borderColor: "#EDEAE4", background: "#F4F1EC" }}
+                        />
                       ))}
                     </div>
                   </div>
                 </div>
-              </div>
 
-              {/* the camera bubble, when the source includes it */}
-              {s.src === SRC_PICK && (
+                {/* the recording flag, on the capture itself */}
                 <span
-                  className="absolute bottom-[22px] left-[22px] grid h-[42px] w-[42px] place-items-center rounded-full border-2 border-white/80"
-                  style={{ background: "#22201D", color: "#B8B2AA" }}
+                  className="absolute right-[15px] top-[15px] flex items-center gap-[5px] rounded-full px-[9px] py-[3px] text-[9px] font-bold text-white transition-opacity duration-300"
+                  style={{ background: "rgba(34,32,29,0.86)", opacity: s.rec ? 1 : 0 }}
+                >
+                  <span className="h-[6px] w-[6px] rounded-full" style={{ background: "#E8574A" }} />
+                  REC
+                </span>
+
+                {/* the camera bubble, because Record me on camera is on */}
+                <span
+                  className="absolute bottom-[15px] left-[15px] grid h-[44px] w-[44px] place-items-center rounded-full"
+                  style={{ background: "#33302B", color: "#B8B2AA" }}
                 >
                   <ICamera className="h-[17px] w-[17px]" />
                 </span>
-              )}
+              </div>
 
-              {/* the recording readout */}
-              <span className="absolute right-[22px] top-[22px] flex items-center gap-[7px] rounded-full bg-black/55 px-[10px] py-[4px] text-[10px] font-semibold text-white">
-                <span className="h-[7px] w-[7px] rounded-full" style={{ background: "#E8574A" }} />
-                REC {clock(s.secs)}
-              </span>
+              {/* ---- the controls ---- */}
+              <div className="ml-3 flex w-[212px] flex-none flex-col">
+                <div className="text-[8.5px] font-bold uppercase tracking-[0.12em]" style={{ color: T.muted }}>
+                  Duration
+                </div>
+                <div className="mt-[2px] text-[24px] font-[800] leading-none tabular-nums">{clock(s.secs)}</div>
+
+                <label className="mt-3 flex items-center gap-[7px] text-[11.5px] font-semibold" style={{ color: T.orange }}>
+                  <CheckBox on />
+                  <IMic className="h-[13px] w-[13px]" />
+                  Record microphone
+                </label>
+                <div
+                  className="mt-[7px] rounded-[7px] border px-2.5 py-[6px] text-[11px]"
+                  style={{ borderColor: T.hair2, color: T.body }}
+                >
+                  System default
+                </div>
+
+                {/* input level, so the microphone reads as live rather than a
+                    checkbox nobody can tell is doing anything */}
+                <div className="mt-[9px] flex h-[13px] items-center gap-[3px]">
+                  {WAVE.map((h, i) => (
+                    <span
+                      key={i}
+                      className="flex-1 rounded-full transition-[height] duration-300"
+                      style={{ height: `${s.rec ? h : 12}%`, background: T.green, opacity: 0.85 }}
+                    />
+                  ))}
+                </div>
+
+                <label className="mt-3 flex items-center gap-[7px] text-[11.5px] font-semibold">
+                  <CheckBox on />
+                  <ICamera className="h-[13px] w-[13px]" />
+                  Record me on camera
+                </label>
+
+                {/* One button in one place, which is what the product does:
+                    it is the same control before and after, so the pointer
+                    presses the same spot twice. */}
+                {/* Directly under the camera toggle, not pinned to the bottom
+                    of the column: at the foot of the stage it collided with the
+                    floating Ask Multi AI pill. */}
+                <span
+                  data-sop={s.rec ? "stop" : "rec"}
+                  className="mt-3 flex items-center justify-center gap-[7px] rounded-[8px] py-[9px] text-[12px] font-semibold text-white transition-all duration-200"
+                  style={{
+                    background: s.rec ? "#E8574A" : T.navy,
+                    boxShadow:
+                      s.hot === (s.rec ? "stop" : "rec")
+                        ? `0 0 0 3px ${s.rec ? "rgba(232,87,74,0.22)" : "rgba(31,41,55,0.18)"}`
+                        : undefined,
+                  }}
+                >
+                  <span
+                    className="transition-all duration-200"
+                    style={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: s.rec ? 2 : 9999,
+                      background: s.rec ? "#fff" : "#E8574A",
+                    }}
+                  />
+                  {s.rec ? "Stop & save" : "Start recording"}
+                </span>
+              </div>
             </div>
-          </div>
-
-          <div className="flex flex-none items-center gap-2.5 px-4 pb-3.5">
-            <span
-              data-sop="stop"
-              className="inline-flex items-center gap-[7px] rounded-[8px] px-[13px] py-[7px] text-[12px] font-semibold text-white transition-all duration-200"
-              style={{
-                background: "#E8574A",
-                boxShadow: s.hot === "stop" ? "0 0 0 3px rgba(232,87,74,0.22)" : undefined,
-              }}
-            >
-              <span className="h-[8px] w-[8px] rounded-[2px] bg-white" />
-              Stop &amp; publish
-            </span>
-            <span className="text-[11.5px]" style={{ color: T.muted }}>
-              Recording screen and camera
-            </span>
           </div>
         </div>
 
-        {/* ---- level 6: the published video SOP ---- */}
+        {/* ---- level 5: the published video SOP ---- */}
         <div
           className="absolute inset-0 flex flex-col overflow-hidden rounded-[12px] border bg-white transition-all duration-[320ms]"
           style={{
             borderColor: T.hair,
-            opacity: s.lvl === 6 ? 1 : 0,
-            transform: s.lvl === 6 ? "scale(1)" : "scale(1.01)",
+            opacity: s.lvl === 5 ? 1 : 0,
+            transform: s.lvl === 5 ? "scale(1)" : "scale(1.01)",
           }}
         >
           <div className="flex flex-none items-start gap-3 px-5 pb-3 pt-4">

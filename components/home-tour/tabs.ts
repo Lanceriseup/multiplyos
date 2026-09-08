@@ -20,9 +20,10 @@
 //
 // SEVEN tabs carry almost all of the loop:
 //
-//   SOP's          16.6s  the library drill, a multi step SOP with 23 steps and
+//   SOP's          15.7s  the library drill, a multi step SOP with 23 steps and
 //                         a step ticked off, then New SOP -> Screen Record ->
-//                         record with a camera -> the published SOP's chapters
+//                         Start recording, a running duration and Stop & save,
+//                         then the published SOP's chapters
 //   Multi AI       12.6s  switch coach and the prompts swap, change the model
 //                         across both providers, an honest answer, a chart
 //   One Page Plan  12.6s  scroll, open a goal, tick a milestone, write the
@@ -41,22 +42,22 @@
 // rather than on moves: the swapped prompts, the five-model picker and the final
 // answer are all things a visitor has to read, not watch.
 //
-// THAT IS THE PROBLEM WITH THIS TABLE AS IT STANDS. Those seven are 83.8 of the
-// loop's 113.2 seconds. SOP's does not begin until 1:14, Agreements until 1:30,
-// Forms until 1:42. Nobody watches a hero for the better part of two minutes, so
+// THAT IS THE PROBLEM WITH THIS TABLE AS IT STANDS. Those seven are 82.9 of the
+// loop's 112.3 seconds. SOP's does not begin until 1:14, Agreements until 1:29,
+// Forms until 1:41. Nobody watches a hero for the better part of two minutes, so
 // the last two tabs are effectively click-only.
 //
-// SOP's went from 8.0s to 16.6s in September on the client's review: recording a
+// SOP's went from 8.0s to 15.7s in September on the client's review: recording a
 // video off your own screen and the multi step SOP were both asked for by name,
 // and neither survives being rushed. So it is now the longest tab in the loop,
-// and the loop is 14 seconds longer than it already was.
+// and the loop is 13 seconds longer than it already was.
 //
 // Every act is worth its length, so trimming beats is the wrong lever. The right
 // one is a SHORTER ROTATION, and it is now overdue. Auto-cycling five tabs
 //
 //   Org Chart, One Page Plan, Multi AI, CFO Dashboard, SOP's
 //
-// is 63.4 seconds and keeps everything the client has singled out so far. All
+// is 62.5 seconds and keeps everything the client has singled out so far. All
 // ten sidebar rows stay clickable whatever the cycle contains, so a dropped tab
 // becomes unlikely rather than unreachable. That change belongs in index.tsx,
 // not here: this table is the client's order and should stay complete.
@@ -65,7 +66,7 @@
 // costs the least:
 //   1. the plan's Goal Updates beat        ~2.4s, the one beat that stands alone
 //   2. the CFO's Profit & Loss hold        2.1s of reading on a dense table
-//   3. the SOP recording clock             4 ticks at 360ms in SopAct
+//   3. the SOP recording clock             6 ticks at 320ms in SopAct
 //   4. the plan's opening scroll           SCROLL_MS in OnePagePlanAct
 //
 // To retime: change `ms` here and nothing else. Nothing reads a duration from
@@ -102,7 +103,7 @@ export const TABS: Tab[] = [
   { key: "proj", brief: "Projects (tasks in projects)", nav: "proj", url: "/projects/client-onboarding", ms: 10800 },
   { key: "cfo", brief: "CFO Dashboard", nav: "cfo", url: "/cfo-dashboard", ms: 12000 },
   // Longest tab in the loop, and deliberately so. See the pacing note above.
-  { key: "sop", brief: "SOP's", nav: "sop", url: "/sop-hq", ms: 16600 },
+  { key: "sop", brief: "SOP's", nav: "sop", url: "/sop-hq", ms: 15700 },
   { key: "agree", brief: "Agreements", nav: "agree", url: "/agreements", ms: 12000 },
   { key: "forms", brief: "Forms", nav: "forms", url: "/forms", ms: 11000 },
 ];
