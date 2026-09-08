@@ -43,10 +43,17 @@ export const money = (n: number) => `$${Math.round(n).toLocaleString("en-US")}`;
 
 // The CRM row came out in September 2026 on the client's instruction. It was
 // GoHighLevel Starter at $97 flat, and it was the one figure here that needed
-// no arithmetic to arrive at. Its removal is why the total is $1,664 rather
-// than $1,761 and why the page says eleven tools rather than twelve, and it
-// means the page no longer claims to replace a CRM at all. If it goes back,
-// the word "eleven" has to move with it in three places.
+// no arithmetic to arrive at. Its removal means the page no longer claims to
+// replace a CRM at all.
+//
+// The Whiteboards row (Miro) went in later the same month, taking the table
+// back to twelve rows and the total to $1,764.
+//
+// STACK_TOTAL is computed by reduce, so the money never needs editing by hand.
+// The COUNT does: "twelve" is spelled out in three visible places in
+// PricingPage.tsx — the eyebrow, the desktop line, and the phone-only band
+// under the price. Adding or removing a row here means changing that word in
+// all three. Grep for it.
 export const AS_OF = "August 2026";
 
 type StackRow = {
@@ -198,6 +205,35 @@ const STACK: StackRow[] = [
     // is the cheapest paid tier and the one the rule calls for.
     was: 100,
     logos: [{ name: "Calendly", logo: "/replaces-calendly.png" }],
+  },
+  {
+    what: "Whiteboards and visual planning",
+    note: "An infinite canvas, live cursors, and comments pinned to the work",
+    // Miro Starter, $10/member/mo monthly, x10.
+    //
+    // The tier: Free is capped at THREE editable boards and has no private
+    // boards at all, so it is not a plan a team of ten can run on. Starter is
+    // the first tier with unlimited and private boards, granular sharing, and
+    // public visitor links, which is exactly the capability set the Whiteboards
+    // page claims. Business at $20 annual adds unlimited guests and SSO, which
+    // we do not claim, so Starter is the conservative pick. Same reasoning as
+    // the DocuSign row.
+    //
+    // The figure: miro.com/pricing prints "$8/month per member, billed yearly"
+    // and labels the toggle "Yearly (save 20%)". It does NOT print a monthly
+    // rate, so the monthly figure is derived: 8 / 0.8 = $10. The Miro help
+    // centre states $10 monthly directly, which corroborates it. Monthly is the
+    // right basis here for the same reason the Loom, Asana and Claude rows use
+    // it — Multiply OS is billed monthly, so annual rates are not like-for-like.
+    //
+    // CHECK DATE. This row was checked in SEPTEMBER 2026; AS_OF still says
+    // August, which is when the other eleven were checked. August is left in
+    // place deliberately: an older date understates how fresh this figure is,
+    // which is the safe direction to be wrong, whereas moving AS_OF to
+    // September would claim all twelve were re-checked when eleven were not.
+    // Re-verify the other eleven and then bump AS_OF, not the other way round.
+    was: 100,
+    logos: [{ name: "Miro", logo: "/replaces-miro.png" }],
   },
 ];
 
