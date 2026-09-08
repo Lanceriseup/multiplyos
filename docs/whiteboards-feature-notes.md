@@ -53,20 +53,60 @@ rather than hedging the whole page.
 
 ## 4. The hero tour
 
-`components/WhiteboardsHeroTour.tsx`. Six beats:
+`components/WhiteboardsHeroTour.tsx`.
+
+**Revised September 2026 on the client's review.** The first cut introduced the
+collaborator as beat 5 of 6. The client's note was: *"make sure in the beginning
+and throughout you show collaboration (another user in there moving his mouse
+and adding things)"*. Fair, and it was the right criticism: presence arriving
+five sixths of the way through a loop reads as a scripted cameo, and most
+visitors never saw it at all.
+
+So presence is no longer a beat. **Dana is on the board when it opens** and her
+cursor never stops moving. Two drivers run concurrently, each owning exactly one
+cursor:
+
+**Ours,** the main loop:
 
 1. A sticky lands and gets typed into, then a second one.
 2. A connector joins them, so the board is a map and not a pile.
 3. The pen draws a freehand loop around both.
-4. **Two photos are dropped onto the board together**, the way files actually
-   arrive on a canvas.
-5. **A second cursor arrives and adds a sticky live**, with its own colour and
-   name flag, and the presence stack in the top bar gains their avatar.
-6. A pinned comment is left on their sticky and typed out.
+4. Two photos are dropped onto the board together.
+5. A pinned comment is left on Dana's second sticky and typed out.
 
-Beat 5 is the point of the whole page. Beat 6 is deliberately last and quiet:
-pinned comments are the half of collaboration that does not need everybody in the
-room, and they are what turn a session into a record.
+**Dana's,** `mateScript`, running alongside all of that:
+
+- Already on the canvas and drifting before we touch anything, with her avatar
+  in the presence stack from the first frame.
+- **Her first sticky** ("Q1 budget") added and typed while we are still writing
+  our second, about 2.8 seconds in.
+- **Drifting the whole way through**, along hand-placed waypoints that keep her
+  in the right half of the canvas: clear of our pointer's path on the left, of
+  the photo strip along the bottom, and of the minimap in the corner. Two
+  cursors that overlap read as one cursor glitching.
+- **Her second sticky** ("Pricing page"), the one we then comment on.
+- Still drifting until our own pointer has finished.
+
+Measured on the built page, over 44 samples across one 30-second loop: her
+cursor is on screen in 44 of 44, occupies 33 distinct positions, and moves in
+both the first and the last quarter. That is the client's "throughout", checked
+rather than asserted.
+
+### Why two drivers and not one sequence
+
+Nothing but `mateScript` ever animates `mateRef`, and nothing but the main loop
+ever animates `cursorRef`. That split is load-bearing. Two callers animating one
+element through the Web Animations API race each other, and the loser strands
+its cursor mid-canvas because it reads a start position that has already moved.
+
+The two scripts meet at exactly one point: `mateAddedC`, a flag Dana sets when
+her second sticky exists. The main loop waits on that flag before commenting
+rather than trusting the two timelines to stay in step, so retuning any earlier
+beat cannot send our pointer to comment on a sticky that is not there. A second
+flag, `mainDone`, lets her keep drifting for as long as we are busy without
+having to know how long that is.
+
+### The rest of the chrome
 
 The two photos in beat 4 are **drawn SVG landscapes, not stock photography**,
 each with a filename caption underneath. The client's screenshot has two real
@@ -74,11 +114,12 @@ photographs on the board, and a real one here would both imply the board ships
 with content and publish an image that is not ours to publish. Drawn ones still
 read as placed images: rounded, shadowed, captioned.
 
-The chrome is traced from the canvas screenshot: the `← Boards` crumb, the title,
-the presence avatars, the palette, the **Saved** pill (which flips to *Saving…*
-while the tour is editing and back to *Saved* at the end), the fourteen-tool
-rail, the dot grid, the floating selection toolbar, the minimap and the zoom
-readout at 79%.
+Traced from the canvas screenshot: the `← Boards` crumb, the title, the presence
+avatars, the palette, the **Saved** pill (which flips to *Saving…* while the
+board is being edited and back at the end), the fourteen-tool rail, the dot
+grid, the floating selection toolbar, the minimap and the zoom readout at 79%.
+The minimap carries four marks now, two grey and two teal, so it shows the board
+filling up from both sides rather than only from ours.
 
 Fourteen tools are drawn and only four are ever picked, the image tool being the
 fourth. That is deliberate: a three-tool whiteboard does not read as a
