@@ -55,42 +55,47 @@ rather than hedging the whole page.
 
 `components/WhiteboardsHeroTour.tsx`.
 
-**Revised September 2026 on the client's review.** The first cut introduced the
-collaborator as beat 5 of 6. The client's note was: *"make sure in the beginning
-and throughout you show collaboration (another user in there moving his mouse
-and adding things)"*. Fair, and it was the right criticism: presence arriving
-five sixths of the way through a loop reads as a scripted cameo, and most
-visitors never saw it at all.
+**Revised twice in September 2026, both times on the client's review.**
 
-So presence is no longer a beat. **Dana is on the board when it opens** and her
-cursor never stops moving. Two drivers run concurrently, each owning exactly one
-cursor:
+The first cut introduced the collaborator as beat 5 of 6. The note back was:
+*"make sure in the beginning and throughout you show collaboration (another user
+in there moving his mouse and adding things)"*. Fair: presence arriving five
+sixths of the way through a loop reads as a scripted cameo, and most visitors
+never saw it.
+
+The second cut over-corrected. Dana was on the board from frame one, but she
+drifted between seven waypoints for the whole loop, and the note back was
+blunt: *"there's a lot of unnecessary movements"*. Also fair. The fix was not
+less presence, it was less motion.
+
+Where it landed, and the two notes that shaped it:
+
+- **She is invited in, on screen, as the first thing that happens.** Share,
+  then Invite, and her avatar joins the presence stack. That answers *"show
+  that we added someone in, in the first place"*: you see the board gain a
+  person rather than finding one already there. The role is **Can edit**,
+  matching the sharing section further down the page.
+- **She moves exactly four times in the whole loop** and is still in between:
+  in from the edge, to her first sticky, to her second, and one step aside so
+  the comment bubble has room. A real collaborator's cursor sits still most of
+  the time. Presence is her being there, not her being busy.
 
 **Ours,** the main loop:
 
+0. Share the board and invite Dana.
 1. A sticky lands and gets typed into, then a second one.
 2. A connector joins them, so the board is a map and not a pile.
 3. The pen draws a freehand loop around both.
 4. Two photos are dropped onto the board together.
 5. A pinned comment is left on Dana's second sticky and typed out.
 
-**Dana's,** `mateScript`, running alongside all of that:
+**Dana's,** `mateScript`, started the moment she is invited: arrive, her first
+sticky ("Q1 budget") while we are still writing ours, her second ("Pricing
+page"), then rest.
 
-- Already on the canvas and drifting before we touch anything, with her avatar
-  in the presence stack from the first frame.
-- **Her first sticky** ("Q1 budget") added and typed while we are still writing
-  our second, about 2.8 seconds in.
-- **Drifting the whole way through**, along hand-placed waypoints that keep her
-  in the right half of the canvas: clear of our pointer's path on the left, of
-  the photo strip along the bottom, and of the minimap in the corner. Two
-  cursors that overlap read as one cursor glitching.
-- **Her second sticky** ("Pricing page"), the one we then comment on.
-- Still drifting until our own pointer has finished.
-
-Measured on the built page, over 44 samples across one 30-second loop: her
-cursor is on screen in 44 of 44, occupies 33 distinct positions, and moves in
-both the first and the last quarter. That is the client's "throughout", checked
-rather than asserted.
+Measured on the built page over 44 samples of one loop: she is off the board for
+the first three samples while we invite her, then on it for the remaining 41,
+across **8 distinct positions** (the drifting version was 33).
 
 ### Why two drivers and not one sequence
 
@@ -103,22 +108,21 @@ The two scripts meet at exactly one point: `mateAddedC`, a flag Dana sets when
 her second sticky exists. The main loop waits on that flag before commenting
 rather than trusting the two timelines to stay in step, so retuning any earlier
 beat cannot send our pointer to comment on a sticky that is not there. A second
-flag, `mainDone`, lets her keep drifting for as long as we are busy without
-having to know how long that is.
+flag, `mainDone`, lets her stay for as long as we are busy without having to
+know how long that is.
 
 ### The rest of the chrome
 
 The two photos in beat 4 are **drawn SVG landscapes, not stock photography**,
 each with a filename caption underneath. The client's screenshot has two real
 photographs on the board, and a real one here would both imply the board ships
-with content and publish an image that is not ours to publish. Drawn ones still
-read as placed images: rounded, shadowed, captioned.
+with content and publish an image that is not ours to publish.
 
 Traced from the canvas screenshot: the `← Boards` crumb, the title, the presence
 avatars, the palette, the **Saved** pill (which flips to *Saving…* while the
 board is being edited and back at the end), the fourteen-tool rail, the dot
 grid, the floating selection toolbar, the minimap and the zoom readout at 79%.
-The minimap carries four marks now, two grey and two teal, so it shows the board
+The minimap carries four marks, two grey and two teal, so it shows the board
 filling up from both sides rather than only from ours.
 
 Fourteen tools are drawn and only four are ever picked, the image tool being the
@@ -200,3 +204,40 @@ row on the comparison table** and no CRM feature page. That predates this work
 and is a claim about what the product ships, so it is the client's call: either
 the table is missing a row or the plan list is promising something the site does
 not show anywhere else.
+
+## 9. Mobile
+
+The client's third September note was that *"some parts of it doesn't look
+optimized"* on a phone. One real bug, and it was this page's alone.
+
+**The page scrolled sideways.** At 390px the document was **490px wide**. The
+`Section` grid children had the default `min-width: auto`, so a visual that
+could not shrink below its content pushed the whole track wider than the
+screen, and `ShareDemo`'s 170px rail was that visual. Fixed with `min-w-0` on
+both grid columns plus a narrower rail on small screens.
+
+Checked against the sibling feature pages at 390px: **none of the other twelve
+overflowed**, so this was a Whiteboards defect rather than a house-wide one. It
+now matches them exactly, including the hero tour's scale of 0.3408.
+
+Three smaller things went with it:
+
+- The board rail is **158px on a phone, 170px from `sm` up**. 170 ate half the
+  card at phone width; below about 150 the labels "Shared with me" and "My
+  department" truncate, and those two labels are what the section is arguing.
+  158 is the width at which both survive, verified by comparing `scrollWidth`
+  against `clientWidth` rather than by eye.
+- The visibility pill on each board row is **icon only below `sm`**. The label
+  pushed it off the edge of the card at 360px, and the panel underneath already
+  spells the selected board's visibility out in full.
+- The avatar on each board row is **hidden below `sm`**. It only repeats who
+  shared the board, which the line under the title already says, and the 36px it
+  cost was the difference between an 88px board name and a 52px one.
+
+**Known and left alone:** at 360px the Multi AI swash still runs about 5px past
+the edge. It is `whitespace-nowrap` so its underline stays on one line, and the
+constraint lives in the shared `MultiAiWired`, not here. Our swash was shortened
+from "somebody who finishes things." to "somebody who remembers." which brings
+it to 23 characters, within a character of the longest one any other page uses
+("somebody who reads it." on Agreements), so this page is no longer the outlier.
+Fixing the remaining 5px means changing the shared component for all thirteen.

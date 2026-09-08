@@ -438,9 +438,12 @@ function ShareDemo() {
       </div>
 
       <div className="flex" style={{ height: "calc(100% - 45px)" }}>
-        {/* 170, not 148: at 148 "Shared with me" and "My department" both
-            truncated, and those two labels are the section's whole point. */}
-        <div className="flex-none border-r px-2.5 py-3" style={{ width: 170, borderColor: HAIR }}>
+        {/* 170 on a desktop, because at 148 "Shared with me" and "My department"
+            both truncated and those two labels are the section's whole point. On a
+            phone the card is only about 334 wide, where 170 would eat half of it,
+            so it drops to 144: still enough for the longest label at 10.5px, and
+            it leaves the board list room to stay readable. */}
+        <div className="w-[158px] flex-none border-r px-2.5 py-3 sm:w-[170px]" style={{ borderColor: HAIR }}>
           {RAIL.map((r, i) => {
             const Ico = r.icon;
             return (
@@ -495,8 +498,11 @@ function ShareDemo() {
                 background: i === pick ? `${TEAL}0A` : "#fff",
               }}
             >
+              {/* Hidden on a phone. It only repeats who shared the board, which
+                  the line underneath already says, and the 36px it costs is the
+                  difference between a readable board name and "Q1 planni...". */}
               <span
-                className="grid h-[26px] w-[26px] flex-none place-items-center rounded-full text-[9px] font-bold text-white"
+                className="hidden h-[26px] w-[26px] flex-none place-items-center rounded-full text-[9px] font-bold text-white sm:grid"
                 style={{ background: b.c }}
               >
                 {b.i}
@@ -521,7 +527,10 @@ function ShareDemo() {
                 ) : (
                   <LockIcon className="h-[10px] w-[10px]" />
                 )}
-                {b.vis}
+                {/* Icon only on a phone. At 360 the label pushed this pill off
+                    the edge of the card, and the panel below already spells the
+                    selected board's visibility out in full. */}
+                <span className="hidden sm:inline">{b.vis}</span>
               </span>
             </button>
           ))}
@@ -834,7 +843,11 @@ export default function WhiteboardsPage() {
       {/* ------------------------------------------------ 5. Multi AI (always last) */}
       <MultiAiWired
         heading="Your boards, read by"
-        swash="somebody who finishes things."
+        // Kept short on purpose. The swash is whitespace-nowrap so its underline
+        // stays on one line, and at 29 characters this ran 15px off the right
+        // edge of a 390px phone. It is also the better line: the intro is about
+        // boards being quietly forgotten.
+        swash="somebody who remembers."
         intro="A whiteboard is where decisions get made and then quietly forgotten. Multi AI can already see every board, every sticky and every open thread, so ask it what came out of a session and what is still hanging."
         leftLabel="The boards your team fills"
         leftColor={TEAL}
@@ -885,7 +898,7 @@ function Section({
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-80px" }}
           transition={colTransition}
-          className={`text-center lg:text-left ${flip ? "lg:order-2" : ""}`}
+          className={`min-w-0 text-center lg:text-left ${flip ? "lg:order-2" : ""}`}
         >
           <p className="mb-4 text-[13px] font-bold uppercase tracking-[0.14em] text-brand-orange-dark">{eyebrow}</p>
           <h2 className="text-[26px] font-extrabold leading-[1.1] tracking-tight text-brand-ink sm:text-[42px] sm:leading-[1.06]">
@@ -907,7 +920,10 @@ function Section({
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-80px" }}
           transition={{ ...colTransition, delay: 0.08 }}
-          className={flip ? "lg:order-1" : ""}
+          // min-w-0: a grid item defaults to min-width:auto, so a visual that
+          // cannot shrink below its content pushes the whole track wider than the
+          // screen. That is what made this page scroll sideways on a phone.
+          className={`min-w-0 ${flip ? "lg:order-1" : ""}`}
         >
           <div className="overflow-hidden rounded-2xl p-2 sm:rounded-[26px] sm:p-6" style={{ background: panel }}>
             {visual}
