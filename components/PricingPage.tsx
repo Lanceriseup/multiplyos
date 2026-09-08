@@ -31,7 +31,7 @@
 //
 // The flipping receipt that used to fill the right column is gone, and with it
 // the .flip-*, .receipt-perf and .seat-dot rules in globals.css. Its back face
-// was the only place the eleven inclusions appeared, so they now live inside
+// was the only place the twelve inclusions appeared, so they now live inside
 // the hero's own card, which is where the client wanted them.
 //
 // >>> BEFORE THIS SHIPS: every figure in STACK is a competitor's list price and
@@ -101,6 +101,7 @@ const INCLUDED = [
   "SOP platform included",
   "CFO dashboard and banking analytics included",
   "Projects, boards and timelines, included",
+  "Whiteboards and visual planning, included",
   "CRM, pipelines, and follow-up included",
   "Forms and e-signatures, 25 forms and 100 signatures a month",
   "AI usage billed every 2 weeks, capped at $200 a month by default",
@@ -324,7 +325,7 @@ export default function PricingPage() {
               className="mb-2.5 text-[10.5px] font-bold uppercase tracking-[0.19em] sm:mb-4"
               style={{ color: ORANGE_DARK }}
             >
-              Eleven tools &middot; one subscription
+              Twelve tools &middot; one subscription
             </p>
             <h1 className="text-[28px] font-extrabold leading-[1.1] tracking-tight text-brand-ink sm:text-[44px]">
               Everything Multiply OS{" "}
@@ -525,7 +526,7 @@ export default function PricingPage() {
               <p className="mx-auto mt-2.5 max-w-[30ch] text-[14.5px] leading-relaxed text-brand-charcoal sm:mx-0 sm:mt-3 sm:max-w-[42ch] sm:text-[15px]">
                 Every module, with nothing held back for a bigger contract.
               </p>
-              {/* "eleven" tracks STACK.length. If a row is added or removed
+              {/* "twelve" tracks STACK.length. If a row is added or removed
                   there, this word changes with it, here and in the eyebrow at
                   the top of the page and in the card's phone-only band below.
                   Three places, all spelled out in words, so grep for the word
@@ -537,7 +538,7 @@ export default function PricingPage() {
                   compared with. Both are fed from STACK_TOTAL, so they cannot
                   drift apart. */}
               <p className="mt-5 hidden max-w-[34ch] text-[15.5px] font-medium leading-relaxed text-brand-ink sm:block">
-                The same eleven tools cost{" "}
+                The same twelve tools cost{" "}
                 <b className="font-extrabold line-through decoration-[rgba(192,64,43,0.55)] decoration-2">
                   {money(STACK_TOTAL)} a month
                 </b>{" "}
@@ -658,7 +659,7 @@ export default function PricingPage() {
                     most work, right under the price it is being measured
                     against. */}
                 <div className="border-t border-[#F1EBE2] bg-[#FFF9F2] px-5 py-2.5 text-center text-[12.5px] leading-snug text-brand-charcoal sm:hidden">
-                  The same eleven tools cost{" "}
+                  The same twelve tools cost{" "}
                   <b className="font-extrabold text-brand-ink line-through decoration-[rgba(192,64,43,0.55)] decoration-2">
                     {money(STACK_TOTAL)}/mo
                   </b>{" "}

@@ -7,6 +7,8 @@ import { useDemo } from "./DemoModal";
 
 const APP_URL = "https://app.multiplyos.com";
 
+// NOTE: /implementation is intentionally NOT listed here. The page is still live
+// and fully accessible via its direct link — it is just not advertised in the menu.
 const navItems: { label: string; href: string }[] = [
   { label: "Platform", href: "/" },
   { label: "AI", href: "#ai" },
@@ -129,8 +131,22 @@ const AgreementIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
-// Order matters: the menu flows top-to-bottom then across, so items 1–4 form the
-// first column, 5–8 the second, 9–12 the third.
+// Order matters: the menu flows top-to-bottom then across. It is grid-rows-5, so
+// items 1-5 form the first column, 6-10 the second, and 11-13 the third.
+//
+// It was grid-rows-4 with twelve features, which made three even columns.
+// Whiteboards took it to thirteen, and left at four rows the flow spilled into a
+// FOURTH column holding a single item, widening the dropdown for no reason. Five
+// rows keeps it three columns wide and one row taller. A fourteenth feature
+// would make it even again.
+const WhiteboardIcon = ({ className }: { className?: string }) => (
+  <svg className={className} {...svgProps}>
+    <rect x="3" y="4.4" width="18" height="12.6" rx="2" />
+    <path d="M12 17v3.2M8.4 20.6h7.2" />
+    <path d="M7.4 8.6h4.2M7.4 12.2h7.2" />
+  </svg>
+);
+
 const features: Feature[] = [
   { label: "Metrics Scoreboard", desc: "Know if you won the week.", href: "/features/metrics-scoreboard", color: "#EA7B1B", icon: ScoreboardIcon },
   { label: "CFO Analytics", desc: "Cash, margin & runway.", href: "/features/cfo-analytics", color: "#A16207", icon: CoinsIcon },
@@ -143,6 +159,7 @@ const features: Feature[] = [
   { label: "Forms", desc: "Capture what you need.", href: "/features/forms", color: "#2E7D5B", icon: FormIcon },
   { label: "Checklists", desc: "Automate the routine.", href: "/features/checklists", color: "#6B7A2E", icon: ChecklistIcon },
   { label: "Agreements", desc: "Signed, and on the record.", href: "/features/agreements", color: "#1F5F7A", icon: AgreementIcon },
+  { label: "Whiteboards", desc: "Think it out together.", href: "/features/whiteboards", color: "#1592AE", icon: WhiteboardIcon },
   { label: "AI Coach & Agent", desc: "Your AI Chief of Staff.", href: "/features/ai-coach", color: "#4B3CC4", icon: SparkIcon },
 ];
 
@@ -165,7 +182,7 @@ function FeaturesMenu({ onNavigate }: { onNavigate: () => void }) {
       {/* invisible bridge so the 10px gap doesn't drop the hover */}
       <span className="absolute -top-3 left-0 right-0 h-3" aria-hidden="true" />
       {/* 3 columns x 4 rows, filled column-first to keep related features grouped */}
-      <div className="grid grid-flow-col grid-rows-4 gap-0.5">
+      <div className="grid grid-flow-col grid-rows-5 gap-0.5">
         {features.map((f) => {
           const Icon = f.icon;
           const tile = (

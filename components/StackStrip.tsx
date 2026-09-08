@@ -2,7 +2,7 @@
 
 // The stack comparison, on the platform page.
 //
-// Same table as the pricing page, from components/StackTable.tsx, so the eleven
+// Same table as the pricing page, from components/StackTable.tsx, so the twelve
 // competitor list prices live in one place and cannot drift between the two
 // pages that quote them.
 //
@@ -74,7 +74,7 @@ export default function StackStrip() {
             className="mb-2.5 text-[10.5px] font-bold uppercase tracking-[0.19em] sm:mb-4"
             style={{ color: ORANGE_DARK }}
           >
-            Eleven tools &middot; one subscription
+            Twelve tools &middot; one subscription
           </p>
           <h2 className="text-[28px] font-extrabold leading-[1.1] tracking-tight text-brand-ink sm:text-[44px]">
             Everything Multiply OS{" "}
