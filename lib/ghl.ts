@@ -193,3 +193,44 @@ export async function createAppointment(params: {
   const appointmentId: string | undefined = raw?.id ?? raw?.appointment?.id;
   return { appointmentId, raw };
 }
+
+/**
+ * Push a raw payload to a GHL **Inbound Webhook** trigger.
+ *
+ * This is deliberately independent of the Private Integration Token: the
+ * webhook URL is its own credential, so form data still reaches HighLevel even
+ * when the PIT/location env vars aren't configured (e.g. preview deploys).
+ *
+ * Set GHL_INBOUND_WEBHOOK_URL to the trigger URL from
+ * GHL → Automation → Workflows → Inbound Webhook.
+ *
+ * Never throws — a webhook hiccup must not fail the visitor's submission.
+ */
+export async function postToInboundWebhook(
+  payload: Record<string, unknown>
+): Promise<{ ok: boolean; status?: number; error?: string }> {
+  const url = process.env.GHL_INBOUND_WEBHOOK_URL;
+  if (!url) {
+    console.warn("GHL_INBOUND_WEBHOOK_URL not set — skipping webhook push");
+    return { ok: false, error: "not_configured" };
+  }
+
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      // Don't let a slow hook hold up the form submission.
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!res.ok) {
+      const detail = await res.text().catch(() => "");
+      console.error(`GHL inbound webhook failed (${res.status}): ${detail}`);
+      return { ok: false, status: res.status, error: detail };
+    }
+    return { ok: true, status: res.status };
+  } catch (err) {
+    console.error("GHL inbound webhook error:", err);
+    return { ok: false, error: String(err) };
+  }
+}
