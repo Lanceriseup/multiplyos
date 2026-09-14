@@ -281,7 +281,7 @@ export default function CoachingCall() {
           <Reveal delay={0.1}>
             <div className="rounded-3xl border border-[#E7E3DA] bg-white p-6 shadow-[0_40px_90px_-50px_rgba(234,123,27,0.55)] sm:p-8">
               <h2 className="text-xl font-bold tracking-tight text-brand-ink sm:text-2xl">
-                Book your call
+                Book Your Call
               </h2>
               <p className="mb-6 mt-1 text-[13.5px] text-brand-charcoal">
                 Tell us a bit about your business and we&rsquo;ll get you scheduled.
