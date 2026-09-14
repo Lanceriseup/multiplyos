@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Navbar from "@/components/Navbar";
-import PricingPackages from "@/components/PricingPackages";
-import CTA from "@/components/CTA";
+import CoachingPackages from "@/components/CoachingPackages";
 import Footer from "@/components/Footer";
 
 export const metadata: Metadata = {
@@ -33,8 +32,7 @@ export default function ImplementationPage() {
   return (
     <main className="min-h-screen bg-white">
       <Navbar />
-      <PricingPackages />
-      <CTA href="https://go.riseupkings.com/coachingpackage" />
+      <CoachingPackages />
       <Footer />
     </main>
   );
