@@ -45,6 +45,8 @@ import { useDemo } from "./DemoModal";
 
 // Orange carries every accent on this page. The navy this replaced came from the
 // in-app pricing screen and was the only cool colour anywhere on the site.
+const SIGNUP_URL = "https://app.multiplyos.com/signup";
+
 const ORANGE = "#EA7B1B";
 const ORANGE_DARK = "#C9650F";
 const ORANGE_GRAD = "linear-gradient(135deg, #F49230, #DE6F14)";
@@ -636,14 +638,21 @@ export default function PricingPage() {
 
                 {/* band three: the way in */}
                 <div className="flex flex-wrap items-center gap-3 border-t border-[#F1EBE2] bg-[#FDFCFA] px-5 py-4 sm:gap-4 sm:px-7">
+                  <a
+                    href={SIGNUP_URL}
+                    className="inline-flex w-full items-center justify-center gap-1.5 rounded-full px-[20px] py-[11px] text-[14.5px] font-semibold text-white shadow-[0_10px_22px_-10px_rgba(234,123,27,0.9)] transition-opacity hover:opacity-90 sm:w-auto"
+                    style={{ background: ORANGE_GRAD }}
+                  >
+                    Sign up
+                    <ChevronRight className="h-[11px] w-[11px]" />
+                  </a>
                   <button
                     type="button"
                     onClick={openDemo}
-                    className="inline-flex w-full items-center justify-center gap-1.5 rounded-full px-[20px] py-[11px] text-[14.5px] font-semibold text-white shadow-[0_10px_22px_-10px_rgba(234,123,27,0.9)] transition-opacity hover:opacity-90 sm:w-auto"
-                    style={{ background: ORANGE }}
+                    className="inline-flex w-full items-center justify-center rounded-full border border-[rgba(234,123,27,0.38)] bg-white px-[20px] py-[11px] text-[14.5px] font-semibold transition-colors hover:border-[rgba(234,123,27,0.6)] hover:bg-[#FFFAF4] sm:w-auto"
+                    style={{ color: ORANGE_DARK }}
                   >
                     Request a Demo
-                    <ChevronRight className="h-[11px] w-[11px]" />
                   </button>
                   {/* full width on a phone, where ml-auto would leave it
                       stranded on its own right-aligned line under the button */}
