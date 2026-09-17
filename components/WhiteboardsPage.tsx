@@ -38,6 +38,8 @@ import MultiAiWired from "./MultiAiWired";
 import type { Row, Insight } from "./MultiAiWired";
 import { useDemo } from "./DemoModal";
 
+const SIGNUP_URL = "https://app.multiplyos.com/signup";
+
 // ---------------------------------------------------------------- tokens
 const TEAL = "#1592AE"; // the feature's own tile colour, from the navbar
 const GREEN = "#2BA463";
@@ -825,7 +827,7 @@ export default function WhiteboardsPage() {
           </Reveal>
 
           <Reveal delay={0.2} className="mt-6 sm:mt-10">
-            <div className="flex justify-center">
+            <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
               <button
                 type="button"
                 onClick={openDemo}
@@ -834,6 +836,12 @@ export default function WhiteboardsPage() {
                 Request a Demo
                 <Arrow className="h-[17px] w-[17px]" />
               </button>
+              <a
+                href={SIGNUP_URL}
+                className="border border-brand-orange/35 flex items-center justify-center gap-2 rounded-lg bg-white/70 px-7 py-3 text-base font-semibold text-brand-orange transition-colors hover:border-brand-orange/55 hover:bg-white sm:min-w-[170px]"
+              >
+                Sign up
+              </a>
             </div>
           </Reveal>
         </div>
