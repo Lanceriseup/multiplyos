@@ -11,6 +11,44 @@ import Reveal from "./Reveal";
 const GHL_CALENDAR_SRC =
   "https://api.leadconnectorhq.com/widget/booking/D9qVaO75mwjBw5z6Hw6A";
 
+/* ---- Prefill ------------------------------------------------------------ */
+
+export type Prefill = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+};
+
+/**
+ * Carry the details the visitor just typed into the GHL booking widget, so the
+ * calendar's contact step arrives filled in instead of asking twice. The widget
+ * reads these as snake_case query params — the same four `buildBookingUrl` in
+ * lib/ghl.ts sets, kept in sync deliberately.
+ *
+ * URL/searchParams does the encoding, which matters for the phone: a literal
+ * "+" in a query string decodes as a space, so it has to go over as %2B.
+ */
+function buildCalendarSrc(prefill: Prefill): string {
+  const url = new URL(GHL_CALENDAR_SRC);
+  if (prefill.firstName) url.searchParams.set("first_name", prefill.firstName);
+  if (prefill.lastName) url.searchParams.set("last_name", prefill.lastName);
+  if (prefill.email) url.searchParams.set("email", prefill.email);
+  if (prefill.phone) url.searchParams.set("phone", prefill.phone);
+  return url.toString();
+}
+
+/**
+ * The form collects digits only, but GHL parses an unprefixed number against
+ * the widget's own locale rather than ours. Send E.164 so a US number is read
+ * as a US number. Assumes +1 — revisit if these calls go international.
+ */
+function toE164(raw: string): string {
+  const digits = raw.replace(/\D/g, "");
+  if (!digits) return "";
+  return `+1${digits.replace(/^1/, "")}`;
+}
+
 /* ---- Content ------------------------------------------------------------ */
 
 const AGENDA = [
@@ -99,13 +137,15 @@ function Check({ className = "" }: { className?: string }) {
 /* ---- Calendar step (funnel copy + embedded GHL widget) ------------------ */
 
 function CalendarStep({
-  firstName,
+  prefill,
   onBack,
 }: {
-  firstName: string;
+  prefill: Prefill;
   onBack: () => void;
 }) {
   const router = useRouter();
+  const firstName = prefill.firstName;
+  const calendarSrc = buildCalendarSrc(prefill);
 
   // Send the visitor to the thank-you page once GHL signals the appointment is
   // booked. Guarded to GHL widget origins and to booking-related messages only,
@@ -164,7 +204,7 @@ function CalendarStep({
       {/* Embedded GHL calendar */}
       <div className="mt-8 overflow-hidden rounded-3xl border border-[#E7E3DA] bg-white p-2 shadow-[0_40px_90px_-50px_rgba(234,123,27,0.55)] sm:p-4">
         <iframe
-          src={GHL_CALENDAR_SRC}
+          src={calendarSrc}
           title="Book your Multiply OS strategy call"
           id="D9qVaO75mwjBw5z6Hw6A_coaching"
           scrolling="no"
@@ -196,7 +236,12 @@ function CalendarStep({
 export default function CoachingCall() {
   const [step, setStep] = useState<"form" | "calendar">("form");
   const [loading, setLoading] = useState(false);
-  const [firstName, setFirstName] = useState("");
+  const [prefill, setPrefill] = useState<Prefill>({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+  });
   const [phone, setPhone] = useState("");
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -205,7 +250,14 @@ export default function CoachingCall() {
 
     const fd = new FormData(e.currentTarget);
     const first = String(fd.get("firstName") || "").trim();
-    setFirstName(first);
+
+    // Hand these to the booking widget so it doesn't ask for them again.
+    setPrefill({
+      firstName: first,
+      lastName: String(fd.get("lastName") || "").trim(),
+      email: String(fd.get("email") || "").trim(),
+      phone: toE164(String(fd.get("phone") || "")),
+    });
 
     // Capture / enrich the lead in GHL (qualifier answers + coaching tags).
     // Best-effort: never block the person from reaching the calendar if this
@@ -240,7 +292,7 @@ export default function CoachingCall() {
 
       {step === "calendar" ? (
         <div className="relative">
-          <CalendarStep firstName={firstName} onBack={() => setStep("form")} />
+          <CalendarStep prefill={prefill} onBack={() => setStep("form")} />
         </div>
       ) : (
         <div className="relative mx-auto grid max-w-container items-start gap-10 lg:grid-cols-[1.05fr_1fr] lg:gap-14">
