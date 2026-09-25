@@ -8,6 +8,8 @@
  * Required PIT scopes: contacts.write, contacts.readonly
  */
 
+import { CONTACT_NAME_MISSING, cleanName } from "./contact-name";
+
 const GHL_API_BASE = "https://services.leadconnectorhq.com";
 const GHL_API_VERSION = "2021-07-28";
 // GHL calendar endpoints use an older API version than contacts.
@@ -67,6 +69,13 @@ export async function upsertContact(
   const raw = await res.json();
   // GHL returns { contact: { id, ... } } (or { new, contact } on upsert)
   const contactId: string | undefined = raw?.contact?.id ?? raw?.id;
+
+  // The routes reject blank names, so this should never fire. If it does, the
+  // contact is still saved (never drop a lead); log the marker with the id only.
+  if (!cleanName(input.firstName) && !cleanName(input.lastName)) {
+    console.error(CONTACT_NAME_MISSING, { contactId: contactId ?? null });
+  }
+
   return { contactId, raw };
 }
 

@@ -159,7 +159,7 @@ export default function ContactPage() {
               <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                 <div className="grid gap-4 sm:grid-cols-2">
                   <Field label="Full name">
-                    <input type="text" name="name" required placeholder="Jordan Lee" className={inputCls} />
+                    <input type="text" name="name" required pattern=".*\S.*" title="Please enter your name." placeholder="Jordan Lee" className={inputCls} />
                   </Field>
                   <Field label="Work email">
                     <input type="email" name="email" required placeholder="you@company.com" className={inputCls} />

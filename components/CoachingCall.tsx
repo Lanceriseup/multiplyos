@@ -342,10 +342,10 @@ export default function CoachingCall() {
               <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                 <div className="grid gap-4 sm:grid-cols-2">
                   <Field label="First name">
-                    <input type="text" name="firstName" required placeholder="Jordan" className={inputCls} />
+                    <input type="text" name="firstName" required pattern=".*\S.*" title="Please enter your first name." placeholder="Jordan" className={inputCls} />
                   </Field>
                   <Field label="Last name">
-                    <input type="text" name="lastName" required placeholder="Lee" className={inputCls} />
+                    <input type="text" name="lastName" required pattern=".*\S.*" title="Please enter your last name." placeholder="Lee" className={inputCls} />
                   </Field>
                 </div>
 

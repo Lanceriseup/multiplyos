@@ -231,7 +231,7 @@ function DemoModal({ open, onClose }: { open: boolean; onClose: () => void }) {
                     </Field>
                     <div className="grid gap-3.5 sm:grid-cols-2">
                       <Field label="Full name">
-                        <input type="text" name="name" required placeholder="Jordan Lee" className={inputCls} />
+                        <input type="text" name="name" required pattern=".*\S.*" title="Please enter your name." placeholder="Jordan Lee" className={inputCls} />
                       </Field>
                       <Field label="Company">
                         <input type="text" name="company" required placeholder="Acme Inc." className={inputCls} />

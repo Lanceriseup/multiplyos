@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { upsertContact, addContactNote, buildBookingUrl } from "@/lib/ghl";
+import { NAME_REQUIRED_ERROR, splitFullName } from "@/lib/contact-name";
 
 // Runs on the Node.js runtime; the PIT never reaches the browser.
 export const runtime = "nodejs";
@@ -28,8 +29,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "Email is required" }, { status: 400 });
   }
 
-  const [firstName, ...rest] = (data.name ?? "").trim().split(/\s+/).filter(Boolean);
-  const lastName = rest.join(" ");
+  // Name is required: reject blank / whitespace-only before anything reaches GHL.
+  const { firstName, lastName } = splitFullName(data.name);
+  if (!firstName) {
+    return NextResponse.json({ ok: false, error: NAME_REQUIRED_ERROR }, { status: 400 });
+  }
   const source = data.source || "Website";
 
   // Map extra questions into GHL custom fields when the field IDs are configured.
