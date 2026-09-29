@@ -2,7 +2,7 @@
 //
 // The order is the client's, verbatim, from the September 2026 brief:
 //
-//   Org Chart / Scoreboard / One Page Plan / 12 Week Year / Multi AI /
+//   Org Chart / Scoreboard / One Page Plan / Quarterly Execution Plan / Multi AI /
 //   Projects (show tasks in projects) / CFO Dashboard / SOP's / Agreements / Forms
 //
 // It replaced the eight tabs the old iframe mockup cycled, so Dashboard, My HQ,
@@ -33,7 +33,7 @@
 //   Projects       10.8s  open a project, then List -> Board -> Timeline on the
 //                         same eight tasks, then tick one and the counter moves
 //   Org Chart       9.6s  Expand All, drag a seat between managers, Show DISC
-//   12 Week Year    9.6s  add a quarterly goal with its KPI target, tick the
+//   Quarterly Execution Plan    9.6s  add a quarterly goal with its KPI target, tick the
 //                         week's priorities, and week 5 scores on that goal
 //
 // None compresses much further. Each is a chain where a beat only means anything
@@ -98,7 +98,7 @@ export const TABS: Tab[] = [
   { key: "org", brief: "Org Chart", nav: "org", url: "/org-chart", ms: 9600 },
   { key: "score", brief: "Scoreboard", nav: "score", url: "/scoreboards", ms: 6400 },
   { key: "plan", brief: "One Page Plan", nav: "plan", url: "/one-page-plan", ms: 12600 },
-  { key: "twelve", brief: "12 Week Year", nav: "twelve", url: "/my-12-week-year", ms: 9600 },
+  { key: "twelve", brief: "Quarterly Execution Plan", nav: "twelve", url: "/quarterly-execution-plan", ms: 9600 },
   { key: "multi", brief: "Multi AI", nav: "multi", url: "/multi-ai", ms: 12600 },
   { key: "proj", brief: "Projects (tasks in projects)", nav: "proj", url: "/projects/client-onboarding", ms: 10800 },
   { key: "cfo", brief: "CFO Dashboard", nav: "cfo", url: "/cfo-dashboard", ms: 12000 },
