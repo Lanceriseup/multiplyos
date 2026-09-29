@@ -7,10 +7,10 @@
 // opened, a milestone ticked, the week's update written, and the chip flipping
 // on the plan behind it. That act earns the name of the screen.
 //
-// August 2026 added an act in FRONT of it, once screenshots of "My 12 Week Year"
+// August 2026 added an act in FRONT of it, once screenshots of "Quarterly Execution Plan"
 // turned up and proved the weekly tier exists:
 //
-//   1. My 12 Week Year          this week's priorities, ticked one at a time
+//   1. Quarterly Execution Plan          this week's priorities, ticked one at a time
 //   2. the pull-back            the rail is revealed, two destinations sharpen
 //   3. the plan, scrolling      why we exist, values, vision, SWOT, the goals
 //   4. open a quarterly goal    its parent chain, its owner, its department
@@ -282,7 +282,7 @@ const UPDATE = {
   text: "Crew two passed certification Friday. Turnaround averaged 6.8 days this week, the first time under seven. Keeping the flag on until we hold it three weeks running.",
 };
 
-// ---- My 12 Week Year, the opening act ----
+// ---- Quarterly Execution Plan, the opening act ----
 const WEEKS = [
   "7/6", "7/13", "7/20", "7/27", "8/3", "8/10", "8/17", "8/24", "8/31", "9/7", "9/14", "9/21", "9/28",
 ];
@@ -340,7 +340,7 @@ const THIS_WEEK = [
 // plate pulls back: where you are, and where you are about to go.
 const NAV = [
   { k: "dash", label: "Dashboard", icon: Home },
-  { k: "twelve", label: "My 12 Week Year", icon: Cal, focus: true },
+  { k: "twelve", label: "Quarterly Execution Plan", icon: Cal, focus: true },
   { k: "plan", label: "One Page Plan", icon: Target, focus: true },
   { k: "score", label: "Scoreboards", icon: Chart },
   { k: "meet", label: "Team Meetings", icon: Grid },
@@ -726,7 +726,7 @@ function NavRail({ scene }: { scene: Scene }) {
               }}
             >
               <Icon className="h-[13px] w-[13px] flex-none" />
-              <span className="whitespace-nowrap text-[11px] font-semibold">{n.label}</span>
+              <span className="truncate text-[11px] font-semibold">{n.label}</span>
               {n.k === "plan" && (
                 <span
                   className="ml-auto h-[6px] w-[6px] flex-none rounded-full transition-opacity duration-500"
@@ -753,7 +753,7 @@ function NavRail({ scene }: { scene: Scene }) {
   );
 }
 
-// ---------------------------------------------------------------- My 12 Week Year
+// ---------------------------------------------------------------- Quarterly Execution Plan
 // The opening act. Personal, weekly, and the rung the other two are made of.
 function TwelveView({ scene }: { scene: Scene }) {
   const hit = (i: number) => (i === NOW_WEEK ? scene.ticked === THIS_WEEK.length : KPI[i]);
@@ -762,7 +762,7 @@ function TwelveView({ scene }: { scene: Scene }) {
     <div className="flex h-full flex-col px-6 pb-5 pt-4">
       <div className="flex flex-none items-start gap-3">
         <span className="min-w-0 flex-1">
-          <h3 className="text-[21px] font-extrabold tracking-tight">My 12 Week Year</h3>
+          <h3 className="text-[21px] font-extrabold tracking-tight">Quarterly Execution Plan</h3>
           <p className="mt-0.5 text-[10.5px] text-brand-charcoal">
             Your quarter, broken into months, then into weeks.
           </p>

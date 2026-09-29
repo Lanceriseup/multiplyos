@@ -1,6 +1,6 @@
 "use client";
 
-// Tab 4 of 10: 12 Week Year.
+// Tab 4 of 10: Quarterly Execution Plan.
 //
 // TeamAccountabilityHeroTour's opening act is only "this week's priorities,
 // ticked one at a time", so unlike the other nine tabs there was no longer beat
@@ -190,7 +190,7 @@ export default function TwelveWeekAct({ active, rig }: { active: boolean; rig: R
   return (
     <div ref={rootRef} className="flex h-full flex-col gap-3">
       <PageHead
-        title="My 12 Week Year"
+        title="Quarterly Execution Plan"
         sub="Your quarter, broken into months, then into weeks."
         right={
           <>

@@ -12,7 +12,7 @@
 // An earlier cut padded it out with Dashboard, My HQ, Team Meetings and a
 // Toolbox group, copied from the real app's twenty-four-row rail so the frame
 // would look like the product. That was wrong: it put rows on screen that the
-// tour never visits and that nobody asked for, and it forced 12 Week Year and
+// tour never visits and that nobody asked for, and it forced Quarterly Execution Plan and
 // Agreements to hide inside collapsed parents. The brief was ten destinations,
 // so the rail is ten destinations, every one of them clickable and every one of
 // them somewhere the tour actually goes.
@@ -54,7 +54,7 @@ const NAV: Row[] = [
   { k: "org", label: "Org Chart", icon: ITree, dot: true },
   { k: "score", label: "Scoreboards", icon: IChart, dot: true },
   { k: "plan", label: "One Page Plan", icon: ITarget },
-  { k: "twelve", label: "My 12 Week Year", icon: ICal },
+  { k: "twelve", label: "Quarterly Execution Plan", icon: ICal },
   { k: "multi", label: "Multi AI", icon: ISpark },
   { k: "proj", label: "Projects", icon: IBoard },
   { k: "cfo", label: "CFO Dashboard", icon: ICoins },
