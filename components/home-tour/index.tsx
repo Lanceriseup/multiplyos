@@ -12,7 +12,7 @@
 //   2. Scoreboard     add a metric and its goal, then put an owner on it
 //   3. One Page Plan  the plan scrolled, then a goal opened, a milestone
 //                     ticked, the week's update written, and the chip flipped
-//   4. 12 Week Year   add a quarterly goal, tick the week, and week 5 scores
+//   4. Quarterly Execution Plan   add a quarterly goal, tick the week, and week 5 scores
 //   5. Multi AI       switch coach, change the model, an honest answer, a chart
 //   6. Projects       open a project, close two of its tasks out
 //   7. CFO Dashboard  the Big Six against their goals, and the briefing

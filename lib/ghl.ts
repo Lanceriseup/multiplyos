@@ -1,3 +1,5 @@
+import { canPrefillWidgetEmail } from "@/lib/ghl-widget";
+
 /**
  * GoHighLevel (LeadConnector) API v2 client.
  *
@@ -121,7 +123,7 @@ export function buildBookingUrl(prefill: {
   const url = new URL(base);
   if (prefill.firstName) url.searchParams.set("first_name", prefill.firstName);
   if (prefill.lastName) url.searchParams.set("last_name", prefill.lastName);
-  if (prefill.email) url.searchParams.set("email", prefill.email);
+  if (canPrefillWidgetEmail(prefill.email)) url.searchParams.set("email", prefill.email!);
   if (prefill.phone) url.searchParams.set("phone", prefill.phone);
   return url.toString();
 }

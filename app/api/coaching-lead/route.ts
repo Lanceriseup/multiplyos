@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { upsertContact, addContactNote, postToInboundWebhook } from "@/lib/ghl";
 import { FIRST_LAST_REQUIRED_ERROR, cleanName } from "@/lib/contact-name";
+import { canPrefillWidgetEmail } from "@/lib/ghl-widget";
 
 // Runs on the Node.js runtime; the PIT never reaches the browser.
 export const runtime = "nodejs";
@@ -120,7 +121,7 @@ export async function POST(request: Request) {
       const url = new URL(base);
       if (firstName) url.searchParams.set("first_name", firstName);
       if (lastName) url.searchParams.set("last_name", lastName);
-      if (email) url.searchParams.set("email", email);
+      if (canPrefillWidgetEmail(email)) url.searchParams.set("email", email);
       if (phone) url.searchParams.set("phone", phone);
       bookingUrl = url.toString();
     }
