@@ -281,3 +281,85 @@ body {
 }
 
 
+
+/* ---- Implementation page: coach bios (flip cards, fade-in backdrop) ---- */
+.coach-flip { perspective: 1400px; cursor: pointer; }
+.coach-flip-inner { position: relative; height: 100%; transform-style: preserve-3d; transition: transform 0.8s cubic-bezier(0.3, 0.9, 0.3, 1); }
+.coach-flip-face { position: absolute; inset: 0; overflow: hidden; border-radius: 24px; -webkit-backface-visibility: hidden; backface-visibility: hidden; }
+.coach-flip-back { transform: rotateY(180deg); }
+.coach-flip.is-flipped .coach-flip-inner { transform: rotateY(180deg); }
+.coach-flip-front img { transition: transform 1.2s ease; }
+@media (hover: hover) {
+  .coach-flip:hover .coach-flip-inner { transform: rotateY(180deg); }
+  .coach-flip:hover .coach-flip-front img { transform: scale(1.06); }
+}
+/* Circle-cropped photos: feather the circle's edge into a backdrop sampled
+   from the photo's own background (currently Joe Power's) */
+.coach-circle-bg { background: radial-gradient(circle at 80% 58%, #7a4c25 0%, #4a3322 28%, #2a221d 58%, #1c1714 100%); }
+.coach-feather {
+  -webkit-mask: radial-gradient(circle closest-side, #000 76%, transparent 99%);
+  mask: radial-gradient(circle closest-side, #000 76%, transparent 99%);
+}
+
+/* Info button: a small bump, then a "Read bio" tag pops up above it and tucks
+   away. Absolutely positioned, so it never pushes the coach's name around. */
+.coach-cta { animation: coach-cta-bump 4.5s ease-in-out infinite; }
+.coach-cta-tag {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 10px);
+  white-space: nowrap;
+  border-radius: 999px;
+  background: #fff;
+  padding: 6px 11px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #0a0a0a;
+  box-shadow: 0 10px 24px -8px rgba(0, 0, 0, 0.6);
+  transform-origin: 85% 100%;
+  opacity: 0;
+  pointer-events: none;
+  animation: coach-cta-tag 4.5s cubic-bezier(0.3, 0.9, 0.3, 1.2) infinite;
+}
+.coach-cta-tag::after {
+  content: "";
+  position: absolute;
+  right: 15px;
+  top: 100%;
+  border: 5px solid transparent;
+  border-top-color: #fff;
+}
+@keyframes coach-cta-bump { 0%, 8%, 30%, 100% { transform: scale(1); } 16% { transform: scale(1.14); } }
+@keyframes coach-cta-tag {
+  0%, 10% { opacity: 0; transform: translateY(6px) scale(0.8); }
+  20%, 62% { opacity: 1; transform: none; }
+  72%, 100% { opacity: 0; transform: translateY(6px) scale(0.8); }
+}
+
+/* Phone bio sheet slide (the translate itself comes from translate-y-* classes) */
+.coach-sheet { transition: transform 0.45s cubic-bezier(0.3, 0.9, 0.3, 1); }
+
+.coach-dots-fade {
+  -webkit-mask: linear-gradient(to bottom, #000 0, transparent 100%);
+  mask: linear-gradient(to bottom, #000 0, transparent 100%);
+}
+.coach-grid {
+  background-image:
+    linear-gradient(rgba(234, 123, 27, 0.14) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(234, 123, 27, 0.14) 1px, transparent 1px);
+  background-size: 56px 56px;
+  background-position: center top;
+  -webkit-mask: radial-gradient(ellipse 85% 75% at 50% 30%, #000 35%, transparent 100%);
+  mask: radial-gradient(ellipse 85% 75% at 50% 30%, #000 35%, transparent 100%);
+}
+.coach-grid-fade {
+  -webkit-mask: linear-gradient(to bottom, transparent 0, transparent 120px, #000 380px, #000 80%, transparent 100%);
+  mask: linear-gradient(to bottom, transparent 0, transparent 120px, #000 380px, #000 80%, transparent 100%);
+}
+@media (prefers-reduced-motion: reduce) {
+  .coach-flip-inner { transition: none; }
+  .coach-cta, .coach-cta-tag { animation: none; }
+  .coach-sheet { transition: none; }
+}

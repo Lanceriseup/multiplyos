@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Navbar from "@/components/Navbar";
 import CoachingPackages from "@/components/CoachingPackages";
+import CoachBios from "@/components/CoachBios";
 import Footer from "@/components/Footer";
 
 export const metadata: Metadata = {
@@ -33,6 +34,7 @@ export default function ImplementationPage() {
     <main className="min-h-screen bg-white">
       <Navbar />
       <CoachingPackages />
+      <CoachBios />
       <Footer />
     </main>
   );
