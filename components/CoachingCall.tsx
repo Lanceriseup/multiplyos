@@ -4,6 +4,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import Script from "next/script";
 import { useRouter } from "next/navigation";
 import Reveal from "./Reveal";
+import { canPrefillWidgetEmail } from "@/lib/ghl-widget";
 
 /* ---- Config ------------------------------------------------------------- */
 
@@ -33,7 +34,8 @@ function buildCalendarSrc(prefill: Prefill): string {
   const url = new URL(GHL_CALENDAR_SRC);
   if (prefill.firstName) url.searchParams.set("first_name", prefill.firstName);
   if (prefill.lastName) url.searchParams.set("last_name", prefill.lastName);
-  if (prefill.email) url.searchParams.set("email", prefill.email);
+  // A "+" email would arrive mangled ("jax test@…"); see lib/ghl-widget.ts.
+  if (canPrefillWidgetEmail(prefill.email)) url.searchParams.set("email", prefill.email);
   if (prefill.phone) url.searchParams.set("phone", prefill.phone);
   return url.toString();
 }
@@ -200,6 +202,14 @@ function CalendarStep({
           )}
         </ul>
       </div>
+
+      {prefill.email && !canPrefillWidgetEmail(prefill.email) && (
+        <p className="mx-auto mt-6 max-w-xl rounded-2xl border border-[#E7E3DA] bg-white px-4 py-3 text-center text-[13.5px] leading-relaxed text-brand-charcoal">
+          Please type your email in the booking form below. Our scheduler
+          can&rsquo;t carry over the &ldquo;+&rdquo; in{" "}
+          <span className="font-semibold text-brand-ink">{prefill.email}</span>.
+        </p>
+      )}
 
       {/* Embedded GHL calendar */}
       <div className="mt-8 overflow-hidden rounded-3xl border border-[#E7E3DA] bg-white p-2 shadow-[0_40px_90px_-50px_rgba(234,123,27,0.55)] sm:p-4">
