@@ -92,7 +92,9 @@ export default function CoachingPackages() {
       {/* Backdrop: dotted grid + ambient orange glows */}
       <div className="pointer-events-none absolute inset-0 bg-dotted opacity-60" />
       <div className="pointer-events-none absolute -top-24 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(234,123,27,0.25),transparent_65%)] blur-2xl" />
-      <div className="cta-glow pointer-events-none absolute -bottom-16 right-[8%] h-64 w-64 rounded-full bg-[radial-gradient(circle,rgba(234,123,27,0.18),transparent_65%)] blur-2xl" />
+      {/* Kept clear of the bottom edge: CoachBios fades in seamlessly below, so
+          a glow clipped by overflow-hidden would show as a hard line there */}
+      <div className="cta-glow pointer-events-none absolute bottom-6 right-[8%] h-64 w-64 rounded-full bg-[radial-gradient(circle,rgba(234,123,27,0.18),transparent_65%)] blur-2xl" />
 
       <div className="relative mx-auto max-w-container">
         {/* Hero */}
