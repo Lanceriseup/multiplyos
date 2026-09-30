@@ -47,6 +47,10 @@ The current site exposes `/api/lead`, `/api/slots`, and `/api/book` for the demo
 - Qualification answers are mirrored to a contact note and can map to configured custom fields.
 - When configured, the response includes a prefilled coaching-calendar handoff.
 
+### Contact names are required
+
+`/api/lead` requires a non-blank name and `/api/coaching-lead` requires a non-blank first and last name; both return 400 before any GoHighLevel write. If a contact is ever upserted without a name anyway, `upsertContact` still saves it and logs `MULTIPLYOS_WEBSITE_CONTACT_NAME_MISSING` at error level with the contact id only. `npm test` covers this with a mocked `fetch`.
+
 Server-side configuration is documented in [`.env.example`](.env.example). Never commit tokens, webhook URLs, customer data, or copied production payloads.
 
 ## Routes

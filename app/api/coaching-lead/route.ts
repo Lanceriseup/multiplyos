@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { upsertContact, addContactNote, postToInboundWebhook } from "@/lib/ghl";
+import { FIRST_LAST_REQUIRED_ERROR, cleanName } from "@/lib/contact-name";
 import { canPrefillWidgetEmail } from "@/lib/ghl-widget";
 
 // Runs on the Node.js runtime; the PIT never reaches the browser.
@@ -42,8 +43,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "Email is required" }, { status: 400 });
   }
 
-  const firstName = data.firstName?.trim();
-  const lastName = data.lastName?.trim();
+  // First and last name are required: reject blank / whitespace-only before
+  // the inbound webhook or the contact upsert can write anything to GHL.
+  const firstName = cleanName(data.firstName);
+  const lastName = cleanName(data.lastName);
+  if (!firstName || !lastName) {
+    return NextResponse.json({ ok: false, error: FIRST_LAST_REQUIRED_ERROR }, { status: 400 });
+  }
+
   const phone = data.phone?.trim();
   const organization = data.organization?.trim();
 
