@@ -32,7 +32,6 @@ const COACHES: Coach[] = [
   {
     name: "Mark Simpson",
     photo: "/coaches/mark-simpson.jpg",
-    position: "40% 30%",
     bio: "Mark is a seasoned business and technology leader and Fractional Integrator with 15+ years of experience turning vision into execution. Mark helps entrepreneurs build stronger teams, scalable businesses, and lasting impact.",
   },
   {
