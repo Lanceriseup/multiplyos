@@ -11,8 +11,16 @@
 // >>> BEFORE THIS SHIPS: every figure in STACK is a competitor's list price and
 // >>> needs verifying. They are gathered here for exactly that reason.
 import { ReplacedLogo } from "./ReplacesStrip";
+import { LOWEST_PRICE_PER_USER } from "@/lib/pricing-tiers";
+import { pricingV2SiteEnabled } from "@/lib/pricing-v2";
+import { signupCta } from "@/lib/signup-cta";
 
-const SIGNUP_URL = "https://app.multiplyos.com/signup";
+const SIGNUP = signupCta();
+
+// Pricing v2 switch. On, the total bar's chip no longer quotes the single $299
+// plan: it says what the plans start at and links to the trial. Off, the bar is
+// exactly as it was.
+const PRICING_V2 = pricingV2SiteEnabled();
 
 // Same literals the pricing page uses. Repeated rather than imported, which is
 // how every other component on this site carries its palette.
@@ -525,8 +533,12 @@ export function StackTable() {
             the bar is clickable, so it carries its own hover lift and focus
             ring to read as a control rather than a label. */}
         <a
-          href={SIGNUP_URL}
-          aria-label={`Sign up for Multiply OS at ${money(PRICE)} a month`}
+          href={SIGNUP.href}
+          aria-label={
+            PRICING_V2
+              ? `Start a free trial of Multiply OS, from ${money(LOWEST_PRICE_PER_USER)} per user a month`
+              : `Sign up for Multiply OS at ${money(PRICE)} a month`
+          }
           className="flex w-full flex-col items-center gap-[2px] rounded-[13px] px-5 pb-2.5 pt-2 text-white shadow-[0_14px_28px_-12px_rgba(201,101,15,0.8)] transition-all duration-200 hover:-translate-y-0.5 hover:brightness-[1.06] hover:shadow-[0_18px_34px_-12px_rgba(201,101,15,0.9)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#FFE9D4] active:translate-y-0 sm:w-auto sm:items-start"
           style={{ background: ORANGE_GRAD }}
         >
@@ -534,8 +546,17 @@ export function StackTable() {
             With Multiply OS
           </span>
           <span className="text-[24px] font-black leading-none tracking-tight tabular-nums sm:text-[27px]">
-            {money(PRICE)}
-            <span className="ml-1 text-[11.5px] font-semibold sm:text-[12.5px]">/mo</span>
+            {PRICING_V2 ? (
+              <>
+                From {money(LOWEST_PRICE_PER_USER)}{" "}
+                <span className="text-[11.5px] font-semibold sm:text-[12.5px]">per user a month</span>
+              </>
+            ) : (
+              <>
+                {money(PRICE)}
+                <span className="ml-1 text-[11.5px] font-semibold sm:text-[12.5px]">/mo</span>
+              </>
+            )}
           </span>
         </a>
       </div>

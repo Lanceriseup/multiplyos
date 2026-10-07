@@ -25,8 +25,9 @@ import { ReplacesChip, REPLACES } from "./ReplacesStrip";
 import MultiAiWired from "./MultiAiWired";
 import type { Row, Insight } from "./MultiAiWired";
 import { useDemo } from "./DemoModal";
+import { signupCta } from "@/lib/signup-cta";
 
-const SIGNUP_URL = "https://app.multiplyos.com/signup";
+const SIGNUP = signupCta();
 
 // ---------------------------------------------------------------- tokens
 const GREEN = "#2BA463";
@@ -1041,10 +1042,10 @@ export default function SopHqPage() {
                 <Arrow className="h-[17px] w-[17px]" />
               </button>
               <a
-                href={SIGNUP_URL}
+                href={SIGNUP.href}
                 className="border border-brand-orange/35 inline-flex w-full max-w-[420px] items-center justify-center gap-2.5 rounded-lg bg-white/70 px-10 py-3 text-[15px] font-semibold text-brand-orange transition-colors hover:border-brand-orange/55 hover:bg-white sm:w-auto sm:min-w-[170px]"
               >
-                Sign up
+                {SIGNUP.label}
               </a>
             </div>
           </Reveal>

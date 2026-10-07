@@ -42,10 +42,11 @@ import Footer from "./Footer";
 import Reveal from "./Reveal";
 import { StackTable, STACK_TOTAL, AS_OF, PRICE, money } from "./StackTable";
 import { useDemo } from "./DemoModal";
+import { signupCta } from "@/lib/signup-cta";
 
 // Orange carries every accent on this page. The navy this replaced came from the
 // in-app pricing screen and was the only cool colour anywhere on the site.
-const SIGNUP_URL = "https://app.multiplyos.com/signup";
+const SIGNUP = signupCta();
 
 const ORANGE = "#EA7B1B";
 const ORANGE_DARK = "#C9650F";
@@ -639,11 +640,11 @@ export default function PricingPage() {
                 {/* band three: the way in */}
                 <div className="flex flex-wrap items-center gap-3 border-t border-[#F1EBE2] bg-[#FDFCFA] px-5 py-4 sm:gap-4 sm:px-7">
                   <a
-                    href={SIGNUP_URL}
+                    href={SIGNUP.href}
                     className="inline-flex w-full items-center justify-center gap-1.5 rounded-full px-[20px] py-[11px] text-[14.5px] font-semibold text-white shadow-[0_10px_22px_-10px_rgba(234,123,27,0.9)] transition-opacity hover:opacity-90 sm:w-auto"
                     style={{ background: ORANGE_GRAD }}
                   >
-                    Sign up
+                    {SIGNUP.label}
                     <ChevronRight className="h-[11px] w-[11px]" />
                   </a>
                   <button

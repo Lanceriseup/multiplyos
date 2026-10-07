@@ -2,8 +2,9 @@
 
 import Reveal from "./Reveal";
 import { useDemo } from "./DemoModal";
+import { signupCta } from "@/lib/signup-cta";
 
-const SIGNUP_URL = "https://app.multiplyos.com/signup";
+const SIGNUP = signupCta();
 
 export default function CTA({ href }: { href?: string }) {
   const { openDemo } = useDemo();
@@ -45,10 +46,10 @@ export default function CTA({ href }: { href?: string }) {
                   </button>
                 )}
                 <a
-                  href={SIGNUP_URL}
+                  href={SIGNUP.href}
                   className="inline-flex w-full items-center justify-center rounded-lg border border-brand-orange/35 bg-white/70 px-6 py-2.5 text-base font-semibold text-brand-orange transition-colors hover:border-brand-orange/55 hover:bg-white sm:w-auto sm:min-w-[150px]"
                 >
-                  Sign up
+                  {SIGNUP.label}
                 </a>
               </div>
             </div>

@@ -58,6 +58,7 @@ Server-side configuration is documented in [`.env.example`](.env.example). Never
 - `/`, `/pricing`, `/contact`
 - `/implementation` is intentionally absent from navigation and marked `noindex`; it remains available by direct link
 - `/coaching-call` and `/coaching-call/thank-you`
+- `/rukcon` redirects to the app's trial, and exists only while the pricing v2 switch is on (see below)
 - `/features/*` for the individual product capabilities
 - `/privacy` and `/terms`
 
@@ -71,6 +72,19 @@ npm run dev
 ```
 
 The site uses Next.js 15, React 19, TypeScript, Tailwind CSS, and Framer Motion. Copy `.env.example` to `.env.local` only when integration work requires local credentials; public page review does not require submitting forms.
+
+## Pricing v2 switch
+
+The three plan pricing (GROW, SCALE, MULTIPLY) is built behind one build time flag, `NEXT_PUBLIC_PRICING_V2`. Unset, or any value other than `1` or `true`, the site is exactly as it was: the single $299 pricing page, Sign up buttons, and no `/rukcon`.
+
+With it on:
+
+- `/pricing` renders `components/PricingTiersPage.tsx`. Prices and the math are in `lib/pricing-tiers.ts`; the words are in `lib/pricing-copy.ts`.
+- Every Sign up button becomes Start free trial and links to the SCALE annual trial in the app (`/trial/signup?plan=scale&billing=annual`). Every link into the app is built in `lib/app-links.mjs`.
+- The home page's stack comparison stops quoting $299.
+- `/rukcon` redirects (307) to the SCALE annual trial with the RUKCON code applied, for the booth QR. Ashley names the final code; it is `RUKCON_PROMO_CODE` in `lib/app-links.mjs`.
+
+Turn it on only after the app's `pricing_v2` switch is on, because the trial links lead to the app's `/trial/signup`. Set `NEXT_PUBLIC_PRICING_V2=1` in the Vercel environment (not as Sensitive) and redeploy; it is read at build time. `lib/pricing-v2.ts` is the one door to the flag, and `npm test` checks it is read nowhere else.
 
 ## Deployment
 
