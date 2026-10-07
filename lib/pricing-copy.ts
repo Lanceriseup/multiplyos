@@ -130,7 +130,7 @@ export const PLANS: Record<PlanId, PlanCopy> = {
       "CRM and pipelines",
       "Hiring and Training",
       "Websites, whiteboards and calendars",
-      "SSO, API access and audit log",
+      "API access and audit log",
     ],
   },
   multiply: {
@@ -224,7 +224,7 @@ export const FEATURE_GROUPS: readonly FeatureGroup[] = [
       row("Whiteboards", N, Y, Y),
       row("Calendars", N, Y, Y),
       row("Multicast screen recorder", N, Y, Y),
-      row("SSO, API access and audit log", N, Y, Y),
+      row("API access and audit log", N, Y, Y),
     ],
   },
   {
