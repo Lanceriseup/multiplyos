@@ -1,20 +1,32 @@
 // The words on the pricing v2 page: plan cards, the HQ add-ons, the setup
-// packages, the comparison table and the FAQ.
+// packages, the comparison table, the FAQ and the page metadata.
 //
 // Source of the copy: direction A of the MOS Pricing Rollout map (chief-of-staff
 // repository, references/mos-pricing-restructure/pricing-rollout.html). Every
 // dollar figure is built from pricing-tiers.ts, so a price is never typed twice.
 //
-// Pure data and pure functions only, so node:test can import it. Used only by
-// PricingTiersPage, so it is not part of any page while the pricing v2 switch is
-// off.
-import type { PlanId } from "@/lib/pricing-tiers";
+// Two modes. With annual billing on, the page offers Annual and Monthly, and
+// Launch onboarding is included with ANNUAL MULTIPLY only (spec decision D2, the
+// app's multiplyLaunchIncluded: "annual_only"). With annual billing off, the
+// site launches monthly only (the app blocks annual checkout until counsel
+// approves the annual consent text), and nothing on the page may mention annual
+// billing or say Launch is included. The functions below (planItems,
+// visibleFeatureGroups, visibleSetupPackages, faqItems, pricingMeta) are how the
+// page asks for the right words in the mode it is built in.
+//
+// Pure data and pure functions only, so node:test can import it. Used only by the
+// pricing v2 page, so it is not part of any page while the switch is off.
+import type { Billing, PlanId } from "@/lib/pricing-tiers";
 import {
   AI_MONTHLY_CAP_DEFAULT,
   FORMS_ADDON_PRICE_PER_MONTH,
   GROW_ADDON_PRICE_PER_MONTH,
   HQ_PRICE_PER_MONTH,
+  PLAN_ORDER,
+  PRICE_PER_USER_MONTH,
   SETUP_PRICE,
+  TRIAL_DAYS,
+  lowestPrice,
   money,
 } from "@/lib/pricing-tiers";
 
@@ -35,6 +47,8 @@ export const HQ_ADDONS: readonly HqAddon[] = [
 
 // ---------------------------------------------------------------- setup packages
 
+// `included` is a claim about annual billing (Launch comes with annual MULTIPLY),
+// so visibleSetupPackages drops it while annual billing is off.
 export type SetupPackage = { name: string; price: number; fit: string; items: readonly string[]; included?: string };
 
 export const SETUP_PACKAGES: readonly SetupPackage[] = [
@@ -48,7 +62,7 @@ export const SETUP_PACKAGES: readonly SetupPackage[] = [
       "Org chart and 2 to 3 core SOPs",
       "One training call, 30 days of email support",
     ],
-    included: "Included with MULTIPLY",
+    included: "Included with MULTIPLY annual",
   },
   {
     name: "ACCELERATE",
@@ -74,11 +88,21 @@ export const SETUP_PACKAGES: readonly SetupPackage[] = [
   },
 ];
 
+// The packages as the page shows them: with annual billing off, no package says
+// it is included with anything.
+export function visibleSetupPackages(annualBilling: boolean): SetupPackage[] {
+  if (annualBilling) return [...SETUP_PACKAGES];
+  return SETUP_PACKAGES.map(({ included: _included, ...rest }) => rest);
+}
+
 const launchValue = money(SETUP_PRICE.launch);
 
 // ---------------------------------------------------------------- plan cards
 
-export type PlanCopy = { name: string; who: string; lead: string | null; items: readonly string[] };
+// A line on a plan card. A plain string shows on both billings; an object with
+// onlyOn shows only on that billing.
+export type PlanItem = string | { text: string; onlyOn: Billing };
+export type PlanCopy = { name: string; who: string; lead: string | null; items: readonly PlanItem[] };
 
 export const PLANS: Record<PlanId, PlanCopy> = {
   grow: {
@@ -115,13 +139,24 @@ export const PLANS: Record<PlanId, PlanCopy> = {
     lead: "Everything in SCALE, plus",
     items: [
       "Any 2 HQ modules included",
-      `Launch onboarding included (${launchValue} value)`,
+      // Launch onboarding is included with ANNUAL MULTIPLY only (spec D2).
+      { text: `Launch onboarding included with annual billing (${launchValue} value)`, onlyOn: "annual" },
       "Additional businesses at 25% off",
       "Expanded AI connections",
       "Unlimited websites",
     ],
   },
 };
+
+// The lines on a plan's card at a billing interval, in the designed order.
+export function planItems(plan: PlanId, billing: Billing): string[] {
+  const out: string[] = [];
+  for (const item of PLANS[plan].items) {
+    if (typeof item === "string") out.push(item);
+    else if (item.onlyOn === billing) out.push(item.text);
+  }
+  return out;
+}
 
 // ---------------------------------------------------------------- compare table
 
@@ -132,6 +167,9 @@ export type FeatureRow = {
   note?: string;
   // Shown beside the name while a feature is not released yet.
   tag?: string;
+  // The row is about something that exists only on annual billing, so it is
+  // hidden while annual billing is off.
+  annualOnly?: boolean;
   // GROW, SCALE, MULTIPLY, in that order.
   values: readonly [FeatureValue, FeatureValue, FeatureValue];
 };
@@ -145,7 +183,7 @@ function row(
   grow: FeatureValue,
   scale: FeatureValue,
   multiply: FeatureValue,
-  extra: { note?: string; tag?: string } = {},
+  extra: { note?: string; tag?: string; annualOnly?: boolean } = {},
 ): FeatureRow {
   return { name, ...extra, values: [grow, scale, multiply] };
 }
@@ -200,7 +238,8 @@ export const FEATURE_GROUPS: readonly FeatureGroup[] = [
         { note: "Contractor, Inventory, Events; Marketing coming Q1" },
       ),
       row("Additional businesses", "10% off", "10% off", "25% off"),
-      row("Launch onboarding", N, N, "Included", { note: `${launchValue} value` }),
+      // Launch onboarding is included with ANNUAL MULTIPLY only (spec D2).
+      row("Launch onboarding", N, N, "Included on annual", { note: `${launchValue} value`, annualOnly: true }),
     ],
   },
 ];
@@ -208,17 +247,27 @@ export const FEATURE_GROUPS: readonly FeatureGroup[] = [
 const readsTheSameEverywhere = (r: FeatureRow) => r.values[0] === r.values[1] && r.values[1] === r.values[2];
 
 // The rows the compare table shows. With differencesOnly the rows that read the
-// same on every plan are dropped, and so is any group left with no rows.
-export function visibleFeatureGroups(differencesOnly: boolean): FeatureGroup[] {
-  if (!differencesOnly) return [...FEATURE_GROUPS];
-  return FEATURE_GROUPS.map((g) => ({ ...g, rows: g.rows.filter((r) => !readsTheSameEverywhere(r)) })).filter(
-    (g) => g.rows.length > 0,
-  );
+// same on every plan are dropped. With annual off, the rows about annual billing
+// are dropped too. A group left with no rows is dropped.
+export function visibleFeatureGroups({
+  differencesOnly,
+  annual,
+}: {
+  differencesOnly: boolean;
+  annual: boolean;
+}): FeatureGroup[] {
+  return FEATURE_GROUPS.map((g) => ({
+    ...g,
+    rows: g.rows.filter((r) => (annual || !r.annualOnly) && !(differencesOnly && readsTheSameEverywhere(r))),
+  })).filter((g) => g.rows.length > 0);
 }
 
 // ---------------------------------------------------------------- FAQ
 
-export type FaqItem = { q: string; a: string };
+// `a` is the answer when annual billing is on. aMonthlyOnly is the answer when
+// the site launches monthly only, for the answers that would otherwise mention
+// annual billing.
+export type FaqItem = { q: string; a: string; aMonthlyOnly?: string };
 
 export const FAQ: readonly FaqItem[] = [
   {
@@ -228,6 +277,8 @@ export const FAQ: readonly FaqItem[] = [
   {
     q: "What happens when my trial ends?",
     a: "Your plan starts and we charge the card on file for the people on your account. You can switch plans or move between annual and monthly before then.",
+    aMonthlyOnly:
+      "Your plan starts and we charge the card on file for the people on your account. You can switch plans before then.",
   },
   {
     q: "Does everyone need the same plan?",
@@ -238,11 +289,39 @@ export const FAQ: readonly FaqItem[] = [
     a: `AI is metered and billed every two weeks on the card on file. You set a monthly cap, ${money(AI_MONTHLY_CAP_DEFAULT)} by default, and AI features pause when your team reaches it.`,
   },
   {
+    // Deliberately says nothing about proration or when a downgrade takes effect:
+    // those are open decisions (D18) and not built.
     q: "Can I change plans later?",
-    a: "Yes. Upgrades take effect right away and the difference is prorated. Downgrades take effect at your next renewal.",
+    a: "Yes. You can switch plans at any time, and your whole company moves to the new plan together.",
   },
   {
     q: "Can you set it up for us?",
-    a: `Yes. Setup packages start at ${launchValue} for teams up to 10, and MULTIPLY includes Launch onboarding.`,
+    a: `Yes. Setup packages start at ${launchValue} for teams up to 10, and MULTIPLY on annual billing includes Launch onboarding.`,
+    aMonthlyOnly: `Yes. Setup packages start at ${launchValue} for teams up to 10.`,
   },
 ];
+
+// The questions and answers as the page shows them.
+export function faqItems(annualBilling: boolean): { q: string; a: string }[] {
+  return FAQ.map((f) => ({ q: f.q, a: annualBilling ? f.a : (f.aMonthlyOnly ?? f.a) }));
+}
+
+// ---------------------------------------------------------------- page metadata
+
+// The description for search results and link previews, built from the price
+// table at the billing the site leads with.
+export function pricingMeta(billing: Billing): { description: string; short: string } {
+  const [grow, scale, multiply] = PLAN_ORDER.map((p) => `${p.toUpperCase()} is ${money(PRICE_PER_USER_MONTH[p][billing])}`);
+  const from = money(lowestPrice(billing));
+  const trial = `${TRIAL_DAYS}-day free trial`;
+  if (billing === "annual") {
+    return {
+      description: `Three plans, priced per user. ${grow}, ${scale} and ${multiply} per user a month on annual billing. Every plan starts with a ${trial}.`,
+      short: `Three plans from ${from} per user a month, billed annually. Start a ${trial} on any plan.`,
+    };
+  }
+  return {
+    description: `Three plans, priced per user. ${grow}, ${scale} and ${multiply} per user a month, billed monthly. Every plan starts with a ${trial}.`,
+    short: `Three plans from ${from} per user a month. Start a ${trial} on any plan.`,
+  };
+}

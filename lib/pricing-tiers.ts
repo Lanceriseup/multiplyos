@@ -10,7 +10,7 @@
 // This is the only place a price is written. The words around the prices (plan
 // cards, comparison table, FAQ) are in pricing-copy.ts and build their dollar
 // figures from this file. It stays small on purpose: the home page's stack table
-// imports it for "From $15", and it must not drag the page copy along.
+// imports it for its SCALE chip, and it must not drag the page copy along.
 //
 // Pure data and pure functions only, so node:test can import it. Not used while
 // the pricing v2 switch is off.
@@ -43,7 +43,10 @@ export const PRICE_PER_USER_MONTH: Record<PlanId, Record<Billing, number>> = {
   multiply: { annual: 49, monthly: 65 },
 };
 
-export const LOWEST_PRICE_PER_USER = Math.min(...PLAN_ORDER.map((p) => PRICE_PER_USER_MONTH[p].annual));
+// The lowest per user price on the page at a billing interval (GROW).
+export function lowestPrice(billing: Billing): number {
+  return Math.min(...PLAN_ORDER.map((p) => PRICE_PER_USER_MONTH[p][billing]));
+}
 
 // "Save up to N%" is the best annual saving across the three plans, rounded
 // down so the claim never overstates it (SCALE saves 25.6%).
@@ -106,6 +109,23 @@ export function teamTotalParts(plan: PlanId, billing: Billing, users: number): {
 export function teamTotalLine(plan: PlanId, billing: Billing, users: number): string {
   const { head, billed } = teamTotalParts(plan, billing, users);
   return billed ? `${head}, ${billed}` : head;
+}
+
+// ---------------------------------------------------------------- the stack table
+
+// The home page's stack table prices every vendor for a team of ten, so ours is
+// priced for ten too.
+export const STACK_TEAM_SIZE = 10;
+
+// What the stack table's total bar says Multiply OS costs against that stack:
+// SCALE for a team of ten, because every row in the table is included on SCALE
+// (GROW lacks several, so a per user GROW price would not be like for like).
+// Derived from the price table, never typed.
+export function stackChip(billing: Billing): { price: string; detail: string } {
+  return {
+    price: money(teamMonthly(FEATURED_PLAN, billing, STACK_TEAM_SIZE)),
+    detail: `${FEATURED_PLAN.toUpperCase()} for ${plural(STACK_TEAM_SIZE, "user")}${billing === "annual" ? ", billed annually" : ""}`,
+  };
 }
 
 // ---------------------------------------------------------------- add-ons and setup

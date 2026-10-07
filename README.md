@@ -73,18 +73,23 @@ npm run dev
 
 The site uses Next.js 15, React 19, TypeScript, Tailwind CSS, and Framer Motion. Copy `.env.example` to `.env.local` only when integration work requires local credentials; public page review does not require submitting forms.
 
-## Pricing v2 switch
+## Pricing v2 switches
 
-The three plan pricing (GROW, SCALE, MULTIPLY) is built behind one build time flag, `NEXT_PUBLIC_PRICING_V2`. Unset, or any value other than `1` or `true`, the site is exactly as it was: the single $299 pricing page, Sign up buttons, and no `/rukcon`.
+The three plan pricing (GROW, SCALE, MULTIPLY) is built behind two build time flags. Both are read in `lib/pricing-v2-switch.mjs` (the typed door is `lib/pricing-v2.ts`), and only the value `1` or `true` turns one on.
 
-With it on:
+- `NEXT_PUBLIC_PRICING_V2` is the main switch. Unset, the site is exactly as it was: the single $299 pricing page, Sign up buttons, and no `/rukcon`.
+- `NEXT_PUBLIC_PRICING_V2_ANNUAL` only does anything while the main switch is on. Set, the site offers annual billing. Unset, it launches monthly only. Keep it unset until counsel approves the annual consent text, because the app blocks annual checkout until then.
+
+With the main switch on:
 
 - `/pricing` renders `components/PricingTiersPage.tsx`. Prices and the math are in `lib/pricing-tiers.ts`; the words are in `lib/pricing-copy.ts`.
-- Every Sign up button becomes Start free trial and links to the SCALE annual trial in the app (`/trial/signup?plan=scale&billing=annual`). Every link into the app is built in `lib/app-links.mjs`.
-- The home page's stack comparison stops quoting $299.
-- `/rukcon` redirects (307) to the SCALE annual trial with the RUKCON code applied, for the booth QR. Ashley names the final code; it is `RUKCON_PROMO_CODE` in `lib/app-links.mjs`.
+- Every Sign up button becomes Start free trial and links to the SCALE trial in the app (`/trial/signup?plan=scale&billing=annual`, or `billing=monthly` when annual billing is off). Every link into the app is built in `lib/app-links.mjs`.
+- The home page's stack comparison stops quoting $299 and says what SCALE costs for a team of ten.
+- `/rukcon` redirects (307) to the SCALE trial with the RUKCON code applied, on the same billing. Ashley names the final code; it is `RUKCON_PROMO_CODE` in `lib/app-links.mjs`.
 
-Turn it on only after the app's `pricing_v2` switch is on, because the trial links lead to the app's `/trial/signup`. Set `NEXT_PUBLIC_PRICING_V2=1` in the Vercel environment (not as Sensitive) and redeploy; it is read at build time. `lib/pricing-v2.ts` is the one door to the flag, and `npm test` checks it is read nowhere else.
+With annual billing on, the pricing page opens on Annual with a Monthly toggle and "Save up to 25%", and Launch onboarding is included with annual MULTIPLY only. With it off, the page shows monthly prices only, has no toggle, and says nothing about annual billing or about Launch being included.
+
+Turn the main switch on only after the app's `pricing_v2` switch is on, because the trial links lead to the app's `/trial/signup`. Set the variables in the Vercel environment (not as Sensitive) and redeploy; both are read at build time. `npm test` checks that each is read in one place only.
 
 ## Deployment
 

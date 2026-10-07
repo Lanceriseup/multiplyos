@@ -17,18 +17,20 @@ const {
   FORMS_ADDON_PRICE_PER_MONTH,
   GROW_ADDON_PRICE_PER_MONTH,
   HQ_PRICE_PER_MONTH,
-  LOWEST_PRICE_PER_USER,
   MAX_USERS,
   MIN_USERS,
   MULTIPLY_MIN_USERS,
   PLAN_ORDER,
   PRICE_PER_USER_MONTH,
   SETUP_PRICE,
+  STACK_TEAM_SIZE,
   TRIAL_DAYS,
   billedUsers,
   clampUsers,
+  lowestPrice,
   money,
   plural,
+  stackChip,
   teamAnnualBilled,
   teamMonthly,
   teamTotalLine,
@@ -55,8 +57,9 @@ test("the trial is 14 days and the page opens on 10 users", () => {
   assert.equal(DEFAULT_USERS, 10);
 });
 
-test("the lowest price on the page is GROW annual, $15", () => {
-  assert.equal(LOWEST_PRICE_PER_USER, 15);
+test("the lowest price on the page is GROW: $15 annual, $19 monthly", () => {
+  assert.equal(lowestPrice("annual"), 15);
+  assert.equal(lowestPrice("monthly"), 19);
 });
 
 test("the annual saving label is true: the best plan saves 25% or a little more, never less", () => {
@@ -162,6 +165,27 @@ test("the total line comes in two parts, so the page can keep each part on one l
 test("the total line at the top of the range", () => {
   assert.equal(teamTotalLine("scale", "annual", 500), "$14,500 a month for 500 users, billed $174,000 a year");
   assert.equal(teamTotalLine("multiply", "monthly", 1000), "$32,500 a month for 500 users");
+});
+
+test("monthly only mode: the team total for 10 users on each plan, and nothing about a year", () => {
+  assert.equal(teamTotalLine("grow", "monthly", 10), "$190 a month for 10 users");
+  assert.equal(teamTotalLine("scale", "monthly", 10), "$390 a month for 10 users");
+  assert.equal(teamTotalLine("multiply", "monthly", 10), "$650 a month for 10 users");
+  for (const plan of PLAN_ORDER) assert.equal(teamTotalParts(plan, "monthly", 10).billed, null);
+});
+
+test("the stack table chip is SCALE for a team of ten: $290 billed annually, or $390 monthly", () => {
+  assert.equal(STACK_TEAM_SIZE, 10);
+  assert.deepEqual(stackChip("annual"), { price: "$290", detail: "SCALE for 10 users, billed annually" });
+  assert.deepEqual(stackChip("monthly"), { price: "$390", detail: "SCALE for 10 users" });
+});
+
+test("the stack table chip follows the price table and the SCALE card's own team total", () => {
+  for (const billing of ["annual", "monthly"]) {
+    assert.equal(stackChip(billing).price, money(PRICE_PER_USER_MONTH[FEATURED_PLAN][billing] * STACK_TEAM_SIZE), billing);
+    assert.equal(stackChip(billing).price, money(teamMonthly(FEATURED_PLAN, billing, STACK_TEAM_SIZE)), billing);
+    assert.ok(teamTotalLine(FEATURED_PLAN, billing, STACK_TEAM_SIZE).startsWith(`${stackChip(billing).price} a month for`), billing);
+  }
 });
 
 test("money rounds to whole dollars and groups thousands", () => {

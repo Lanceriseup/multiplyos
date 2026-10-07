@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import PricingPage from "@/components/PricingPage";
 import PricingTiersPage from "@/components/PricingTiersPage";
-import { pricingV2SiteEnabled } from "@/lib/pricing-v2";
-import { PLAN_ORDER, PRICE_PER_USER_MONTH, TRIAL_DAYS, money } from "@/lib/pricing-tiers";
+import { leadBilling, pricingV2SiteEnabled } from "@/lib/pricing-v2";
+import { pricingMeta } from "@/lib/pricing-copy";
 
 // The single $299 plan, as the page has always described itself.
 const metadataToday: Metadata = {
@@ -36,10 +36,10 @@ const metadataToday: Metadata = {
 };
 
 // Pricing v2: the three plans, priced per user. The numbers come from
-// lib/pricing-tiers.ts, the same table the page renders.
-const fromAnnual = PLAN_ORDER.map((p) => `${p.toUpperCase()} is ${money(PRICE_PER_USER_MONTH[p].annual)}`);
-const tiersDescription = `Three plans, priced per user. ${fromAnnual[0]}, ${fromAnnual[1]} and ${fromAnnual[2]} per user a month on annual billing. Every plan starts with a ${TRIAL_DAYS}-day free trial.`;
-const tiersShort = `Three plans from ${money(PRICE_PER_USER_MONTH.grow.annual)} per user a month, billed annually. Start a ${TRIAL_DAYS}-day free trial on any plan.`;
+// lib/pricing-tiers.ts, the same table the page renders, at the billing the site
+// leads with: annual prices when annual billing is on, monthly prices when the
+// site launches monthly only.
+const { description: tiersDescription, short: tiersShort } = pricingMeta(leadBilling());
 
 // Same address, site name and share image as today's; the words are new.
 const metadataTiers: Metadata = {

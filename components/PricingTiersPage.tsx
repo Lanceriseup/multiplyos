@@ -17,6 +17,14 @@
 //   - every link into the app: lib/app-links.mjs, so a Start free trial button
 //     is the same URL as the hero's and the /rukcon redirect.
 //
+// Two modes, chosen at build time by the second switch (see lib/pricing-v2.ts):
+//   - annual billing on: Annual (the opening choice) and Monthly, "Save up to
+//     25%", and Launch onboarding with annual MULTIPLY.
+//   - annual billing off, the monthly only launch (the app blocks annual
+//     checkout until counsel approves the annual consent text): no toggle, monthly
+//     prices, every link says billing=monthly, and nothing on the page mentions
+//     annual billing or says Launch is included.
+//
 // The artifact the design came from used a navy card for the featured plan. The
 // site's palette has no navy (the old pricing page dropped it), so SCALE takes
 // the site's ink instead and keeps the orange for the badge and the buttons.
@@ -44,8 +52,13 @@ import {
   teamTotalParts,
 } from "@/lib/pricing-tiers";
 import type { Billing, PlanId } from "@/lib/pricing-tiers";
-import { FAQ, HQ_ADDONS, PLANS, SETUP_PACKAGES, visibleFeatureGroups } from "@/lib/pricing-copy";
+import { HQ_ADDONS, PLANS, faqItems, planItems, visibleFeatureGroups, visibleSetupPackages } from "@/lib/pricing-copy";
 import type { FeatureValue } from "@/lib/pricing-copy";
+import { leadBilling, pricingV2AnnualEnabled } from "@/lib/pricing-v2";
+
+// Annual billing is offered only when both switches are on. Fixed at build time,
+// so the server render and the browser always agree.
+const PRICING_V2_ANNUAL = pricingV2AnnualEnabled();
 
 // ---------------------------------------------------------------- shared bits
 
@@ -280,7 +293,7 @@ function PlanCard({
         }`}
       >
         {copy.lead && <li className="font-bold">{copy.lead}</li>}
-        {copy.items.map((item) => (
+        {planItems(plan, billing).map((item) => (
           <li key={item} className="grid grid-cols-[16px_minmax(0,1fr)] items-start gap-2">
             <Tick className="mt-[3px] h-[14px] w-[14px] text-brand-orange" />
             {item}
@@ -344,7 +357,7 @@ function SetupPackages() {
         />
         <Reveal delay={0.08}>
           <div className="mx-auto grid max-w-[480px] gap-3 lg:max-w-none lg:grid-cols-3">
-            {SETUP_PACKAGES.map((s) => (
+            {visibleSetupPackages(PRICING_V2_ANNUAL).map((s) => (
               <div
                 key={s.name}
                 className="flex min-w-0 flex-col gap-2 rounded-2xl border border-black/[0.08] bg-white p-5 shadow-[0_24px_54px_-38px_rgba(40,30,15,0.4)]"
@@ -405,7 +418,7 @@ function CompareCell({ value }: { value: FeatureValue }) {
 
 function Compare() {
   const [differencesOnly, setDifferencesOnly] = useState(false);
-  const groups = visibleFeatureGroups(differencesOnly);
+  const groups = visibleFeatureGroups({ differencesOnly, annual: PRICING_V2_ANNUAL });
 
   return (
     <section className="bg-[#F6F3EE] px-5 py-14 sm:px-8 sm:py-20">
@@ -506,7 +519,7 @@ function Faq() {
         <SectionHead title="Questions" />
         <Reveal delay={0.06}>
           <div className="mx-auto max-w-3xl divide-y divide-[#EBE7E0] border-y border-[#EBE7E0]">
-            {FAQ.map((f, i) => (
+            {faqItems(PRICING_V2_ANNUAL).map((f, i) => (
               <details key={f.q} open={i === 0} className="group">
                 <summary
                   className={`flex min-h-[56px] cursor-pointer list-none items-center gap-4 py-4 text-left text-[15.5px] font-semibold text-brand-ink [&::-webkit-details-marker]:hidden ${FOCUS}`}
@@ -528,7 +541,8 @@ function Faq() {
 
 export default function PricingTiersPage() {
   const { openDemo } = useDemo();
-  const [billing, setBilling] = useState<Billing>("annual");
+  // Annual when annual billing is on, otherwise monthly and it never changes.
+  const [billing, setBilling] = useState<Billing>(leadBilling());
   const [users, setUsers] = useState(DEFAULT_USERS);
   // The plan the phone's sticky bar is about. SCALE until a visitor touches
   // another card.
@@ -573,7 +587,7 @@ export default function PricingTiersPage() {
           </Reveal>
 
           <Reveal delay={0.08} className="mt-8 flex flex-col items-center justify-center gap-4 sm:mt-10 sm:flex-row sm:gap-7">
-            <BillingToggle billing={billing} onChange={setBilling} />
+            {PRICING_V2_ANNUAL && <BillingToggle billing={billing} onChange={setBilling} />}
             <TeamSize users={users} onChange={setUsers} />
           </Reveal>
 

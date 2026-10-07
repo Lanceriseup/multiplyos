@@ -1,5 +1,5 @@
 import { appTrialUrl, RUKCON_PROMO_CODE } from "./lib/app-links.mjs";
-import { pricingV2SiteEnabled } from "./lib/pricing-v2-switch.mjs";
+import { leadBilling, pricingV2SiteEnabled } from "./lib/pricing-v2-switch.mjs";
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -12,9 +12,11 @@ const nextConfig = {
   ...(process.env.BUILD_DIR ? { distDir: process.env.BUILD_DIR } : {}),
 
   // multiplyos.com/rukcon is where the RUKCON booth QR points. It sends people
-  // into the SCALE annual trial with the booth code applied, so the signup
-  // carries the RUKCON code the offer is tracked by. It exists only while the
-  // pricing v2 switch is on; switched off, the site has no /rukcon.
+  // into the SCALE trial with the booth code applied, so the signup carries the
+  // RUKCON code the offer is tracked by. The trial is billed annually when
+  // annual billing is on and monthly when the site launches monthly only (see
+  // leadBilling). It exists only while the pricing v2 switch is on; switched
+  // off, the site has no /rukcon.
   //
   // Temporary (307), not permanent, so the destination can change after the
   // event without browsers holding on to the old one. Ashley names the final
@@ -27,7 +29,7 @@ const nextConfig = {
     return [
       {
         source: "/rukcon",
-        destination: appTrialUrl({ plan: "scale", billing: "annual", promo: RUKCON_PROMO_CODE }),
+        destination: appTrialUrl({ plan: "scale", billing: leadBilling(), promo: RUKCON_PROMO_CODE }),
         permanent: false,
       },
     ];

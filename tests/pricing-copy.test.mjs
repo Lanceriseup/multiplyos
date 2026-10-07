@@ -1,15 +1,26 @@
 // The words around the numbers on the pricing page: plan cards, the HQ add-ons,
 // the setup packages, the comparison table (and its "show differences only"
-// filter) and the FAQ. The numbers themselves are tested in
+// filter), the FAQ and the page metadata. The numbers themselves are tested in
 // pricing-tiers.test.mjs.
+//
+// Two modes matter here. With annual billing on, the page offers Annual and
+// Monthly and Launch onboarding is included with annual MULTIPLY only (spec
+// decision D2). With annual billing off (the monthly only launch, before counsel
+// approves the annual consent text) the page must not say anything about annual
+// billing or about Launch being included.
 import test from "node:test";
 import assert from "node:assert/strict";
 
 import * as copy from "../lib/pricing-copy";
 import * as tiers from "../lib/pricing-tiers";
 
-const { FAQ, FEATURE_GROUPS, HQ_ADDONS, PLANS, SETUP_PACKAGES, visibleFeatureGroups } = copy;
+const { FAQ, FEATURE_GROUPS, HQ_ADDONS, PLANS, SETUP_PACKAGES, faqItems, planItems, pricingMeta, visibleFeatureGroups, visibleSetupPackages } =
+  copy;
 const { PLAN_ORDER } = tiers;
+
+const LAUNCH_LINE = "Launch onboarding included with annual billing ($1,000 value)";
+const SWITCH_PLANS_ANSWER = "Yes. You can switch plans at any time, and your whole company moves to the new plan together.";
+const rowsOf = (groups) => groups.flatMap((g) => g.rows);
 
 // ---- add-ons and setup packages ----------------------------------------------
 
@@ -26,21 +37,37 @@ test("the four HQ modules, with Marketing HQ marked Coming Q1", () => {
 });
 
 test("setup packages run Launch, Accelerate, Momentum at the setup prices", () => {
+  for (const annual of [true, false]) {
+    assert.deepEqual(
+      visibleSetupPackages(annual).map((s) => [s.name, s.price]),
+      [
+        ["LAUNCH", tiers.SETUP_PRICE.launch],
+        ["ACCELERATE", tiers.SETUP_PRICE.accelerate],
+        ["MOMENTUM", tiers.SETUP_PRICE.momentum],
+      ],
+    );
+  }
+});
+
+test("with annual billing on, only Launch carries Included with MULTIPLY annual", () => {
   assert.deepEqual(
-    SETUP_PACKAGES.map((s) => [s.name, s.price]),
-    [
-      ["LAUNCH", tiers.SETUP_PRICE.launch],
-      ["ACCELERATE", tiers.SETUP_PRICE.accelerate],
-      ["MOMENTUM", tiers.SETUP_PRICE.momentum],
-    ],
+    visibleSetupPackages(true).map((s) => s.included ?? null),
+    ["Included with MULTIPLY annual", null, null],
   );
 });
 
-test("only Launch carries Included with MULTIPLY", () => {
+test("monthly only: no setup package says it is included with anything", () => {
   assert.deepEqual(
-    SETUP_PACKAGES.map((s) => s.included ?? null),
-    ["Included with MULTIPLY", null, null],
+    visibleSetupPackages(false).map((s) => s.included ?? null),
+    [null, null, null],
   );
+});
+
+test("visibleSetupPackages does not change the source table", () => {
+  const before = JSON.stringify(SETUP_PACKAGES);
+  visibleSetupPackages(false);
+  visibleSetupPackages(true);
+  assert.equal(JSON.stringify(SETUP_PACKAGES), before);
 });
 
 // ---- plan cards --------------------------------------------------------------
@@ -56,20 +83,38 @@ test("plan copy: names, who they are for, and what each builds on", () => {
   );
   for (const p of PLAN_ORDER) {
     assert.ok(PLANS[p].who.length > 0, `${p} has a who`);
-    assert.ok(PLANS[p].items.length >= 5, `${p} has a real list`);
+    for (const billing of ["annual", "monthly"]) assert.ok(planItems(p, billing).length >= 4, `${p} ${billing} has a real list`);
   }
 });
 
-test("plan cards state the Launch value and the HQ inclusion from the same numbers", () => {
-  assert.ok(PLANS.multiply.items.includes("Any 2 HQ modules included"));
-  assert.ok(PLANS.multiply.items.includes("Launch onboarding included ($1,000 value)"));
+test("MULTIPLY on annual billing includes Launch onboarding, and the line sits second as designed", () => {
+  assert.deepEqual(planItems("multiply", "annual"), [
+    "Any 2 HQ modules included",
+    LAUNCH_LINE,
+    "Additional businesses at 25% off",
+    "Expanded AI connections",
+    "Unlimited websites",
+  ]);
+});
+
+test("MULTIPLY on monthly billing makes no Launch claim", () => {
+  assert.deepEqual(planItems("multiply", "monthly"), [
+    "Any 2 HQ modules included",
+    "Additional businesses at 25% off",
+    "Expanded AI connections",
+    "Unlimited websites",
+  ]);
+});
+
+test("GROW and SCALE read the same on both billings", () => {
+  for (const p of ["grow", "scale"]) assert.deepEqual(planItems(p, "annual"), planItems(p, "monthly"), p);
 });
 
 // ---- compare table -----------------------------------------------------------
 
-test("compare table: three groups and 23 rows, each with a value for all three plans", () => {
+test("compare table with annual billing: three groups and 23 rows, each with a value for all three plans", () => {
   assert.deepEqual(
-    FEATURE_GROUPS.map((g) => [g.name, g.rows.length]),
+    visibleFeatureGroups({ differencesOnly: false, annual: true }).map((g) => [g.name, g.rows.length]),
     [
       ["The core", 8],
       ["Business modules", 12],
@@ -86,9 +131,31 @@ test("compare table: three groups and 23 rows, each with a value for all three p
   }
 });
 
+test("compare table: Launch onboarding is included on annual MULTIPLY only", () => {
+  const row = rowsOf(visibleFeatureGroups({ differencesOnly: false, annual: true })).find((r) => r.name === "Launch onboarding");
+  assert.deepEqual([...row.values], [false, false, "Included on annual"]);
+  assert.equal(row.note, "$1,000 value");
+});
+
+test("compare table, monthly only: the Launch onboarding row is gone and the other 22 stay", () => {
+  const groups = visibleFeatureGroups({ differencesOnly: false, annual: false });
+  const rows = rowsOf(groups);
+  assert.equal(rows.length, 22);
+  assert.ok(!rows.some((r) => r.name === "Launch onboarding"));
+  assert.deepEqual(
+    groups.map((g) => [g.name, g.rows.length]),
+    [
+      ["The core", 8],
+      ["Business modules", 12],
+      ["Whole company", 2],
+    ],
+  );
+});
+
 test("compare table: Forms and e-signatures and performance reviews are tagged as coming", () => {
-  const rows = FEATURE_GROUPS.flatMap((g) => g.rows);
-  const tagged = rows.filter((r) => r.tag).map((r) => [r.name, r.tag]);
+  const tagged = rowsOf(FEATURE_GROUPS)
+    .filter((r) => r.tag)
+    .map((r) => [r.name, r.tag]);
   assert.deepEqual(tagged, [
     ["Performance reviews and engagement surveys", "Coming Q4"],
     ["Forms and e-signatures", "Coming soon"],
@@ -96,11 +163,9 @@ test("compare table: Forms and e-signatures and performance reviews are tagged a
 });
 
 test("show differences only drops the six rows that read the same on every plan", () => {
-  const all = visibleFeatureGroups(false);
-  assert.equal(all.flatMap((g) => g.rows).length, 23);
+  assert.equal(rowsOf(visibleFeatureGroups({ differencesOnly: false, annual: true })).length, 23);
 
-  const diff = visibleFeatureGroups(true);
-  const kept = diff.flatMap((g) => g.rows).map((r) => r.name);
+  const kept = rowsOf(visibleFeatureGroups({ differencesOnly: true, annual: true })).map((r) => r.name);
   assert.equal(kept.length, 17);
   for (const same of [
     "One Page Plan",
@@ -117,26 +182,86 @@ test("show differences only drops the six rows that read the same on every plan"
   }
 });
 
+test("show differences only, monthly only: 16 rows, still no Launch onboarding", () => {
+  const kept = rowsOf(visibleFeatureGroups({ differencesOnly: true, annual: false })).map((r) => r.name);
+  assert.equal(kept.length, 16);
+  assert.ok(!kept.includes("Launch onboarding"));
+});
+
 test("show differences only never returns an empty group", () => {
-  for (const g of visibleFeatureGroups(true)) assert.ok(g.rows.length > 0, g.name);
+  for (const annual of [true, false]) {
+    for (const g of visibleFeatureGroups({ differencesOnly: true, annual })) assert.ok(g.rows.length > 0, g.name);
+  }
 });
 
 test("visibleFeatureGroups does not mutate the source table", () => {
   const before = JSON.stringify(FEATURE_GROUPS);
-  visibleFeatureGroups(true);
-  visibleFeatureGroups(false);
+  for (const annual of [true, false]) {
+    visibleFeatureGroups({ differencesOnly: true, annual });
+    visibleFeatureGroups({ differencesOnly: false, annual });
+  }
   assert.equal(JSON.stringify(FEATURE_GROUPS), before);
 });
 
 // ---- FAQ ---------------------------------------------------------------------
 
-test("FAQ has the six approved questions, trial question first", () => {
-  assert.equal(FAQ.length, 6);
-  assert.equal(FAQ[0].q, "Do I need a credit card to start the trial?");
-  for (const item of FAQ) {
-    assert.ok(item.q.endsWith("?"), item.q);
-    assert.ok(item.a.length > 0, item.q);
+test("FAQ has the six approved questions in both modes, trial question first", () => {
+  for (const annual of [true, false]) {
+    const items = faqItems(annual);
+    assert.equal(items.length, 6);
+    assert.equal(items[0].q, "Do I need a credit card to start the trial?");
+    for (const item of items) {
+      assert.ok(item.q.endsWith("?"), item.q);
+      assert.ok(item.a.length > 0, item.q);
+    }
   }
+  assert.equal(FAQ.length, 6);
+});
+
+test("changing plans: a true answer that settles no open decision (no proration, downgrade or renewal rules)", () => {
+  for (const annual of [true, false]) {
+    const answer = faqItems(annual).find((i) => i.q === "Can I change plans later?").a;
+    assert.equal(answer, SWITCH_PLANS_ANSWER);
+  }
+  for (const annual of [true, false]) {
+    for (const item of faqItems(annual)) assert.ok(!/prorat|downgrad|renewal/i.test(item.a), `${item.q}: ${item.a}`);
+  }
+});
+
+test("the setup answer: with annual billing MULTIPLY on annual includes Launch", () => {
+  const answer = faqItems(true).find((i) => i.q === "Can you set it up for us?").a;
+  assert.equal(answer, "Yes. Setup packages start at $1,000 for teams up to 10, and MULTIPLY on annual billing includes Launch onboarding.");
+});
+
+test("the setup answer, monthly only: the Launch clause is dropped", () => {
+  const answer = faqItems(false).find((i) => i.q === "Can you set it up for us?").a;
+  assert.equal(answer, "Yes. Setup packages start at $1,000 for teams up to 10.");
+});
+
+test("what happens when the trial ends: annual billing is only mentioned when it is offered", () => {
+  const on = faqItems(true).find((i) => i.q === "What happens when my trial ends?").a;
+  const off = faqItems(false).find((i) => i.q === "What happens when my trial ends?").a;
+  assert.ok(/annual and monthly/.test(on), on);
+  assert.ok(!/annual/i.test(off), off);
+  assert.ok(off.includes("You can switch plans before then."), off);
+});
+
+// ---- page metadata -----------------------------------------------------------
+
+test("metadata from the monthly prices: $19, $39, $65, billed monthly, nothing annual", () => {
+  const { description, short } = pricingMeta("monthly");
+  for (const price of ["$19", "$39", "$65"]) assert.ok(description.includes(price), `${price} in ${description}`);
+  assert.ok(short.includes("from $19"), short);
+  for (const text of [description, short]) assert.ok(!/annual|save up to/i.test(text), text);
+  for (const price of ["$15", "$29", "$49"]) assert.ok(!description.includes(price), `${price} should not be in ${description}`);
+  assert.ok(description.includes("14-day free trial"), description);
+});
+
+test("metadata from the annual prices: $15, $29, $49 on annual billing", () => {
+  const { description, short } = pricingMeta("annual");
+  for (const price of ["$15", "$29", "$49"]) assert.ok(description.includes(price), `${price} in ${description}`);
+  assert.ok(/annual/.test(description), description);
+  assert.ok(short.includes("from $15") && /annually/.test(short), short);
 });
 
 // ---- copy rules --------------------------------------------------------------
@@ -153,12 +278,31 @@ const copyStrings = () => strings(Object.values({ ...tiers, ...copy }).filter((v
 // Built from its code point so this file does not itself contain the character.
 const EM_DASH = String.fromCharCode(0x2014);
 
+// Everything a visitor can read on the page when annual billing is off.
+function monthlyOnlyCopy() {
+  return [
+    ...PLAN_ORDER.flatMap((p) => [PLANS[p].name, PLANS[p].who, PLANS[p].lead ?? "", ...planItems(p, "monthly")]),
+    ...strings(visibleFeatureGroups({ differencesOnly: false, annual: false })),
+    ...strings(visibleSetupPackages(false)),
+    ...strings(faqItems(false)),
+    ...strings(pricingMeta("monthly")),
+  ];
+}
+
 test("no em dash and no exclamation mark anywhere in the page copy or the price labels", () => {
-  const all = copyStrings();
+  const all = [...copyStrings(), ...strings(pricingMeta("annual")), ...strings(pricingMeta("monthly")), ...strings(faqItems(false))];
   assert.ok(all.length > 60, `only found ${all.length} strings, the walk is broken`);
   for (const s of all) {
     assert.ok(!s.includes(EM_DASH), `em dash in: ${s}`);
     assert.ok(!s.includes("!"), `exclamation mark in: ${s}`);
+  }
+});
+
+test("monthly only: nothing on the page mentions annual billing, a saving, or Launch being included", () => {
+  const all = monthlyOnlyCopy();
+  assert.ok(all.length > 60, `only found ${all.length} strings, the walk is broken`);
+  for (const s of all) {
+    assert.ok(!/annual|save up to|launch onboarding/i.test(s), `monthly only copy says: ${s}`);
   }
 });
 
