@@ -276,7 +276,7 @@ export default function Navbar() {
         key={item.label}
         type="button"
         onClick={openDemo}
-        className="rounded-md px-4 py-2 text-[15px] font-medium text-brand-charcoal transition-colors hover:bg-black/5 hover:text-brand-ink"
+        className="whitespace-nowrap rounded-md px-3 py-2 text-[15px] font-medium text-brand-charcoal xl:px-4 transition-colors hover:bg-black/5 hover:text-brand-ink"
       >
         {item.label}
       </button>
@@ -284,7 +284,7 @@ export default function Navbar() {
       <Link
         key={item.label}
         href={item.href}
-        className="rounded-md px-4 py-2 text-[15px] font-medium text-brand-charcoal transition-colors hover:bg-black/5 hover:text-brand-ink"
+        className="whitespace-nowrap rounded-md px-3 py-2 text-[15px] font-medium text-brand-charcoal xl:px-4 transition-colors hover:bg-black/5 hover:text-brand-ink"
       >
         {item.label}
       </Link>
@@ -298,13 +298,13 @@ export default function Navbar() {
     >
       <nav className="mx-auto flex h-[72px] max-w-container items-center justify-between px-5 sm:px-8">
         {/* Logo */}
-        <Link href="/" className="flex items-center" aria-label="Multiply OS home">
+        <Link href="/" className="flex flex-none items-center" aria-label="Multiply OS home">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/MultiplyOS_logoBlack.png" alt="Multiply OS" className="h-12 w-auto" />
         </Link>
 
         {/* Desktop nav */}
-        <div className="hidden items-center gap-1 md:flex">
+        <div className="hidden items-center gap-1 lg:flex">
           {/* Platform */}
           {renderSimpleItem(navItems[0])}
 
@@ -323,7 +323,7 @@ export default function Navbar() {
               aria-haspopup="menu"
               aria-expanded={featuresOpen}
               onClick={() => setFeaturesOpen((v) => !v)}
-              className="flex items-center gap-1 rounded-md px-4 py-2 text-[15px] font-medium text-brand-charcoal transition-colors hover:bg-black/5 hover:text-brand-ink"
+              className="flex items-center gap-1 whitespace-nowrap rounded-md px-3 py-2 text-[15px] font-medium text-brand-charcoal xl:px-4 transition-colors hover:bg-black/5 hover:text-brand-ink"
             >
               Features
               <svg
@@ -346,10 +346,10 @@ export default function Navbar() {
         </div>
 
         {/* Right side CTA */}
-        <div className="hidden items-center gap-2 md:flex">
+        <div className="hidden items-center gap-2 lg:flex">
           <Link
             href={APP_URL}
-            className="rounded-lg bg-brand-ink px-5 py-2.5 text-[15px] font-semibold text-white transition-colors hover:bg-black"
+            className="whitespace-nowrap rounded-lg bg-brand-ink px-5 py-2.5 text-[15px] font-semibold text-white transition-colors hover:bg-black"
           >
             Log in
           </Link>
@@ -357,7 +357,7 @@ export default function Navbar() {
 
         {/* Mobile toggle */}
         <button
-          className="inline-flex items-center justify-center rounded-md p-2 text-brand-ink md:hidden"
+          className="inline-flex items-center justify-center rounded-md p-2 text-brand-ink lg:hidden"
           aria-label="Toggle menu"
           aria-expanded={mobileOpen}
           onClick={() => setMobileOpen((v) => !v)}
@@ -374,7 +374,7 @@ export default function Navbar() {
 
       {/* Mobile menu */}
       {mobileOpen && (
-        <div className="max-h-[calc(100vh-72px)] overflow-y-auto border-t border-black/5 bg-white px-5 pb-6 pt-2 md:hidden">
+        <div className="max-h-[calc(100vh-72px)] overflow-y-auto border-t border-black/5 bg-white px-5 pb-6 pt-2 lg:hidden">
           <div className="flex flex-col">
             {/* Platform first, then Features, then the rest, so the order
                 matches the desktop bar */}

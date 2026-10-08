@@ -986,7 +986,7 @@ function Section({
 }) {
   return (
     <section id={id} className="scroll-mt-24 px-5 py-10 sm:px-8 sm:py-20">
-      <div className="mx-auto grid max-w-container items-center gap-8 lg:grid-cols-2 lg:gap-16">
+      <div className="mx-auto grid max-w-container grid-cols-1 items-center gap-8 lg:grid-cols-2 lg:gap-16">
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
