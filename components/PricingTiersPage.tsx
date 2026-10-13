@@ -55,6 +55,7 @@ import type { Billing, PlanId } from "@/lib/pricing-tiers";
 import { HQ_ADDONS, PLANS, faqItems, planItems, visibleFeatureGroups, visibleSetupPackages } from "@/lib/pricing-copy";
 import type { FeatureValue } from "@/lib/pricing-copy";
 import { leadBilling, pricingV2AnnualEnabled } from "@/lib/pricing-v2";
+import { boothOffer, boothPlanLine } from "@/lib/rukcon-booth";
 
 // Annual billing is offered only when both switches are on. Fixed at build time,
 // so the server render and the browser always agree.
@@ -189,17 +190,21 @@ function PlanCard({
   billing,
   users,
   onSelect,
+  promo,
 }: {
   plan: PlanId;
   billing: Billing;
   users: number;
   onSelect: (p: PlanId) => void;
+  /** The booth code (/rukcon): carried on the trial link, and the offer line on SCALE. */
+  promo?: string;
 }) {
   const { openDemo } = useDemo();
   const copy = PLANS[plan];
   const featured = plan === FEATURED_PLAN;
   const rate = PRICE_PER_USER_MONTH[plan][billing];
   const total = teamTotalParts(plan, billing, users);
+  const offerLine = promo ? boothPlanLine(plan, billing) : null;
 
   // The card is a subgrid of the grid around it from lg up, so the price, the
   // total, the button and the list sit on the same line in all three cards
@@ -265,7 +270,7 @@ function PlanCard({
       </p>
 
       <div className="grid gap-2.5">
-        <a href={appTrialUrl({ plan, billing })} className={`${PILL} w-full ${FOCUS}`}>
+        <a href={appTrialUrl({ plan, billing, promo })} className={`${PILL} w-full ${FOCUS}`}>
           Start free trial
         </a>
         {plan === "multiply" ? (
@@ -292,6 +297,12 @@ function PlanCard({
           featured ? "border-white/15" : "border-black/[0.08]"
         }`}
       >
+        {offerLine && (
+          <li className="grid grid-cols-[16px_minmax(0,1fr)] items-start gap-2 font-semibold text-[#F7A165]">
+            <Tick className="mt-[3px] h-[14px] w-[14px] text-brand-orange" />
+            {offerLine}
+          </li>
+        )}
         {copy.lead && <li className="font-bold">{copy.lead}</li>}
         {planItems(plan, billing).map((item) => (
           <li key={item} className="grid grid-cols-[16px_minmax(0,1fr)] items-start gap-2">
@@ -539,7 +550,37 @@ function Faq() {
 
 // ---------------------------------------------------------------- the page
 
-export default function PricingTiersPage() {
+// The RUKCON offer above the plans on /rukcon. Phone first: the booth QR is
+// scanned on a phone.
+function BoothOffer() {
+  const offer = boothOffer(PRICING_V2_ANNUAL);
+  return (
+    <Reveal delay={0.04} className="mx-auto mt-7 max-w-3xl sm:mt-9">
+      <div className="relative overflow-hidden rounded-2xl bg-brand-ink px-5 py-6 text-white shadow-[0_30px_60px_-28px_rgba(10,10,10,0.7)] sm:px-8 sm:py-7">
+        <div aria-hidden="true" className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-[radial-gradient(circle,rgba(234,123,27,0.45),transparent_65%)] blur-2xl" />
+        <div className="relative">
+          <p className="text-[10.5px] font-bold uppercase tracking-[0.19em] text-[#F7A165]">{offer.eyebrow}</p>
+          <h2 className="mt-2 text-balance text-[22px] font-extrabold leading-[1.15] tracking-tight sm:text-[28px]">
+            {offer.title}
+          </h2>
+          <p className="mt-3 max-w-[60ch] text-[14px] leading-relaxed text-white/80 sm:text-[15px]">{offer.body}</p>
+          <ol className="mt-4 flex flex-col gap-2 text-[13.5px] text-white/90 sm:flex-row sm:gap-6">
+            {offer.steps.map((step, i) => (
+              <li key={step} className="flex items-center gap-2">
+                <span className="grid h-6 w-6 flex-none place-items-center rounded-full bg-[linear-gradient(135deg,#F49230,#DE6F14)] text-[12px] font-bold">
+                  {i + 1}
+                </span>
+                {step}
+              </li>
+            ))}
+          </ol>
+        </div>
+      </div>
+    </Reveal>
+  );
+}
+
+export default function PricingTiersPage({ promo }: { promo?: string } = {}) {
   const { openDemo } = useDemo();
   // Annual when annual billing is on, otherwise monthly and it never changes.
   const [billing, setBilling] = useState<Billing>(leadBilling());
@@ -586,6 +627,8 @@ export default function PricingTiersPage() {
             </p>
           </Reveal>
 
+          {promo && <BoothOffer />}
+
           <Reveal delay={0.08} className="mt-8 flex flex-col items-center justify-center gap-4 sm:mt-10 sm:flex-row sm:gap-7">
             {PRICING_V2_ANNUAL && <BillingToggle billing={billing} onChange={setBilling} />}
             <TeamSize users={users} onChange={setUsers} />
@@ -595,7 +638,7 @@ export default function PricingTiersPage() {
             <h2 className="sr-only">Plans</h2>
             <div className="mx-auto grid max-w-[480px] gap-5 lg:max-w-none lg:grid-cols-3 lg:gap-x-4 lg:gap-y-3.5">
               {PLAN_ORDER.map((p) => (
-                <PlanCard key={p} plan={p} billing={billing} users={users} onSelect={setSelected} />
+                <PlanCard key={p} plan={p} billing={billing} users={users} onSelect={setSelected} promo={promo} />
               ))}
             </div>
           </Reveal>
@@ -636,7 +679,7 @@ export default function PricingTiersPage() {
                 </p>
                 <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
                   <a
-                    href={appTrialUrl({ plan: FEATURED_PLAN, billing })}
+                    href={appTrialUrl({ plan: FEATURED_PLAN, billing, promo })}
                     className={`${PILL} w-full max-w-[420px] sm:w-auto sm:min-w-[190px] ${FOCUS}`}
                   >
                     Start free trial
@@ -667,7 +710,7 @@ export default function PricingTiersPage() {
             {money(PRICE_PER_USER_MONTH[selected][billing])} per user / month, {billingNote(billing)}
           </span>
         </div>
-        <a href={appTrialUrl({ plan: selected, billing })} className={`${PILL_BASE} flex-none px-4 text-[14px] ${FOCUS}`}>
+        <a href={appTrialUrl({ plan: selected, billing, promo })} className={`${PILL_BASE} flex-none px-4 text-[14px] ${FOCUS}`}>
           Start free trial
         </a>
       </div>

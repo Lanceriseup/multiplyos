@@ -1,6 +1,3 @@
-import { appTrialUrl, RUKCON_PROMO_CODE } from "./lib/app-links.mjs";
-import { leadBilling, pricingV2SiteEnabled } from "./lib/pricing-v2-switch.mjs";
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
@@ -11,29 +8,9 @@ const nextConfig = {
   //   BUILD_DIR=.next-check npx next build
   ...(process.env.BUILD_DIR ? { distDir: process.env.BUILD_DIR } : {}),
 
-  // multiplyos.com/rukcon is where the RUKCON booth QR points. It sends people
-  // into the SCALE trial with the booth code applied, so the signup carries the
-  // RUKCON code the offer is tracked by. The trial is billed annually when
-  // annual billing is on and monthly when the site launches monthly only (see
-  // leadBilling). It exists only while the pricing v2 switch is on; switched
-  // off, the site has no /rukcon.
-  //
-  // Temporary (307), not permanent, so the destination can change after the
-  // event without browsers holding on to the old one. Ashley names the final
-  // code: it lives in lib/app-links.mjs as RUKCON_PROMO_CODE.
-  //
-  // The lib imports are .mjs because this file runs on Node 20 in CI, which
-  // cannot load .ts.
-  async redirects() {
-    if (!pricingV2SiteEnabled()) return [];
-    return [
-      {
-        source: "/rukcon",
-        destination: appTrialUrl({ plan: "scale", billing: leadBilling(), promo: RUKCON_PROMO_CODE }),
-        permanent: false,
-      },
-    ];
-  },
+  // multiplyos.com/rukcon, where the RUKCON booth QR points, used to be a
+  // redirect into the SCALE trial. It is now a page (app/rukcon/page.tsx): the
+  // pricing page with the RUKCON offer and the code on every trial link.
 };
 
 export default nextConfig;
