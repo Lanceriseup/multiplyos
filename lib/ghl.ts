@@ -51,16 +51,22 @@ function headers(token: string, version: string = GHL_API_VERSION) {
 /**
  * Upsert a contact (matches on email/phone within the location, so re-submits
  * don't create duplicates). Returns the GHL contact id.
+ *
+ * Tags are NOT sent on the upsert: GHL documents that the upsert's `tags`
+ * field "will overwrite all current tags associated with the contact", which
+ * would wipe an existing contact's tags on every form submit. They go through
+ * the add-tags endpoint afterwards instead, which only adds.
  */
 export async function upsertContact(
   input: UpsertContactInput
 ): Promise<{ contactId: string | undefined; raw: unknown }> {
   const { token, locationId } = getCredentials();
+  const { tags, ...contact } = input;
 
   const res = await fetch(`${GHL_API_BASE}/contacts/upsert`, {
     method: "POST",
     headers: headers(token),
-    body: JSON.stringify({ locationId, ...input }),
+    body: JSON.stringify({ locationId, ...contact }),
   });
 
   if (!res.ok) {
@@ -78,7 +84,37 @@ export async function upsertContact(
     console.error(CONTACT_NAME_MISSING, { contactId: contactId ?? null });
   }
 
+  // Awaited so the tags are on the contact before the visitor reaches the
+  // booking step (GHL workflows triggered by the booking can see them).
+  // A tag failure is logged, never thrown: the contact itself is saved.
+  if (contactId && tags?.length) {
+    await addContactTags(contactId, tags).catch((err) =>
+      console.error("GHL add-tags failed:", err)
+    );
+  }
+
   return { contactId, raw };
+}
+
+/**
+ * Add tags to a contact, keeping the ones it already has.
+ */
+export async function addContactTags(
+  contactId: string,
+  tags: string[]
+): Promise<void> {
+  const { token } = getCredentials();
+
+  const res = await fetch(`${GHL_API_BASE}/contacts/${contactId}/tags`, {
+    method: "POST",
+    headers: headers(token),
+    body: JSON.stringify({ tags }),
+  });
+
+  if (!res.ok) {
+    const detail = await res.text();
+    throw new Error(`GHL add-tags failed (${res.status}): ${detail}`);
+  }
 }
 
 /**
