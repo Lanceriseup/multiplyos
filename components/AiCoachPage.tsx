@@ -38,8 +38,9 @@ import Reveal from "./Reveal";
 import AiCoachHeroTour from "./AiCoachHeroTour";
 import { ReplacesChip, REPLACES } from "./ReplacesStrip";
 import { useDemo } from "./DemoModal";
+import { signupCta } from "@/lib/signup-cta";
 
-const SIGNUP_URL = "https://app.multiplyos.com/signup";
+const SIGNUP = signupCta();
 
 // ---------------------------------------------------------------- tokens
 const AI = "#4B3CC4"; // the feature's own tile colour, from the navbar
@@ -856,10 +857,10 @@ export default function AiCoachPage() {
                 <Arrow className="h-[17px] w-[17px]" />
               </button>
               <a
-                href={SIGNUP_URL}
+                href={SIGNUP.href}
                 className="border border-brand-orange/35 inline-flex w-full max-w-[420px] items-center justify-center gap-2.5 rounded-lg bg-white/70 px-10 py-3 text-[15px] font-semibold text-brand-orange transition-colors hover:border-brand-orange/55 hover:bg-white sm:w-auto sm:min-w-[170px]"
               >
-                Sign up
+                {SIGNUP.label}
               </a>
             </div>
           </Reveal>

@@ -58,6 +58,7 @@ Server-side configuration is documented in [`.env.example`](.env.example). Never
 - `/`, `/pricing`, `/contact`
 - `/implementation` is linked from the top navigation but marked `noindex`, so it stays out of search results
 - `/coaching-call` and `/coaching-call/thank-you`
+- `/rukcon` redirects to the app's trial, and exists only while the pricing v2 switch is on (see below)
 - `/features/*` for the individual product capabilities
 - `/privacy` and `/terms`
 
@@ -71,6 +72,24 @@ npm run dev
 ```
 
 The site uses Next.js 15, React 19, TypeScript, Tailwind CSS, and Framer Motion. Copy `.env.example` to `.env.local` only when integration work requires local credentials; public page review does not require submitting forms.
+
+## Pricing v2 switches
+
+The three plan pricing (GROW, SCALE, MULTIPLY) is built behind two build time flags. Both are read in `lib/pricing-v2-switch.mjs` (the typed door is `lib/pricing-v2.ts`), and only the value `1` or `true` turns one on.
+
+- `NEXT_PUBLIC_PRICING_V2` is the main switch. Unset, the site is exactly as it was: the single $299 pricing page, Sign up buttons, and no `/rukcon`.
+- `NEXT_PUBLIC_PRICING_V2_ANNUAL` only does anything while the main switch is on. Set, the site offers annual billing. Unset, it launches monthly only. Keep it unset until counsel approves the annual consent text, because the app blocks annual checkout until then.
+
+With the main switch on:
+
+- `/pricing` renders `components/PricingTiersPage.tsx`. Prices and the math are in `lib/pricing-tiers.ts`; the words are in `lib/pricing-copy.ts`.
+- Every Sign up button becomes Start free trial and links to the SCALE trial in the app (`/trial/signup?plan=scale&billing=annual`, or `billing=monthly` when annual billing is off). Every link into the app is built in `lib/app-links.mjs`.
+- The home page's stack comparison stops quoting $299 and says what SCALE costs for a team of ten.
+- `/rukcon` redirects (307) to the SCALE trial with the RUKCON code applied, on the same billing. Ashley names the final code; it is `RUKCON_PROMO_CODE` in `lib/app-links.mjs`.
+
+With annual billing on, the pricing page opens on Annual with a Monthly toggle and "Save up to 25%", and Launch onboarding is included with annual MULTIPLY only. With it off, the page shows monthly prices only, has no toggle, and says nothing about annual billing or about Launch being included.
+
+Turn the main switch on only after the app's `pricing_v2` switch is on, because the trial links lead to the app's `/trial/signup`. Set the variables in the Vercel environment (not as Sensitive) and redeploy; both are read at build time. `npm test` checks that each is read in one place only.
 
 ## Deployment
 
