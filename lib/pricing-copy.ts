@@ -5,12 +5,11 @@
 // repository, references/mos-pricing-restructure/pricing-rollout.html). Every
 // dollar figure is built from pricing-tiers.ts, so a price is never typed twice.
 //
-// Two modes. With annual billing on, the page offers Annual and Monthly, and
-// Launch onboarding is included with ANNUAL MULTIPLY only (spec decision D2, the
-// app's multiplyLaunchIncluded: "annual_only"). With annual billing off, the
-// site launches monthly only (the app blocks annual checkout until counsel
-// approves the annual consent text), and nothing on the page may mention annual
-// billing or say Launch is included. The functions below (planItems,
+// Two modes. With annual billing on, the page offers Annual and Monthly. With
+// annual billing off, the site launches monthly only, and nothing on the page
+// may mention annual billing. Launch onboarding is included with MULTIPLY on
+// either billing (decided Oct 13, replacing spec D2's annual-only rule; the
+// app's TIER_PLANS.multiply.launchIncluded is "always"). The functions below (planItems,
 // visibleFeatureGroups, visibleSetupPackages, faqItems, pricingMeta) are how the
 // page asks for the right words in the mode it is built in.
 //
@@ -47,8 +46,8 @@ export const HQ_ADDONS: readonly HqAddon[] = [
 
 // ---------------------------------------------------------------- setup packages
 
-// `included` is a claim about annual billing (Launch comes with annual MULTIPLY),
-// so visibleSetupPackages drops it while annual billing is off.
+// `included`: Launch comes with MULTIPLY on either billing (decided Oct 13), so
+// the claim shows in both modes.
 export type SetupPackage = { name: string; price: number; fit: string; items: readonly string[]; included?: string };
 
 export const SETUP_PACKAGES: readonly SetupPackage[] = [
@@ -62,7 +61,7 @@ export const SETUP_PACKAGES: readonly SetupPackage[] = [
       "Org chart and 2 to 3 core SOPs",
       "One training call, 30 days of email support",
     ],
-    included: "Included with MULTIPLY annual",
+    included: "Included with MULTIPLY",
   },
   {
     name: "ACCELERATE",
@@ -90,9 +89,8 @@ export const SETUP_PACKAGES: readonly SetupPackage[] = [
 
 // The packages as the page shows them: with annual billing off, no package says
 // it is included with anything.
-export function visibleSetupPackages(annualBilling: boolean): SetupPackage[] {
-  if (annualBilling) return [...SETUP_PACKAGES];
-  return SETUP_PACKAGES.map(({ included: _included, ...rest }) => rest);
+export function visibleSetupPackages(_annualBilling: boolean): SetupPackage[] {
+  return [...SETUP_PACKAGES];
 }
 
 const launchValue = money(SETUP_PRICE.launch);
@@ -139,8 +137,9 @@ export const PLANS: Record<PlanId, PlanCopy> = {
     lead: "Everything in SCALE, plus",
     items: [
       "Any 2 HQ modules included",
-      // Launch onboarding is included with ANNUAL MULTIPLY only (spec D2).
-      { text: `Launch onboarding included with annual billing (${launchValue} value)`, onlyOn: "annual" },
+      // Launch onboarding comes with MULTIPLY on either billing (decided Oct 13, replacing
+      // spec D2's annual-only rule).
+      `Launch onboarding included (${launchValue} value)`,
       "Additional businesses at 25% off",
       "Expanded AI connections",
       "Unlimited websites",
@@ -238,8 +237,8 @@ export const FEATURE_GROUPS: readonly FeatureGroup[] = [
         { note: "Contractor, Inventory, Events; Marketing coming Q1" },
       ),
       row("Additional businesses", "10% off", "10% off", "25% off"),
-      // Launch onboarding is included with ANNUAL MULTIPLY only (spec D2).
-      row("Launch onboarding", N, N, "Included on annual", { note: `${launchValue} value`, annualOnly: true }),
+      // Launch onboarding comes with MULTIPLY on either billing (decided Oct 13).
+      row("Launch onboarding", N, N, "Included", { note: `${launchValue} value` }),
     ],
   },
 ];
@@ -296,8 +295,7 @@ export const FAQ: readonly FaqItem[] = [
   },
   {
     q: "Can you set it up for us?",
-    a: `Yes. Setup packages start at ${launchValue} for teams up to 10, and MULTIPLY on annual billing includes Launch onboarding.`,
-    aMonthlyOnly: `Yes. Setup packages start at ${launchValue} for teams up to 10.`,
+    a: `Yes. Setup packages start at ${launchValue} for teams up to 10, and MULTIPLY includes Launch onboarding.`,
   },
 ];
 

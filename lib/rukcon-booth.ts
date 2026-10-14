@@ -35,7 +35,7 @@ export function boothOffer(annualBilling: boolean): BoothOffer {
   };
 }
 
-// The extra line on a plan card. MULTIPLY annual already lists Launch, so only
+// The extra line on a plan card. MULTIPLY already lists Launch, so only
 // SCALE gets one, and only where the offer applies (annual billing).
 export function boothPlanLine(plan: PlanId, billing: Billing): string | null {
   if (plan !== "scale" || billing !== "annual") return null;

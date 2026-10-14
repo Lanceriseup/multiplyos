@@ -19,7 +19,7 @@
 //
 // Two modes, chosen at build time by the second switch (see lib/pricing-v2.ts):
 //   - annual billing on: Annual (the opening choice) and Monthly, "Save up to
-//     25%", and Launch onboarding with annual MULTIPLY.
+//     25%". Launch onboarding comes with MULTIPLY on either billing.
 //   - annual billing off, the monthly only launch (the app blocks annual
 //     checkout until counsel approves the annual consent text): no toggle, monthly
 //     prices, every link says billing=monthly, and nothing on the page mentions
