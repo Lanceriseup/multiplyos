@@ -202,13 +202,13 @@ const ArrowIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
-// Events, Inventory and People HQ have no page yet, so they render as
-// non-navigating cards; add `href` as each page ships. `soon` replaces the
-// Explore link with a pulsing badge and keeps the card from navigating.
+// Inventory and People HQ have no page yet, so they render as non-navigating
+// cards; add `href` as each page ships. `soon` replaces the Explore link with a
+// pulsing badge and keeps the card from navigating.
 type HqModule = Feature & { soon?: string };
 
 const hqModules: HqModule[] = [
-  { label: "Events HQ", desc: "Plan, promote and run every event.", color: "#C2412D", icon: TicketIcon },
+  { label: "Events HQ", desc: "Plan, staff and run every event.", href: "/features/events-hq", color: "#C2412D", icon: TicketIcon },
   { label: "Inventory HQ", desc: "Stock, counts and reorders in one place.", color: "#2F6F8F", icon: BoxIcon },
   { label: "People HQ", desc: "Hire, onboard and grow your people.", color: "#B0466E", icon: PeopleIcon },
   { label: "SOP HQ", desc: "Every process, documented.", href: "/features/sop-hq", color: "#7A4E28", icon: BookIcon },
