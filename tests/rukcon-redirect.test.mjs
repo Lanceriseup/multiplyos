@@ -1,7 +1,7 @@
-// /rukcon is a page now (app/rukcon/page.tsx), not a redirect: the booth QR
-// opens the pricing page with the RUKCON offer and the code on every trial
-// link. The config must not shadow the page with a redirect, whatever the
-// pricing v2 flags say.
+// /rukcon, where the RUKCON booth QR points. With the pricing v2 switch on it
+// is a page (app/rukcon/page.tsx), so no redirect may shadow it. With the
+// switch off it falls back to the event link: the home page with the demo
+// modal open, tagged "rukcon" (lib/event-tag.ts).
 import test, { afterEach } from "node:test";
 import assert from "node:assert/strict";
 
@@ -17,16 +17,26 @@ afterEach(() => {
   }
 });
 
-test("no redirect shadows /rukcon, with any combination of the flags", async () => {
-  for (const site of [undefined, "1"]) {
-    for (const annual of [undefined, "1"]) {
-      if (site === undefined) delete process.env.NEXT_PUBLIC_PRICING_V2;
-      else process.env.NEXT_PUBLIC_PRICING_V2 = site;
-      if (annual === undefined) delete process.env.NEXT_PUBLIC_PRICING_V2_ANNUAL;
-      else process.env.NEXT_PUBLIC_PRICING_V2_ANNUAL = annual;
-      const redirects = (await nextConfig.redirects?.()) ?? [];
-      assert.equal(redirects.some((r) => r.source === "/rukcon"), false);
-    }
+async function redirectsWith(site, annual) {
+  for (const [k, v] of [[KEYS[0], site], [KEYS[1], annual]]) {
+    if (v === undefined) delete process.env[k];
+    else process.env[k] = v;
+  }
+  return (await nextConfig.redirects?.()) ?? [];
+}
+
+test("switch on: no redirect shadows the /rukcon page, with or without annual", async () => {
+  for (const annual of [undefined, "1"]) {
+    const redirects = await redirectsWith("1", annual);
+    assert.equal(redirects.some((r) => r.source === "/rukcon"), false);
+  }
+});
+
+test("switch off: /rukcon is the temporary event link into the demo modal", async () => {
+  for (const site of [undefined, "0"]) {
+    assert.deepEqual(await redirectsWith(site, undefined), [
+      { source: "/rukcon", destination: "/?demo=open&utm_source=rukcon&utm_medium=qr", permanent: false },
+    ]);
   }
 });
 

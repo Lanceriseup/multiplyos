@@ -7,7 +7,7 @@ Public marketing, feature, pricing, contact, demo-booking, and coaching-call sit
 | Link | Access / status |
 | --- | --- |
 | [Marketing website](https://multiplyos.com/) | Public production |
-| [Implementation packages](https://multiplyos.com/implementation) | Public production; direct-link-only and `noindex` |
+| [Implementation packages](https://multiplyos.com/implementation) | Public production; linked from the top navigation but `noindex` |
 | [Coaching-call page](https://multiplyos.com/coaching-call) | Public production; form submission writes to GoHighLevel |
 | [Start free trial](https://app.multiplyos.com/signup) | Separate product-app signup |
 | [MultiplyOS app](https://app.multiplyos.com/) | Separate product; redirects to login |
@@ -56,7 +56,7 @@ Server-side configuration is documented in [`.env.example`](.env.example). Never
 ## Routes
 
 - `/`, `/pricing`, `/contact`
-- `/implementation` is intentionally absent from navigation and marked `noindex`; it remains available by direct link
+- `/implementation` is linked from the top navigation but marked `noindex`, so it stays out of search results
 - `/coaching-call` and `/coaching-call/thank-you`
 - `/rukcon` redirects to the app's trial, and exists only while the pricing v2 switch is on (see below)
 - `/features/*` for the individual product capabilities

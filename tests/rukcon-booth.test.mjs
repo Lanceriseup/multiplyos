@@ -40,3 +40,8 @@ test("no em dash anywhere in the booth copy", () => {
     for (const s of [offer.eyebrow, offer.title, offer.body, ...offer.steps]) assert.doesNotMatch(s, NO_EM_DASH);
   }
 });
+
+test("the booth code is an approved event tag, so booth demo requests are tagged in GHL", async () => {
+  const { eventTag } = await import("../lib/event-tag");
+  assert.equal(eventTag(booth.BOOTH_PROMO_CODE), "rukcon");
+});

@@ -28,7 +28,7 @@
 // The artifact the design came from used a navy card for the featured plan. The
 // site's palette has no navy (the old pricing page dropped it), so SCALE takes
 // the site's ink instead and keeps the orange for the badge and the buttons.
-import { Fragment, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
 import Reveal from "./Reveal";
@@ -56,6 +56,7 @@ import { HQ_ADDONS, PLANS, faqItems, planItems, visibleFeatureGroups, visibleSet
 import type { FeatureValue } from "@/lib/pricing-copy";
 import { leadBilling, pricingV2AnnualEnabled } from "@/lib/pricing-v2";
 import { boothOffer, boothPlanLine } from "@/lib/rukcon-booth";
+import { eventTag, rememberEvent } from "@/lib/event-tag";
 
 // Annual billing is offered only when both switches are on. Fixed at build time,
 // so the server render and the browser always agree.
@@ -588,6 +589,12 @@ export default function PricingTiersPage({ promo }: { promo?: string } = {}) {
   // The plan the phone's sticky bar is about. SCALE until a visitor touches
   // another card.
   const [selected, setSelected] = useState<PlanId>(FEATURED_PLAN);
+  // On the booth page, remember the event (RUKCON is an approved event tag), so
+  // a demo request from here is tagged in GHL like one from the event link.
+  useEffect(() => {
+    const tag = eventTag(promo);
+    if (tag) rememberEvent(tag);
+  }, [promo]);
 
   return (
     <main className="min-h-screen bg-white pb-20 md:pb-0">

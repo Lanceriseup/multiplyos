@@ -120,7 +120,7 @@ test("/api/coaching-lead sends trimmed first/last to the webhook and the upsert"
 test("upsertContact still writes a name-less contact but logs the marker with the id only", async () => {
   const { contactId } = await upsertContact({ email: "someone@example.com", tags: ["x"] });
   assert.equal(contactId, "contact_123");
-  assert.equal(calls.length, 1, "the contact is still written");
+  assert.equal(calls.filter((c) => c.url.endsWith("/contacts/upsert")).length, 1, "the contact is still written");
   const logged = errors.find((e) => e[0] === CONTACT_NAME_MISSING);
   assert.ok(logged, "marker logged at error level");
   assert.deepEqual(logged[1], { contactId: "contact_123" });
@@ -131,3 +131,60 @@ test("upsertContact logs nothing when a name is present", async () => {
   await upsertContact({ email: "someone@example.com", firstName: "Jordan" });
   assert.equal(errors.length, 0);
 });
+
+// ---- tags never overwrite an existing contact's tags -----------------------
+
+test("upsertContact sends tags via add-tags, not on the upsert (which would overwrite them)", async () => {
+  await upsertContact({ email: "someone@example.com", firstName: "Jordan", tags: ["a", "b"] });
+  const upsert = calls.find((c) => c.url.endsWith("/contacts/upsert"));
+  assert.equal("tags" in upsert.body, false, "no tags on the upsert body");
+  const addTags = calls.find((c) => c.url.endsWith("/contacts/contact_123/tags"));
+  assert.ok(addTags, "add-tags called");
+  assert.equal(addTags.method, "POST");
+  assert.deepEqual(addTags.body, { tags: ["a", "b"] });
+  assert.ok(calls.indexOf(upsert) < calls.indexOf(addTags), "tags added after the contact exists");
+});
+
+test("upsertContact makes no add-tags call when there are no tags", async () => {
+  await upsertContact({ email: "someone@example.com", firstName: "Jordan" });
+  assert.equal(calls.some((c) => c.url.endsWith("/tags")), false);
+});
+
+test("a failed add-tags call still saves the lead", async () => {
+  globalThis.fetch = async (url, init = {}) => {
+    calls.push({ url: String(url), method: init.method });
+    if (String(url).endsWith("/contacts/upsert")) return Response.json({ contact: { id: "contact_123" } });
+    if (String(url).endsWith("/tags")) return new Response("nope", { status: 422 });
+    return Response.json({ ok: true });
+  };
+  const res = await postLead(jsonRequest("/api/lead", { name: "Jordan Lee", email: "lead@example.com", event: "rukcon" }));
+  assert.equal(res.status, 200);
+  assert.equal((await res.json()).contactId, "contact_123");
+  assert.ok(errors.some((e) => String(e[0]).includes("add-tags failed")), "failure logged");
+});
+
+// ---- event attribution (QR links like /rukcon) -----------------------------
+
+function addedTags() {
+  return calls.find((c) => c.url.endsWith("/contacts/contact_123/tags"))?.body.tags;
+}
+
+test("/api/lead tags an approved event, normalising case and spaces", async () => {
+  const res = await postLead(
+    jsonRequest("/api/lead", { name: "Jordan Lee", email: "lead@example.com", source: "Demo Request", event: " RUKCON " })
+  );
+  assert.equal(res.status, 200);
+  assert.deepEqual(addedTags(), ["website-lead", "demo-request", "rukcon"]);
+  const note = calls.find((c) => c.url.endsWith("/notes"));
+  assert.match(note.body.body, /^Event: rukcon$/m);
+});
+
+for (const event of ["vip", "rukcon2", "", 42, null]) {
+  test(`/api/lead ignores unapproved event ${JSON.stringify(event)}`, async () => {
+    const res = await postLead(
+      jsonRequest("/api/lead", { name: "Jordan Lee", email: "lead@example.com", source: "Demo Request", event })
+    );
+    assert.equal(res.status, 200);
+    assert.deepEqual(addedTags(), ["website-lead", "demo-request"]);
+  });
+}
