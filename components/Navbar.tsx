@@ -160,10 +160,13 @@ const features: Feature[] = [
 ];
 
 // ---- HQ Modules: whole departments, shown as full-colour cards below the grid ----
-const TicketIcon = ({ className }: { className?: string }) => (
+// Events HQ's own mark in the app: a calendar with a grid of days. Distinct
+// from Team Meetings' CalIcon, which has lines rather than days.
+const EventsIcon = ({ className }: { className?: string }) => (
   <svg className={className} {...svgProps}>
-    <path d="M3.6 7.6A1.6 1.6 0 0 1 5.2 6h13.6a1.6 1.6 0 0 1 1.6 1.6v2.1a2.3 2.3 0 0 0 0 4.6v2.1a1.6 1.6 0 0 1-1.6 1.6H5.2a1.6 1.6 0 0 1-1.6-1.6v-2.1a2.3 2.3 0 0 0 0-4.6z" />
-    <path d="M14.4 6.6v1.6M14.4 11.2v1.6M14.4 15.8v1.6" />
+    <rect x="3.8" y="5" width="16.4" height="15" rx="2.4" />
+    <path d="M3.8 9.6h16.4M8.2 3.2v3.4M15.8 3.2v3.4" />
+    <path d="M8 13.2h.01M12 13.2h.01M16 13.2h.01M8 16.6h.01M12 16.6h.01M16 16.6h.01" strokeWidth={2.4} />
   </svg>
 );
 const BoxIcon = ({ className }: { className?: string }) => (
@@ -208,7 +211,7 @@ const ArrowIcon = ({ className }: { className?: string }) => (
 type HqModule = Feature & { soon?: string };
 
 const hqModules: HqModule[] = [
-  { label: "Events HQ", desc: "Plan, staff and run every event.", href: "/features/events-hq", color: "#C2412D", icon: TicketIcon },
+  { label: "Events HQ", desc: "Plan, staff and run every event.", href: "/features/events-hq", color: "#C2412D", icon: EventsIcon },
   { label: "Inventory HQ", desc: "Stock, counts and reorders in one place.", color: "#2F6F8F", icon: BoxIcon },
   { label: "People HQ", desc: "Hire, onboard and grow your people.", color: "#B0466E", icon: PeopleIcon },
   { label: "SOP HQ", desc: "Every process, documented.", href: "/features/sop-hq", color: "#7A4E28", icon: BookIcon },

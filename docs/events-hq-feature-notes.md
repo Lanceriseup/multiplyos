@@ -65,24 +65,32 @@ the same voice; the screenshot only shows the Invite tab.
 screen is React state, only the cursor and ripple animate through the Web
 Animations API, and the loop is generation-token guarded.
 
-The loop is one morning for an event manager, without leaving the module:
+The loop walks the module the way a manager would, using every screen the
+client sent:
 
-0. The event list, upcoming first.
-1. Open the next event, Leaders Summit 2026.
-2. Registrations climb from 128 to 137 of 140.
-3. The three open tasks in "2 Weeks out" get ticked off; the stage bar moves on
-   to "1 Week out" and a toast says so.
-4. The Agenda tab: day one's run of show, then View / Share agenda, and the
-   agenda texted and emailed to the event's coaches.
+- **Across the top tabs**: Events → Calendar (year view) → Overview Calendar
+  (planning, staffing and coaches grid) → Registrations (a new one lands) →
+  Coaches (a pending volunteer gets approved) → Templates → back to Events.
+- **Into one event**: Leaders Summit 2026 opens; registrations climb to 137 of
+  140; the stage's three open tasks get ticked off and the bar moves on. Then
+  **Details** (dates, type, capacity, ticket price, owner, landing page link),
+  **Agenda** (multi-day run of show with coloured groups and notes and cues,
+  then View / Share agenda → text and email it to the coaches), **Client
+  Portal** (attendee table with portal status, forms, shirt size, hotel and
+  welcome box carrier and tracking; a hotel gets booked) and **Inventory**
+  (attendee shirt sizes synced from the attendee list, per-person items scaled
+  to attendance, a shortage flagged).
+
+Screens fade out quickly and the next fades in after, rather than a straight
+crossfade, so two tables never ghost through each other.
 
 The View / Share agenda menu is traced from a later client screenshot: View
 agenda, Open the shared agenda, Share agenda…, then "Text & email the agenda
-to" Volunteers… and Coaches…. The tour picks Coaches… because texting the
-run of show to the people working the event is the part no spreadsheet does.
+to" Volunteers… and Coaches….
 
-The chrome is traced from the screenshots: the sidebar with its eight pages,
-the six top tabs, the list's columns and filters, the record's four stat cards,
-the stage chevrons, and the nine record tabs.
+**The Events HQ icon** is the app's own: a calendar with a grid of days. It is
+used in the navbar card, the hero badge and the tour's sidebar. Team Meetings
+keeps its lined calendar, so the two stay distinguishable.
 
 **Reduced motion** shows the finished record (stage moved on, tasks done). The
 scene starts BLANK on the first render and the effect swaps in STILL after
@@ -108,8 +116,8 @@ portal.ridgeline.com.
 
 - `app/features/events-hq/page.tsx`: new route and metadata.
 - `components/EventsHqPage.tsx`, `components/EventsHqHeroTour.tsx`: new.
-- `components/Navbar.tsx`: the Events HQ card gets its `href` and its corrected
-  description.
+- `components/Navbar.tsx`: the Events HQ card gets its `href`, its corrected
+  description, and the app's Events HQ icon.
 
 Not touched: `StackTable.tsx` and the pricing copy. `lib/pricing-copy.ts`
 already lists Events HQ ("Registration, attendee management and event

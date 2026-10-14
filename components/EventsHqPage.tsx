@@ -77,6 +77,14 @@ const TicketIcon = ({ className, style }: IconProps) => (
     <path d="M14.4 6.6v1.6M14.4 11.2v1.6M14.4 15.8v1.6" />
   </svg>
 );
+/** Events HQ's own mark in the app: a calendar with a grid of days. */
+const EventsIcon = ({ className, style }: IconProps) => (
+  <svg className={className} style={style} {...ico}>
+    <rect x="3.8" y="5" width="16.4" height="15" rx="2.4" />
+    <path d="M3.8 9.6h16.4M8.2 3.2v3.4M15.8 3.2v3.4" />
+    <path d="M8 13.2h.01M12 13.2h.01M16 13.2h.01M8 16.6h.01M12 16.6h.01M16 16.6h.01" strokeWidth={2.4} />
+  </svg>
+);
 const CalIcon = ({ className, style }: IconProps) => (
   <svg className={className} style={style} {...ico}>
     <rect x="4" y="5.2" width="16" height="14.6" rx="2.4" />
@@ -1042,7 +1050,7 @@ export default function EventsHqPage() {
               className="inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.12em] sm:text-[12px]"
               style={{ borderColor: `${RED}33`, background: `${RED}0F`, color: RED }}
             >
-              <TicketIcon className="h-[14px] w-[14px] sm:h-[19px] sm:w-[19px]" />
+              <EventsIcon className="h-[14px] w-[14px] sm:h-[19px] sm:w-[19px]" />
               Events HQ
             </span>
 
@@ -1123,10 +1131,10 @@ export default function EventsHqPage() {
         }
         body="Every event moves through stages, each with its own tasks, owners and due dates. The record shows where the event is, what is done, what is due, and how many days are left."
         points={[
-          "Stages from six months out to the week of, each with its own task list",
-          "Tasks with an owner, a due date, a priority and a status",
+          "Stages from six months out to the week of, each with tasks, owners, due dates and status",
           "Templates: reusable blueprints with stages, tasks, inventory, files and budget numbers",
-          "An Agenda Library of run-of-show templates. Drop one onto any event, then text and email it to the coaches and volunteers",
+          "A run of show for every day, set-up and volunteer days included, with notes and cues on each segment",
+          "Agendas built once in the Agenda Library, then texted and emailed to the coaches and volunteers",
         ]}
         visual={<StagesDemo />}
         flip
@@ -1145,7 +1153,7 @@ export default function EventsHqPage() {
         }
         body="Every event carries its own roster of registrations, coaches and volunteers. Every contact carries their history, so you know who has attended what before they sign up for what comes next."
         points={[
-          "A roster on every event, and every registration across all of them in one list",
+          "A roster on every event: copy every email or phone number in one click, or export it",
           "Coaches and volunteers per event, team or external, approved, pending or declined",
           "A contact's record shows every event they've registered for and every role they've held",
           "Link an Ontraport contact group to an event to bring its attendees in",
@@ -1166,9 +1174,9 @@ export default function EventsHqPage() {
         }
         body="Give attendees a portal with your name and brand on it. Logistics, their hotel, their intake form and who to call are all in one place, and the texts and emails that get them there send themselves."
         points={[
-          "Your portal name, logo, colours and support contact",
-          "Put it on your own address, like portal.yourdomain.com",
-          "A welcome page attendees see the first time they log in",
+          "Your name, logo, colours and support contact, on your own address like portal.yourdomain.com",
+          "Attach a form and it lands in every attendee's pre-event checklist, marked done when they submit",
+          "Track each attendee's hotel, shirt size and welcome box shipment, carrier and tracking number included",
           "Invite, new event, reminder and follow-up messages, each with a one-time login link",
         ]}
         visual={<PortalDemo />}
@@ -1188,10 +1196,10 @@ export default function EventsHqPage() {
         }
         body="Every event has a budget with its plan, its spend and its P/L. Gear and supplies are held from Inventory HQ for the event, and when it wraps, the holds come off so that stock counts again."
         points={[
-          "A budget on every event: plan, spend and P/L",
-          "Decide who can see and edit event budgets",
-          "Hold stock from Inventory HQ for upcoming events, and track attendee shirt sizes against it",
-          "A finished event still holding stock gets flagged until you release it",
+          "A budget on every event, with plan, spend and P/L, seen only by people you give access",
+          "Per-person items scale with attendance: your planned number or registrations plus 10%, whichever is higher",
+          "Attendee shirt sizes sync from the attendee list and count against real stock",
+          "Shortages get flagged before the event, and a finished event still holding stock until you release it",
         ]}
         visual={<BudgetDemo />}
         panel={PANEL_WARM}
