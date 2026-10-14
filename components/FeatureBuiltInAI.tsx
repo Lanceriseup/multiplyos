@@ -312,7 +312,7 @@ export default function FeatureBuiltInAI() {
 
   return (
     <section id="ai" className="scroll-mt-24 px-5 py-8 sm:px-8 sm:py-24">
-      <div className="mx-auto grid max-w-container items-center gap-8 lg:grid-cols-2 lg:gap-16">
+      <div className="mx-auto grid max-w-container grid-cols-1 items-center gap-8 lg:grid-cols-2 lg:gap-16">
         {/* visual — LEFT (iris gradient panel) */}
         <motion.div
           ref={ref}
