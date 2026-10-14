@@ -1,5 +1,5 @@
 /**
- * Event attribution for QR codes / short links (e.g. multiplyos.com/rukcon).
+ * Event attribution for QR codes / short links (e.g. multiplyos.com/rukcon-demo).
  *
  * The short link redirects to `/?demo=open&utm_source=<event>` (see
  * next.config.mjs). The browser remembers the event for 30 days, so a visitor
