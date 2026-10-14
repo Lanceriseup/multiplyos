@@ -11,7 +11,8 @@
 //   3. the stage        the open tasks in "2 Weeks out" get ticked off, and
 //                       the stage bar moves on to "1 Week out"
 //   4. the agenda       the Agenda tab, the run of show for day one, and the
-//                       share link copied for the team
+//                       agenda texted and emailed to the event's coaches from
+//                       the View / Share agenda menu
 //
 // The chrome is traced from the client's October 2026 screenshots: the Events
 // HQ sidebar with its eight pages, the Events / Calendar / Overview Calendar /
@@ -149,10 +150,25 @@ const Pencil = ({ className, style }: IconProps) => (
     <path d="M3.6 20.4l4.4-1.2 10.6-10.6a2 2 0 0 0-2.8-2.8L5.2 16.4z" />
   </svg>
 );
-const LinkIcon = ({ className, style }: IconProps) => (
+const External = ({ className, style }: IconProps) => (
   <svg className={className} style={style} {...ico}>
-    <path d="M10 13.6a4 4 0 0 0 5.7 0l2.8-2.8a4 4 0 0 0-5.7-5.7L11.4 6.5" />
-    <path d="M14 10.4a4 4 0 0 0-5.7 0L5.5 13.2a4 4 0 0 0 5.7 5.7l1.4-1.4" />
+    <path d="M13.4 4.6h6v6M19.4 4.6l-8.2 8.2" />
+    <path d="M17.4 13.8v4.4a1.6 1.6 0 0 1-1.6 1.6H5.8a1.6 1.6 0 0 1-1.6-1.6V8.2a1.6 1.6 0 0 1 1.6-1.6h4.4" />
+  </svg>
+);
+const ShareNodes = ({ className, style }: IconProps) => (
+  <svg className={className} style={style} {...ico}>
+    <circle cx="17.6" cy="6" r="2.6" />
+    <circle cx="6.4" cy="12" r="2.6" />
+    <circle cx="17.6" cy="18" r="2.6" />
+    <path d="M8.8 10.8l6.4-3.4M8.8 13.2l6.4 3.4" />
+  </svg>
+);
+/** Volunteers, as the product draws them: a hand holding a heart. */
+const HandHeart = ({ className, style }: IconProps) => (
+  <svg className={className} style={style} {...ico}>
+    <path d="M3.4 14.4h2.8l3.4 1.4h3.2a1.4 1.4 0 0 1 0 2.8H9.6M12.8 18.6l5.4-2.2a1.5 1.5 0 0 1 1.2 2.7l-6.4 3.1H8.2l-4.8-1.6" />
+    <path d="M15.4 11.6s-3.8-2.2-3.8-4.8a2 2 0 0 1 3.8-.9 2 2 0 0 1 3.8.9c0 2.6-3.8 4.8-3.8 4.8z" />
   </svg>
 );
 const Chevron = ({ className, style }: IconProps) => (
@@ -469,10 +485,10 @@ export default function EventsHqHeroTour() {
         await wait(700);
         if (!(await tap("share", 620))) return;
         patch({ shareOpen: true });
-        await wait(520);
-        if (!(await tap("share-copy", 420))) return;
-        patch({ shareOpen: false, toast: "Agenda link copied. Anyone with it can view." });
-        await wait(2000);
+        await wait(700);
+        if (!(await tap("share-coaches", 520))) return;
+        patch({ shareOpen: false, toast: "Agenda texted and emailed to the event's 3 coaches." });
+        await wait(2200);
         patch({ toast: null });
         await wait(900);
 
@@ -791,22 +807,40 @@ function DetailView({ scene }: { scene: Scene }) {
             View / Share agenda
             <Chevron className="h-[10px] w-[10px]" />
           </span>
+          {/* Traced from the client's screenshot of this menu: three ways to
+              see or share the agenda, then texting and emailing it to the
+              event's volunteers or coaches. */}
           <div
-            className="absolute right-0 top-[calc(100%+6px)] z-10 w-[178px] rounded-[10px] border bg-white p-1 text-[10.5px] transition-all duration-200"
+            className="absolute right-0 top-[calc(100%+6px)] z-10 w-[196px] rounded-[10px] border bg-white p-1 text-[10.5px] transition-all duration-200"
             style={{
               borderColor: HAIR2,
+              color: "#3C3833",
               opacity: scene.shareOpen ? 1 : 0,
               transform: scene.shareOpen ? "translateY(0)" : "translateY(-4px)",
               boxShadow: "0 16px 32px -14px rgba(20,15,10,0.35)",
             }}
           >
-            <div className="flex items-center gap-2 rounded-[7px] px-2.5 py-2" style={{ color: "#4A4740" }}>
-              <List className="h-[12px] w-[12px]" />
-              Open the agenda
+            {[
+              { l: "View agenda", icon: List },
+              { l: "Open the shared agenda", icon: External },
+              { l: "Share agenda…", icon: ShareNodes },
+            ].map((m) => (
+              <div key={m.l} className="flex items-center gap-2 rounded-[7px] px-2.5 py-[6px]">
+                <m.icon className="h-[12px] w-[12px] flex-none" />
+                {m.l}
+              </div>
+            ))}
+            <div className="my-1 border-t" style={{ borderColor: HAIR }} />
+            <div className="px-2.5 pb-1 pt-0.5 text-[9.5px]" style={{ color: MUTED }}>
+              Text &amp; email the agenda to
             </div>
-            <div data-eh="share-copy" className="flex items-center gap-2 rounded-[7px] px-2.5 py-2 font-semibold" style={{ background: "#F5F3EF" }}>
-              <LinkIcon className="h-[12px] w-[12px]" style={{ color: RED }} />
-              Copy share link
+            <div className="flex items-center gap-2 rounded-[7px] px-2.5 py-[6px]">
+              <HandHeart className="h-[12px] w-[12px] flex-none" />
+              Volunteers…
+            </div>
+            <div data-eh="share-coaches" className="flex items-center gap-2 rounded-[7px] px-2.5 py-[6px] font-semibold" style={{ background: "#F5F3EF" }}>
+              <Cap className="h-[12px] w-[12px] flex-none" style={{ color: RED }} />
+              Coaches…
             </div>
           </div>
         </div>

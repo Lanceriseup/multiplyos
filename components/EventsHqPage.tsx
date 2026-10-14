@@ -1126,7 +1126,7 @@ export default function EventsHqPage() {
           "Stages from six months out to the week of, each with its own task list",
           "Tasks with an owner, a due date, a priority and a status",
           "Templates: reusable blueprints with stages, tasks, inventory, files and budget numbers",
-          "An Agenda Library of run-of-show templates. Drop one onto any event and the dates come from the event",
+          "An Agenda Library of run-of-show templates. Drop one onto any event, then text and email it to the coaches and volunteers",
         ]}
         visual={<StagesDemo />}
         flip

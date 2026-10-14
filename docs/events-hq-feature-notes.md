@@ -72,8 +72,13 @@ The loop is one morning for an event manager, without leaving the module:
 2. Registrations climb from 128 to 137 of 140.
 3. The three open tasks in "2 Weeks out" get ticked off; the stage bar moves on
    to "1 Week out" and a toast says so.
-4. The Agenda tab: day one's run of show, then View / Share agenda and Copy
-   share link.
+4. The Agenda tab: day one's run of show, then View / Share agenda, and the
+   agenda texted and emailed to the event's coaches.
+
+The View / Share agenda menu is traced from a later client screenshot: View
+agenda, Open the shared agenda, Share agenda…, then "Text & email the agenda
+to" Volunteers… and Coaches…. The tour picks Coaches… because texting the
+run of show to the people working the event is the part no spreadsheet does.
 
 The chrome is traced from the screenshots: the sidebar with its eight pages,
 the six top tabs, the list's columns and filters, the record's four stat cards,
