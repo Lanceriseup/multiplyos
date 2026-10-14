@@ -574,19 +574,26 @@ export default function EventsHqHeroTour() {
       if (alive()) c.style.opacity = `${to}`;
     };
 
-    const tap = async (sel: string, dur = 560, fx = 0.5, fy = 0.5) => {
+    /**
+     * Glide to a target and press it. `p` lands the moment the press starts,
+     * the way a real UI responds on mousedown-ish timing, rather than after
+     * the press animation has finished: waiting for it made every click feel
+     * like it lagged a beat behind the cursor.
+     */
+    const tap = async (sel: string, dur = 560, p?: Partial<Scene>, fx = 0.5, fy = 0.5) => {
       await glide(pointAt(sel, fx, fy), dur);
       if (!alive()) return false;
-      await wait(150);
+      await wait(70);
       if (!alive()) return false;
-      await click();
+      const pressed = click();
+      if (p) patch(p);
+      await pressed;
       return alive();
     };
 
-    /** Click a tab and wait for its screen to have been looked at. */
+    /** Click a tab and hold on its screen long enough to read it. */
     const visit = async (sel: string, p: Partial<Scene>, hold: number, dur = 560) => {
-      if (!(await tap(sel, dur))) return false;
-      patch(p);
+      if (!(await tap(sel, dur, p))) return false;
       await wait(hold);
       return alive();
     };
@@ -606,8 +613,7 @@ export default function EventsHqHeroTour() {
         patch({ newReg: true });
         await wait(1500);
         if (!(await visit("top-coaches", { screen: "coaches" }, 700))) return;
-        if (!(await tap("approve", 620))) return;
-        patch({ approved: true });
+        if (!(await tap("approve", 620, { approved: true }))) return;
         await wait(1100);
         if (!(await visit("top-templates", { screen: "templates" }, 1600, 640))) return;
         if (!(await visit("top-events", { screen: "events" }, 500, 620))) return;
@@ -616,11 +622,12 @@ export default function EventsHqHeroTour() {
         await glide(pointAt("row-0", 0.3, 0.5), 640);
         if (!alive()) return;
         patch({ hoverRow: true });
-        await wait(260);
-        await click();
-        if (!alive()) return;
+        await wait(200);
+        const opened = click();
         patch({ screen: "detail", hoverRow: false });
-        await wait(700);
+        await opened;
+        if (!alive()) return;
+        await wait(600);
 
         // registrations land while you watch
         for (let r = REGS_FROM + 1; r <= REGS_TO; r++) {
@@ -632,9 +639,8 @@ export default function EventsHqHeroTour() {
 
         // the stage's open tasks, ticked off, and the bar moves on
         for (let i = 0; i < TASKS.length; i++) {
-          if (!(await tap(`task-${i}`, i === 0 ? 640 : 440))) return;
-          patch({ done: i + 1 });
-          await wait(300);
+          if (!(await tap(`task-${i}`, i === 0 ? 640 : 440, { done: i + 1 }))) return;
+          await wait(260);
         }
         patch({ stage: STAGE_NOW + 1, toast: "2 Weeks out is complete. 1 Week out is up next." });
         await wait(1700);
@@ -649,16 +655,13 @@ export default function EventsHqHeroTour() {
           patch({ agendaRows: k });
         }
         await wait(600);
-        if (!(await tap("share", 620))) return;
-        patch({ shareOpen: true });
+        if (!(await tap("share", 620, { shareOpen: true }))) return;
         await wait(650);
-        if (!(await tap("share-coaches", 500))) return;
-        patch({ shareOpen: false, toast: "Agenda texted and emailed to the event's 3 coaches." });
+        if (!(await tap("share-coaches", 500, { shareOpen: false, toast: "Agenda texted and emailed to the event's 3 coaches." }))) return;
         await wait(1800);
         patch({ toast: null });
         if (!(await visit("tab-portal", { rtab: "portal" }, 600, 640))) return;
-        if (!(await tap("hotel-1", 560))) return;
-        patch({ hotelBooked: true });
+        if (!(await tap("hotel-1", 560, { hotelBooked: true }))) return;
         await wait(1000);
         if (!(await visit("tab-inventory", { rtab: "inventory" }, 2200, 600))) return;
 
@@ -776,22 +779,31 @@ export default function EventsHqHeroTour() {
 
 // ---------------------------------------------------------------- plumbing
 /**
- * A full-size layer that fades in and out. Out is quick and in waits for it,
- * so two screens are never half-visible on top of each other: a straight
- * crossfade showed the old table ghosting through the new one.
+ * A full-size layer that crossfades. The incoming layer sits ON TOP with the
+ * app's own background, so it covers the outgoing one as it fades in: no
+ * ghosting of two tables through each other, and no blank gap between screens.
+ * An earlier version faded out first and in after a delay, and that gap is
+ * what read as lag.
  */
 function Fade({ on, from, children }: { on: boolean; from?: "left" | "right"; children: React.ReactNode }) {
-  const shift = from === "left" ? "translateX(-14px)" : from === "right" ? "translateX(14px)" : "translateY(6px)";
+  const shift = from === "left" ? "translateX(-10px)" : from === "right" ? "translateX(10px)" : "translateY(4px)";
   return (
     <div
-      className="absolute inset-0 ease-out"
+      className="absolute inset-0"
       style={{
+        background: "#F7F6F3",
+        zIndex: on ? 2 : 1,
         opacity: on ? 1 : 0,
         transform: on ? "none" : shift,
         pointerEvents: on ? "auto" : "none",
         transitionProperty: "opacity, transform",
-        transitionDuration: on ? "380ms" : "160ms",
-        transitionDelay: on ? "150ms" : "0ms",
+        // Incoming: fades in over the top. Outgoing: stays solid underneath
+        // and only drops once the incoming layer has covered it, so the frame
+        // never washes out to two half-transparent screens.
+        transitionDuration: on ? "260ms" : "0ms",
+        transitionDelay: on ? "0ms" : "260ms",
+        transitionTimingFunction: "cubic-bezier(0.22,1,0.36,1)",
+        willChange: "opacity, transform",
       }}
     >
       {children}
