@@ -1,0 +1,23 @@
+# What a local `vercel deploy` must not upload.
+#
+# CI never needs this file: the workflow checks out from git and ships
+# `vercel deploy --prebuilt`, so it only ever uploads .vercel/output. This is
+# for deploying from a working tree by hand.
+#
+# The testimonial videos are the reason it exists. gary-cucchi.mp4 is 179 MB and
+# ned-schaut.mp4 is 104 MB, both over Vercel's 100 MB per-file limit, so a plain
+# `vercel deploy` pushes 277 MB and then fails outright. They are gitignored for
+# the same reason on GitHub's side, nothing in the site references them, and
+# they still need hosting or compression before they ship.
+public/testimonials/*.mp4
+
+# Build output and local state. Vercel builds from source, so sending these is
+# at best wasted upload and at worst a stale build being served.
+.git
+node_modules
+.next
+.next-check
+.vercel
+
+# Local design mockups, gitignored as well.
+design

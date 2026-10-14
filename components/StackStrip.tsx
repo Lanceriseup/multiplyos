@@ -50,8 +50,13 @@
 import Link from "next/link";
 import Reveal from "./Reveal";
 import { StackTable, STACK_TOTAL, AS_OF, PRICE, money } from "./StackTable";
+import { pricingV2SiteEnabled } from "@/lib/pricing-v2";
 
 const ORANGE_DARK = "#C9650F";
+
+// Pricing v2 switch. On, the link and the saving line stop quoting the single
+// $299 plan. Off, the section is exactly as it was.
+const PRICING_V2 = pricingV2SiteEnabled();
 
 export default function StackStrip() {
   return (
@@ -114,16 +119,27 @@ export default function StackStrip() {
             href="/pricing"
             className="mt-4 inline-flex items-center gap-1.5 text-[13.5px] font-semibold text-brand-orange-dark underline decoration-brand-orange/40 underline-offset-[3px] transition-colors hover:text-brand-orange"
           >
-            See what {money(PRICE)} a month includes
+            {PRICING_V2 ? (
+              <>See plans and pricing</>
+            ) : (
+              <>
+                See what {money(PRICE)} a month includes
+              </>
+            )}
             <span aria-hidden="true">&rarr;</span>
           </Link>
           {/* The saving is stated here rather than left to the reader, because
               the table's own total bar shows the two figures but never the
               difference between them. Fed from STACK_TOTAL so it cannot drift
-              from the rows above it. */}
-          <p className="mt-2 text-[11.5px] text-brand-gray">
-            That is {money(STACK_TOTAL - PRICE)} a month back, on the same work.
-          </p>
+              from the rows above it.
+
+              Gone while pricing v2 is on: it is a comparison against the single
+              $299 plan, and with three plans there is no one price to subtract. */}
+          {!PRICING_V2 && (
+            <p className="mt-2 text-[11.5px] text-brand-gray">
+              That is {money(STACK_TOTAL - PRICE)} a month back, on the same work.
+            </p>
+          )}
         </Reveal>
       </div>
     </section>

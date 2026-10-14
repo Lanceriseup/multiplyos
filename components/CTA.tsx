@@ -2,6 +2,9 @@
 
 import Reveal from "./Reveal";
 import { useDemo } from "./DemoModal";
+import { signupCta } from "@/lib/signup-cta";
+
+const SIGNUP = signupCta();
 
 export default function CTA({ href }: { href?: string }) {
   const { openDemo } = useDemo();
@@ -25,22 +28,30 @@ export default function CTA({ href }: { href?: string }) {
                   on one platform.
                 </p>
               </div>
-              {href ? (
+              <div className="flex w-full flex-none flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
+                {href ? (
+                  <a
+                    href={href}
+                    className="inline-flex w-full items-center justify-center rounded-lg bg-brand-orange px-6 py-2.5 text-base font-semibold text-white shadow-[0_10px_30px_-8px_rgba(234,123,27,0.75)] transition-colors hover:bg-brand-orange-dark sm:w-auto sm:min-w-[190px]"
+                  >
+                    Request a Demo
+                  </a>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={openDemo}
+                    className="inline-flex w-full items-center justify-center rounded-lg bg-brand-orange px-6 py-2.5 text-base font-semibold text-white shadow-[0_10px_30px_-8px_rgba(234,123,27,0.75)] transition-colors hover:bg-brand-orange-dark sm:w-auto sm:min-w-[190px]"
+                  >
+                    Request a Demo
+                  </button>
+                )}
                 <a
-                  href={href}
-                  className="inline-flex w-full flex-none items-center justify-center rounded-lg bg-brand-orange px-6 py-2.5 text-base font-semibold text-white shadow-[0_10px_30px_-8px_rgba(234,123,27,0.75)] transition-colors hover:bg-brand-orange-dark sm:w-auto sm:min-w-[210px]"
+                  href={SIGNUP.href}
+                  className="inline-flex w-full items-center justify-center rounded-lg border border-brand-orange/35 bg-white/70 px-6 py-2.5 text-base font-semibold text-brand-orange transition-colors hover:border-brand-orange/55 hover:bg-white sm:w-auto sm:min-w-[150px]"
                 >
-                  Request a Demo
+                  {SIGNUP.label}
                 </a>
-              ) : (
-                <button
-                  type="button"
-                  onClick={openDemo}
-                  className="inline-flex w-full flex-none items-center justify-center rounded-lg bg-brand-orange px-6 py-2.5 text-base font-semibold text-white shadow-[0_10px_30px_-8px_rgba(234,123,27,0.75)] transition-colors hover:bg-brand-orange-dark sm:w-auto sm:min-w-[210px]"
-                >
-                  Request a Demo
-                </button>
-              )}
+              </div>
             </div>
           </div>
         </Reveal>

@@ -17,3 +17,6 @@ next-env.d.ts
 /public/testimonials/*.mp4
 .next-check/
 .vercel
+
+# Local Claude Code dev config (not part of the app)
+.claude/

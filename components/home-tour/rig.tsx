@@ -119,7 +119,7 @@ export function useCursorRig(
       const s = stage.getBoundingClientRect();
       const t = node.getBoundingClientRect();
       const k = scaleRef.current || 1;
-      // A zero-size target means the node is display:none — almost always the
+      // A zero-size target means the node is display:none, almost always the
       // hidden second copy of the tour. Falling back to the current position
       // leaves the pointer parked while the beats fire around it, which is easy
       // to misread as an easing problem, so say so out loud in development.
@@ -291,8 +291,8 @@ export type ActApi = {
    * Find one of THIS act's own cursor targets.
    *
    * Acts must never use document.querySelector for this. The tour is mounted
-   * TWICE on the home page — once in the Hero for mobile, once in OsOverview for
-   * desktop — and one of the two is always display:none. document.querySelector
+   * TWICE on the home page, once in the Hero for mobile and once in OsOverview
+   * for desktop, and one is always display:none. document.querySelector
    * returns whichever comes first in the document, which is the mobile copy, and
    * a display:none element has no layout box, so every cursor target measured
    * zero and pointAt silently fell back to "wherever the pointer already is".
@@ -306,7 +306,7 @@ export type ActApi = {
  * The per-act sequence hook. Handles the generation guard, the initial-state
  * reset on deactivate, and cancelling the pointer's in-flight animations.
  *
- * `seq` is intentionally NOT in the dependency list — acts declare it inline, so
+ * `seq` is intentionally NOT in the dependency list. Acts declare it inline, so
  * a new function identity arrives on every render and depending on it would
  * restart the tour on every `setScene`.
  */

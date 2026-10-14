@@ -1,6 +1,6 @@
 "use client";
 
-// Tab 10 of 10 — Forms.
+// Tab 10 of 10: Forms.
 //
 // Short cut of FormsHeroTour, which runs eight beats over about thirty-six
 // seconds. Two survive, the first and the last:

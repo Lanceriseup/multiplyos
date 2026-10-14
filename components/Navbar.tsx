@@ -1,25 +1,24 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { JSX, CSSProperties } from "react";
+import type { JSX, CSSProperties, ReactNode } from "react";
 import Link from "next/link";
 import { useDemo } from "./DemoModal";
 
 const APP_URL = "https://app.multiplyos.com";
 
-// NOTE: /implementation is intentionally NOT listed here. The page is still live
-// and fully accessible via its direct link — it is just not advertised in the menu.
 const navItems: { label: string; href: string }[] = [
   { label: "Platform", href: "/" },
   { label: "AI", href: "#ai" },
+  { label: "Implementation", href: "https://multiplyos.com/implementation" },
   { label: "Pricing", href: "/pricing" },
   { label: "Contact", href: "/contact" },
   { label: "Request a Demo", href: "#demo" },
 ];
 
-// ---- Features submenu (the twelve product features) ----
-// All twelve have a page. If a thirteenth is ever added without one, omit `href`
-// and it renders as a non-navigating tile until its page ships.
+// ---- Features submenu: twelve core features, then the HQ Modules band ----
+// Omit `href` on anything without a page yet and it renders as a non-navigating
+// tile (or card) until its page ships.
 type Feature = {
   label: string;
   desc: string;
@@ -131,14 +130,12 @@ const AgreementIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
-// Order matters: the menu flows top-to-bottom then across. It is grid-rows-5, so
-// items 1-5 form the first column, 6-10 the second, and 11-13 the third.
+// Order matters: the menu flows top-to-bottom then across. It is grid-rows-4, so
+// items 1-4 form the first column, 5-8 the second, and 9-12 the third.
 //
-// It was grid-rows-4 with twelve features, which made three even columns.
-// Whiteboards took it to thirteen, and left at four rows the flow spilled into a
-// FOURTH column holding a single item, widening the dropdown for no reason. Five
-// rows keeps it three columns wide and one row taller. A fourteenth feature
-// would make it even again.
+// SOP HQ moved out of this list into the HQ Modules band, which brought it back to
+// twelve and three even columns. A thirteenth core feature would spill into a
+// fourth column holding a single item; switch to grid-rows-5 then.
 const WhiteboardIcon = ({ className }: { className?: string }) => (
   <svg className={className} {...svgProps}>
     <rect x="3" y="4.4" width="18" height="12.6" rx="2" />
@@ -150,7 +147,6 @@ const WhiteboardIcon = ({ className }: { className?: string }) => (
 const features: Feature[] = [
   { label: "Metrics Scoreboard", desc: "Know if you won the week.", href: "/features/metrics-scoreboard", color: "#EA7B1B", icon: ScoreboardIcon },
   { label: "CFO Analytics", desc: "Cash, margin & runway.", href: "/features/cfo-analytics", color: "#A16207", icon: CoinsIcon },
-  { label: "SOP HQ", desc: "Every process, documented.", href: "/features/sop-hq", color: "#7A4E28", icon: BookIcon },
   { label: "Projects & Tasks", desc: "See the whole board.", href: "/features/projects-tasks", color: "#5B47A8", icon: BoardIcon },
   { label: "Team Accountability", desc: "Own the week, every week.", href: "/features/team-accountability", color: "#B4532A", icon: TargetIcon },
   { label: "Team Meetings", desc: "Every meeting, on rhythm.", href: "/features/team-meetings", color: "#2C6BA6", icon: CalIcon },
@@ -163,6 +159,67 @@ const features: Feature[] = [
   { label: "AI Coach & Agent", desc: "Your AI Chief of Staff.", href: "/features/ai-coach", color: "#4B3CC4", icon: SparkIcon },
 ];
 
+// ---- HQ Modules: whole departments, shown as full-colour cards below the grid ----
+// Events HQ's own mark in the app: a calendar with a grid of days. Distinct
+// from Team Meetings' CalIcon, which has lines rather than days.
+const EventsIcon = ({ className }: { className?: string }) => (
+  <svg className={className} {...svgProps}>
+    <rect x="3.8" y="5" width="16.4" height="15" rx="2.4" />
+    <path d="M3.8 9.6h16.4M8.2 3.2v3.4M15.8 3.2v3.4" />
+    <path d="M8 13.2h.01M12 13.2h.01M16 13.2h.01M8 16.6h.01M12 16.6h.01M16 16.6h.01" strokeWidth={2.4} />
+  </svg>
+);
+const BoxIcon = ({ className }: { className?: string }) => (
+  <svg className={className} {...svgProps}>
+    <path d="M12 3.2l7.8 4.3v9L12 20.8l-7.8-4.3v-9z" />
+    <path d="M4.4 7.6L12 11.8l7.6-4.2" />
+    <path d="M12 11.8v8.8" />
+    <path d="M8.1 5.4l7.7 4.3" />
+  </svg>
+);
+const PeopleIcon = ({ className }: { className?: string }) => (
+  <svg className={className} {...svgProps}>
+    <circle cx="9" cy="8.2" r="3.2" />
+    <path d="M3.4 19.2c.6-3.2 2.9-5.1 5.6-5.1s5 1.9 5.6 5.1" />
+    <path d="M15.4 5.3a3 3 0 0 1 0 5.7" />
+    <path d="M17.3 14.4c1.8.6 3 2.2 3.3 4.8" />
+  </svg>
+);
+const HardHatIcon = ({ className }: { className?: string }) => (
+  <svg className={className} {...svgProps}>
+    <path d="M5.2 16.4v-1.9a6.8 6.8 0 0 1 13.6 0v1.9" />
+    <path d="M10.2 8.3V6.4a1.8 1.8 0 0 1 3.6 0v1.9" />
+    <path d="M3.4 16.4h17.2v1.6a1.2 1.2 0 0 1-1.2 1.2H4.6a1.2 1.2 0 0 1-1.2-1.2z" />
+  </svg>
+);
+const HqIcon = ({ className }: { className?: string }) => (
+  <svg className={className} {...svgProps} strokeWidth={1.9}>
+    <path d="M4 20V8.6L12 4l8 4.6V20" />
+    <path d="M9.4 20v-5h5.2v5" />
+    <path d="M2.8 20h18.4" />
+  </svg>
+);
+const ArrowIcon = ({ className }: { className?: string }) => (
+  <svg className={className} {...svgProps} strokeWidth={2.2}>
+    <path d="M5 12h14M13 6l6 6-6 6" />
+  </svg>
+);
+
+// Inventory and People HQ have no page yet, so they render as non-navigating
+// cards; add `href` as each page ships. `soon` replaces the Explore link with a
+// pulsing badge and keeps the card from navigating.
+type HqModule = Feature & { soon?: string };
+
+const hqModules: HqModule[] = [
+  { label: "Events HQ", desc: "Plan, staff and run every event.", href: "/features/events-hq", color: "#C2412D", icon: EventsIcon },
+  { label: "Inventory HQ", desc: "Stock, counts and reorders in one place.", color: "#2F6F8F", icon: BoxIcon },
+  { label: "People HQ", desc: "Hire, onboard and grow your people.", color: "#B0466E", icon: PeopleIcon },
+  { label: "SOP HQ", desc: "Every process, documented.", href: "/features/sop-hq", color: "#7A4E28", icon: BookIcon },
+  { label: "Contractor HQ", desc: "Your contractors, organized.", color: "#9A7414", icon: HardHatIcon, soon: "Coming Nov" },
+];
+
+const liveCount = [...features, ...hqModules].filter((f) => f.href).length;
+
 // Gradient "app tile" for each feature icon — white glyph, soft colored shadow.
 function tileStyle(c: string): CSSProperties {
   return {
@@ -172,46 +229,148 @@ function tileStyle(c: string): CSSProperties {
   };
 }
 
+// Full-colour HQ card. Live cards tilt toward the cursor and catch a shine on
+// hover (styles in globals.css under "Features menu: HQ Module cards").
+function HqCard({ m, onNavigate, className = "" }: { m: HqModule; onNavigate: () => void; className?: string }) {
+  const Icon = m.icon;
+  const live = Boolean(m.href) && !m.soon;
+  const body = (
+    <>
+      <span className="hq-shine" aria-hidden="true" />
+      <span className="hq-glass">
+        <Icon className="h-[21px] w-[21px]" />
+      </span>
+      <span className="relative z-[1] mt-auto text-base font-bold leading-tight tracking-[-0.015em]">{m.label}</span>
+      <span className="relative z-[1] mt-0.5 text-[12.25px] leading-snug text-white/[0.82]">{m.desc}</span>
+      {m.soon ? (
+        <span className="hq-soon">
+          <i aria-hidden="true" />
+          {m.soon}
+        </span>
+      ) : live ? (
+        <span className="hq-go">
+          Explore <ArrowIcon className="h-[13px] w-[13px]" />
+        </span>
+      ) : null}
+    </>
+  );
+  const cls = `hq-card ${m.soon ? "hq-card-soon" : ""} ${className}`;
+  const style = { "--c": m.color } as CSSProperties;
+
+  if (!live) {
+    return (
+      <div role="menuitem" aria-disabled="true" className={cls} style={style}>
+        {body}
+      </div>
+    );
+  }
+  return (
+    <Link
+      href={m.href!}
+      role="menuitem"
+      onClick={onNavigate}
+      className={`${cls} hq-card-live`}
+      style={style}
+      onPointerMove={(e) => {
+        if (e.pointerType !== "mouse") return;
+        const el = e.currentTarget;
+        const r = el.getBoundingClientRect();
+        const x = (e.clientX - r.left) / r.width - 0.5;
+        const y = (e.clientY - r.top) / r.height - 0.5;
+        el.style.transform = `perspective(700px) rotateX(${(-y * 10).toFixed(2)}deg) rotateY(${(x * 12).toFixed(2)}deg) translateY(-4px)`;
+      }}
+      onPointerLeave={(e) => {
+        e.currentTarget.style.transform = "";
+      }}
+    >
+      {body}
+    </Link>
+  );
+}
+
+function SectionLabel({ children, count, accent }: { children: ReactNode; count?: number; accent?: boolean }) {
+  return (
+    <span
+      className={`flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.16em] ${
+        accent ? "text-brand-orange-dark" : "text-[#9A9894]"
+      }`}
+    >
+      {children}
+      {count !== undefined && (
+        <span className="rounded-full bg-black/5 px-[7px] py-px text-[11px] font-semibold tracking-normal text-[#6E6D6A]">
+          {count}
+        </span>
+      )}
+    </span>
+  );
+}
+
 function FeaturesMenu({ onNavigate }: { onNavigate: () => void }) {
   return (
-    <div
-      role="menu"
-      aria-label="Features"
-      className="absolute left-0 top-[calc(100%+10px)] z-40 w-[860px] max-w-[calc(100vw-2.5rem)] rounded-2xl border border-black/[0.09] bg-white p-3 shadow-[0_4px_12px_rgba(10,10,10,0.06),0_18px_44px_rgba(10,10,10,0.14)]"
-    >
-      {/* invisible bridge so the 10px gap doesn't drop the hover */}
-      <span className="absolute -top-3 left-0 right-0 h-3" aria-hidden="true" />
-      {/* 3 columns x 4 rows, filled column-first to keep related features grouped */}
-      <div className="grid grid-flow-col grid-rows-5 gap-0.5">
-        {features.map((f) => {
-          const Icon = f.icon;
-          const tile = (
-            <>
-              <span
-                className="grid h-10 w-10 flex-none place-items-center rounded-[11px]"
-                style={tileStyle(f.color)}
-              >
-                <Icon className="h-[21px] w-[21px] [filter:drop-shadow(0_1px_1px_rgba(0,0,0,0.18))]" />
-              </span>
-              <span className="min-w-0">
-                <span className="block text-[14.5px] font-semibold leading-tight text-brand-ink">{f.label}</span>
-                <span className="mt-px block text-[12.5px] leading-snug text-brand-charcoal">{f.desc}</span>
-              </span>
-            </>
-          );
-          const rowClass = "flex items-center gap-3 rounded-xl p-[9px] transition-colors hover:bg-[#F6F3EE]";
-
-          // No destination yet — render a plain tile so nothing navigates.
-          return f.href ? (
-            <Link key={f.label} href={f.href} role="menuitem" onClick={onNavigate} className={rowClass}>
-              {tile}
-            </Link>
-          ) : (
-            <div key={f.label} role="menuitem" onClick={onNavigate} className={rowClass}>
-              {tile}
-            </div>
-          );
-        })}
+    // Centred under the whole nav (which is `relative`), not under the Features
+    // button: the menu is wider than the space to the button's right. The inner
+    // div carries the entrance animation so it doesn't fight the centring transform.
+    <div className="absolute left-1/2 top-[calc(100%-6px)] z-40 w-[960px] max-w-[calc(100vw-2.5rem)] -translate-x-1/2">
+      {/* invisible bridge so the gap below the button doesn't drop the hover */}
+      <span className="absolute -top-4 left-0 right-0 h-4" aria-hidden="true" />
+      <div
+        role="menu"
+        aria-label="Features"
+        className="hq-menu-in rounded-[22px] border border-black/[0.09] bg-white p-2.5 shadow-[0_4px_12px_rgba(10,10,10,0.06),0_30px_70px_rgba(10,10,10,0.2)]"
+      >
+        <div className="px-2.5 py-2">
+          <SectionLabel count={features.length}>Core features</SectionLabel>
+        </div>
+        {/* 3 columns x 4 rows, filled column-first to keep related features grouped */}
+        <div className="grid grid-flow-col grid-rows-4 gap-0.5">
+          {features.map((f) => {
+            const Icon = f.icon;
+            const tile = (
+              <>
+                <span
+                  className="grid h-10 w-10 flex-none place-items-center rounded-[11px]"
+                  style={tileStyle(f.color)}
+                >
+                  <Icon className="h-[21px] w-[21px] [filter:drop-shadow(0_1px_1px_rgba(0,0,0,0.18))]" />
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-[14.5px] font-semibold leading-tight text-brand-ink">{f.label}</span>
+                  <span className="mt-px block text-[12.5px] leading-snug text-brand-charcoal">{f.desc}</span>
+                </span>
+              </>
+            );
+            const rowClass = "flex items-center gap-3 rounded-xl p-[9px] transition-colors hover:bg-[#F6F3EE]";
+  
+            // No destination yet — render a plain tile so nothing navigates.
+            return f.href ? (
+              <Link key={f.label} href={f.href} role="menuitem" onClick={onNavigate} className={rowClass}>
+                {tile}
+              </Link>
+            ) : (
+              <div key={f.label} role="menuitem" onClick={onNavigate} className={rowClass}>
+                {tile}
+              </div>
+            );
+          })}
+        </div>
+  
+        {/* HQ Modules band */}
+        <div className="mt-2.5 rounded-2xl border border-black/[0.05] bg-gradient-to-b from-[#FBF8F3] to-[#F4EEE5] p-4">
+          <div className="mb-3.5 px-0.5">
+            <SectionLabel accent>
+              <HqIcon className="h-3.5 w-3.5" />
+              HQ Modules
+            </SectionLabel>
+            <p className="mt-1 text-lg font-bold tracking-[-0.015em] text-brand-ink">
+              Run whole departments inside Multiply OS
+            </p>
+          </div>
+          <div className="grid grid-cols-5 gap-2.5">
+            {hqModules.map((m) => (
+              <HqCard key={m.label} m={m} onNavigate={onNavigate} />
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -222,6 +381,7 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [featuresOpen, setFeaturesOpen] = useState(false);
   const [mobileFeaturesOpen, setMobileFeaturesOpen] = useState(false);
+  const [activeHq, setActiveHq] = useState(0);
   const featuresRef = useRef<HTMLDivElement>(null);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { openDemo } = useDemo();
@@ -277,7 +437,7 @@ export default function Navbar() {
         key={item.label}
         type="button"
         onClick={openDemo}
-        className="rounded-md px-4 py-2 text-[15px] font-medium text-brand-charcoal transition-colors hover:bg-black/5 hover:text-brand-ink"
+        className="whitespace-nowrap rounded-md px-3 py-2 text-[15px] font-medium text-brand-charcoal xl:px-4 transition-colors hover:bg-black/5 hover:text-brand-ink"
       >
         {item.label}
       </button>
@@ -285,7 +445,7 @@ export default function Navbar() {
       <Link
         key={item.label}
         href={item.href}
-        className="rounded-md px-4 py-2 text-[15px] font-medium text-brand-charcoal transition-colors hover:bg-black/5 hover:text-brand-ink"
+        className="whitespace-nowrap rounded-md px-3 py-2 text-[15px] font-medium text-brand-charcoal xl:px-4 transition-colors hover:bg-black/5 hover:text-brand-ink"
       >
         {item.label}
       </Link>
@@ -297,22 +457,22 @@ export default function Navbar() {
         scrolled ? "shadow-[0_1px_0_0_rgba(0,0,0,0.08)]" : ""
       }`}
     >
-      <nav className="mx-auto flex h-[72px] max-w-container items-center justify-between px-5 sm:px-8">
+      <nav className="relative mx-auto flex h-[72px] max-w-container items-center justify-between px-5 sm:px-8">
         {/* Logo */}
-        <Link href="/" className="flex items-center" aria-label="Multiply OS home">
+        <Link href="/" className="flex flex-none items-center" aria-label="Multiply OS home">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/MultiplyOS_logoBlack.png" alt="Multiply OS" className="h-12 w-auto" />
         </Link>
 
         {/* Desktop nav */}
-        <div className="hidden items-center gap-1 md:flex">
+        <div className="hidden items-center gap-1 lg:flex">
           {/* Platform */}
           {renderSimpleItem(navItems[0])}
 
-          {/* Features dropdown */}
+          {/* Features dropdown. Deliberately not `relative`: the menu positions
+              against the nav so it can centre under the whole bar. */}
           <div
             ref={featuresRef}
-            className="relative"
             onMouseEnter={openFeatures}
             onMouseLeave={closeFeatures}
             onBlur={(e) => {
@@ -324,7 +484,7 @@ export default function Navbar() {
               aria-haspopup="menu"
               aria-expanded={featuresOpen}
               onClick={() => setFeaturesOpen((v) => !v)}
-              className="flex items-center gap-1 rounded-md px-4 py-2 text-[15px] font-medium text-brand-charcoal transition-colors hover:bg-black/5 hover:text-brand-ink"
+              className="flex items-center gap-1 whitespace-nowrap rounded-md px-3 py-2 text-[15px] font-medium text-brand-charcoal xl:px-4 transition-colors hover:bg-black/5 hover:text-brand-ink"
             >
               Features
               <svg
@@ -347,10 +507,10 @@ export default function Navbar() {
         </div>
 
         {/* Right side CTA */}
-        <div className="hidden items-center gap-2 md:flex">
+        <div className="hidden items-center gap-2 lg:flex">
           <Link
             href={APP_URL}
-            className="rounded-lg bg-brand-ink px-5 py-2.5 text-[15px] font-semibold text-white transition-colors hover:bg-black"
+            className="whitespace-nowrap rounded-lg bg-brand-ink px-5 py-2.5 text-[15px] font-semibold text-white transition-colors hover:bg-black"
           >
             Log in
           </Link>
@@ -358,7 +518,7 @@ export default function Navbar() {
 
         {/* Mobile toggle */}
         <button
-          className="inline-flex items-center justify-center rounded-md p-2 text-brand-ink md:hidden"
+          className="inline-flex items-center justify-center rounded-md p-2 text-brand-ink lg:hidden"
           aria-label="Toggle menu"
           aria-expanded={mobileOpen}
           onClick={() => setMobileOpen((v) => !v)}
@@ -375,7 +535,7 @@ export default function Navbar() {
 
       {/* Mobile menu */}
       {mobileOpen && (
-        <div className="max-h-[calc(100vh-72px)] overflow-y-auto border-t border-black/5 bg-white px-5 pb-6 pt-2 md:hidden">
+        <div className="max-h-[calc(100vh-72px)] overflow-y-auto border-t border-black/5 bg-white px-5 pb-6 pt-2 lg:hidden">
           <div className="flex flex-col">
             {/* Platform first, then Features, then the rest, so the order
                 matches the desktop bar */}
@@ -401,13 +561,57 @@ export default function Navbar() {
               >
                 <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-              <span className="ml-auto text-[12px] font-normal text-brand-gray">
-                {features.filter((f) => f.href).length} live
-              </span>
+              <span className="ml-auto text-[12px] font-normal text-brand-gray">{liveCount} live</span>
             </button>
 
             {mobileFeaturesOpen && (
-              <div className="mb-1 flex flex-col gap-0.5 border-l border-black/10 pb-1 pl-2">
+              <div className="mb-1 flex flex-col gap-0.5 pb-1">
+                {/* HQ Modules: a swipeable row of the same full-colour cards */}
+                <div className="flex items-center justify-between px-1 pb-2.5 pt-0.5">
+                  <SectionLabel accent>
+                    <HqIcon className="h-3.5 w-3.5" />
+                    HQ Modules
+                  </SectionLabel>
+                  <span className="flex items-center gap-1 text-[12px] text-[#9A9894]">
+                    Swipe <ArrowIcon className="h-3 w-3" />
+                  </span>
+                </div>
+                {/* bottom padding leaves room for the cards' shadows, which the
+                    scroll container would otherwise clip; the dots pull up into it */}
+                <div
+                  className="scrollbar-none -mx-5 flex snap-x snap-mandatory gap-2.5 overflow-x-auto px-5 pb-9 pt-0.5"
+                  onScroll={(e) => {
+                    const track = e.currentTarget;
+                    const step = (track.firstElementChild as HTMLElement).offsetWidth + 10;
+                    setActiveHq(Math.min(hqModules.length - 1, Math.round(track.scrollLeft / step)));
+                  }}
+                >
+                  {hqModules.map((m) => (
+                    <HqCard
+                      key={m.label}
+                      m={m}
+                      onNavigate={() => {
+                        setMobileFeaturesOpen(false);
+                        setMobileOpen(false);
+                      }}
+                      className="!h-[168px] w-[214px] flex-none snap-start scroll-ml-5"
+                    />
+                  ))}
+                </div>
+                <div className="-mt-6 flex justify-center gap-1.5" aria-hidden="true">
+                  {hqModules.map((m, i) => (
+                    <span
+                      key={m.label}
+                      className={`h-1.5 rounded-full transition-all duration-300 ${
+                        i === activeHq ? "w-[18px] bg-brand-orange" : "w-1.5 bg-[#E2DED6]"
+                      }`}
+                    />
+                  ))}
+                </div>
+
+                <div className="px-1 pb-1 pt-4">
+                  <SectionLabel count={features.length}>Core features</SectionLabel>
+                </div>
                 {features.map((f) => {
                   const Icon = f.icon;
                   const tile = (

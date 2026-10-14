@@ -1,3 +1,5 @@
+import { canPrefillWidgetEmail } from "@/lib/ghl-widget";
+
 /**
  * GoHighLevel (LeadConnector) API v2 client.
  *
@@ -7,6 +9,8 @@
  *
  * Required PIT scopes: contacts.write, contacts.readonly
  */
+
+import { CONTACT_NAME_MISSING, cleanName } from "./contact-name";
 
 const GHL_API_BASE = "https://services.leadconnectorhq.com";
 const GHL_API_VERSION = "2021-07-28";
@@ -47,16 +51,22 @@ function headers(token: string, version: string = GHL_API_VERSION) {
 /**
  * Upsert a contact (matches on email/phone within the location, so re-submits
  * don't create duplicates). Returns the GHL contact id.
+ *
+ * Tags are NOT sent on the upsert: GHL documents that the upsert's `tags`
+ * field "will overwrite all current tags associated with the contact", which
+ * would wipe an existing contact's tags on every form submit. They go through
+ * the add-tags endpoint afterwards instead, which only adds.
  */
 export async function upsertContact(
   input: UpsertContactInput
 ): Promise<{ contactId: string | undefined; raw: unknown }> {
   const { token, locationId } = getCredentials();
+  const { tags, ...contact } = input;
 
   const res = await fetch(`${GHL_API_BASE}/contacts/upsert`, {
     method: "POST",
     headers: headers(token),
-    body: JSON.stringify({ locationId, ...input }),
+    body: JSON.stringify({ locationId, ...contact }),
   });
 
   if (!res.ok) {
@@ -67,7 +77,44 @@ export async function upsertContact(
   const raw = await res.json();
   // GHL returns { contact: { id, ... } } (or { new, contact } on upsert)
   const contactId: string | undefined = raw?.contact?.id ?? raw?.id;
+
+  // The routes reject blank names, so this should never fire. If it does, the
+  // contact is still saved (never drop a lead); log the marker with the id only.
+  if (!cleanName(input.firstName) && !cleanName(input.lastName)) {
+    console.error(CONTACT_NAME_MISSING, { contactId: contactId ?? null });
+  }
+
+  // Awaited so the tags are on the contact before the visitor reaches the
+  // booking step (GHL workflows triggered by the booking can see them).
+  // A tag failure is logged, never thrown: the contact itself is saved.
+  if (contactId && tags?.length) {
+    await addContactTags(contactId, tags).catch((err) =>
+      console.error("GHL add-tags failed:", err)
+    );
+  }
+
   return { contactId, raw };
+}
+
+/**
+ * Add tags to a contact, keeping the ones it already has.
+ */
+export async function addContactTags(
+  contactId: string,
+  tags: string[]
+): Promise<void> {
+  const { token } = getCredentials();
+
+  const res = await fetch(`${GHL_API_BASE}/contacts/${contactId}/tags`, {
+    method: "POST",
+    headers: headers(token),
+    body: JSON.stringify({ tags }),
+  });
+
+  if (!res.ok) {
+    const detail = await res.text();
+    throw new Error(`GHL add-tags failed (${res.status}): ${detail}`);
+  }
 }
 
 /**
@@ -112,7 +159,7 @@ export function buildBookingUrl(prefill: {
   const url = new URL(base);
   if (prefill.firstName) url.searchParams.set("first_name", prefill.firstName);
   if (prefill.lastName) url.searchParams.set("last_name", prefill.lastName);
-  if (prefill.email) url.searchParams.set("email", prefill.email);
+  if (canPrefillWidgetEmail(prefill.email)) url.searchParams.set("email", prefill.email!);
   if (prefill.phone) url.searchParams.set("phone", prefill.phone);
   return url.toString();
 }
@@ -192,4 +239,45 @@ export async function createAppointment(params: {
   const raw = await res.json();
   const appointmentId: string | undefined = raw?.id ?? raw?.appointment?.id;
   return { appointmentId, raw };
+}
+
+/**
+ * Push a raw payload to a GHL **Inbound Webhook** trigger.
+ *
+ * This is deliberately independent of the Private Integration Token: the
+ * webhook URL is its own credential, so form data still reaches HighLevel even
+ * when the PIT/location env vars aren't configured (e.g. preview deploys).
+ *
+ * Set GHL_INBOUND_WEBHOOK_URL to the trigger URL from
+ * GHL → Automation → Workflows → Inbound Webhook.
+ *
+ * Never throws — a webhook hiccup must not fail the visitor's submission.
+ */
+export async function postToInboundWebhook(
+  payload: Record<string, unknown>
+): Promise<{ ok: boolean; status?: number; error?: string }> {
+  const url = process.env.GHL_INBOUND_WEBHOOK_URL;
+  if (!url) {
+    console.warn("GHL_INBOUND_WEBHOOK_URL not set — skipping webhook push");
+    return { ok: false, error: "not_configured" };
+  }
+
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      // Don't let a slow hook hold up the form submission.
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!res.ok) {
+      const detail = await res.text().catch(() => "");
+      console.error(`GHL inbound webhook failed (${res.status}): ${detail}`);
+      return { ok: false, status: res.status, error: detail };
+    }
+    return { ok: true, status: res.status };
+  } catch (err) {
+    console.error("GHL inbound webhook error:", err);
+    return { ok: false, error: String(err) };
+  }
 }

@@ -10,6 +10,7 @@ import {
 } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import BookingCalendar from "@/components/BookingCalendar";
+import { eventTag, recalledEvent, rememberEvent } from "@/lib/event-tag";
 
 /* ------------------------------------------------------------------ */
 /*  Context — lets any button anywhere open the demo modal             */
@@ -24,6 +25,20 @@ export default function DemoProvider({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
   const openDemo = useCallback(() => setOpen(true), []);
   const close = useCallback(() => setOpen(false), []);
+
+  // Event QR links (e.g. /rukcon) land on `?demo=open&utm_source=<event>`:
+  // remember the event for attribution and open the modal straight away.
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    const tag = eventTag(url.searchParams.get("utm_source"));
+    if (tag) rememberEvent(tag);
+    if (url.searchParams.get("demo") === "open") {
+      setOpen(true);
+      // Drop the flag so a refresh or shared link doesn't reopen the modal.
+      url.searchParams.delete("demo");
+      window.history.replaceState(window.history.state, "", url);
+    }
+  }, []);
 
   return (
     <DemoContext.Provider value={{ openDemo }}>
@@ -90,6 +105,7 @@ function DemoModal({ open, onClose }: { open: boolean; onClose: () => void }) {
           teamSize: fd.get("teamSize"),
           message: fd.get("message"),
           source: "Demo Request",
+          event: recalledEvent(),
         }),
       });
       const json = await res.json();
@@ -231,7 +247,7 @@ function DemoModal({ open, onClose }: { open: boolean; onClose: () => void }) {
                     </Field>
                     <div className="grid gap-3.5 sm:grid-cols-2">
                       <Field label="Full name">
-                        <input type="text" name="name" required placeholder="Jordan Lee" className={inputCls} />
+                        <input type="text" name="name" required pattern=".*\S.*" title="Please enter your name." placeholder="Jordan Lee" className={inputCls} />
                       </Field>
                       <Field label="Company">
                         <input type="text" name="company" required placeholder="Acme Inc." className={inputCls} />

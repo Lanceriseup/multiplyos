@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { upsertContact, addContactNote, buildBookingUrl } from "@/lib/ghl";
+import { NAME_REQUIRED_ERROR, splitFullName } from "@/lib/contact-name";
+import { eventTag } from "@/lib/event-tag";
 
 // Runs on the Node.js runtime; the PIT never reaches the browser.
 export const runtime = "nodejs";
@@ -13,6 +15,8 @@ interface LeadPayload {
   topic?: string;
   message?: string;
   source?: string;
+  /** Event the visitor arrived from via a QR link; only approved tags are used. */
+  event?: string;
 }
 
 export async function POST(request: Request) {
@@ -28,9 +32,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "Email is required" }, { status: 400 });
   }
 
-  const [firstName, ...rest] = (data.name ?? "").trim().split(/\s+/).filter(Boolean);
-  const lastName = rest.join(" ");
+  // Name is required: reject blank / whitespace-only before anything reaches GHL.
+  const { firstName, lastName } = splitFullName(data.name);
+  if (!firstName) {
+    return NextResponse.json({ ok: false, error: NAME_REQUIRED_ERROR }, { status: 400 });
+  }
   const source = data.source || "Website";
+  const event = eventTag(data.event);
+  const tags = ["website-lead", source.toLowerCase().replace(/\s+/g, "-")];
+  if (event) tags.push(event);
 
   // Map extra questions into GHL custom fields when the field IDs are configured.
   const customFields: Array<{ id: string; field_value: string }> = [];
@@ -48,13 +58,14 @@ export async function POST(request: Request) {
       email,
       companyName: data.company?.trim() || undefined,
       source,
-      tags: ["website-lead", source.toLowerCase().replace(/\s+/g, "-")],
+      tags,
       customFields: customFields.length ? customFields : undefined,
     });
 
     // Record the fields that don't map onto standard contact properties.
     const noteLines = [
       `Submitted via: ${source}`,
+      event && `Event: ${event}`,
       data.company && `Company: ${data.company}`,
       data.teamSize && `Team size: ${data.teamSize}`,
       data.topic && `Topic: ${data.topic}`,

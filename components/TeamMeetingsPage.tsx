@@ -36,6 +36,9 @@ import { ReplacesChip, REPLACES } from "./ReplacesStrip";
 import MultiAiWired from "./MultiAiWired";
 import type { Row, Insight } from "./MultiAiWired";
 import { useDemo } from "./DemoModal";
+import { signupCta } from "@/lib/signup-cta";
+
+const SIGNUP = signupCta();
 
 // ---------------------------------------------------------------- tokens
 const BLUE = "#2C6BA6";
@@ -1094,7 +1097,7 @@ function Section({
 }) {
   return (
     <section id={id} className="scroll-mt-24 px-5 py-10 sm:px-8 sm:py-20">
-      <div className="mx-auto grid max-w-container items-center gap-8 lg:grid-cols-2 lg:gap-16">
+      <div className="mx-auto grid max-w-container grid-cols-1 items-center gap-8 lg:grid-cols-2 lg:gap-16">
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -1203,7 +1206,7 @@ export default function TeamMeetingsPage() {
           </Reveal>
 
           <Reveal delay={0.2} className="mt-6 sm:mt-10">
-            <div className="flex justify-center">
+            <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
               <button
                 type="button"
                 onClick={openDemo}
@@ -1212,6 +1215,12 @@ export default function TeamMeetingsPage() {
                 Request a Demo
                 <Arrow className="h-[17px] w-[17px]" />
               </button>
+              <a
+                href={SIGNUP.href}
+                className="border border-brand-orange/35 inline-flex w-full max-w-[420px] items-center justify-center gap-2.5 rounded-lg bg-white/70 px-10 py-3 text-[15px] font-semibold text-brand-orange transition-colors hover:border-brand-orange/55 hover:bg-white sm:w-auto sm:min-w-[170px]"
+              >
+                {SIGNUP.label}
+              </a>
             </div>
           </Reveal>
         </div>

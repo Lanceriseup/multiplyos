@@ -315,7 +315,7 @@ export default function FeatureScoreboards() {
 
   return (
     <section id="features" className="scroll-mt-24 px-5 py-8 sm:px-8 sm:py-24">
-      <div className="mx-auto grid max-w-container items-center gap-8 lg:grid-cols-2 lg:gap-16">
+      <div className="mx-auto grid max-w-container grid-cols-1 items-center gap-8 lg:grid-cols-2 lg:gap-16">
         {/* copy */}
         <motion.div
           initial={{ opacity: 0, y: 24 }}

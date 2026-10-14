@@ -11,6 +11,20 @@
 // >>> BEFORE THIS SHIPS: every figure in STACK is a competitor's list price and
 // >>> needs verifying. They are gathered here for exactly that reason.
 import { ReplacedLogo } from "./ReplacesStrip";
+import { FEATURED_PLAN, STACK_TEAM_SIZE, stackChip, teamTotalLine } from "@/lib/pricing-tiers";
+import { leadBilling, pricingV2SiteEnabled } from "@/lib/pricing-v2";
+import { signupCta } from "@/lib/signup-cta";
+
+const SIGNUP = signupCta();
+
+// Pricing v2 switch. On, the total bar's chip no longer quotes the single $299
+// plan. It says what SCALE costs for a team of ten at the billing the site leads
+// with ($290 a month billed annually, or $390 a month when the site launches
+// monthly only) and links to the trial. SCALE, not the cheapest plan, because
+// every row in this table is included on SCALE, and a team of ten because that
+// is what the vendor prices above are for. Off, the bar is exactly as it was.
+const PRICING_V2 = pricingV2SiteEnabled();
+const CHIP = PRICING_V2 ? stackChip(leadBilling()) : null;
 
 // Same literals the pricing page uses. Repeated rather than imported, which is
 // how every other component on this site carries its palette.
@@ -519,18 +533,32 @@ export function StackTable() {
             it exists to beat, so the eye landed on the loser first. Stacking it
             keeps the name for anyone who wants it there without letting it run
             along the line. See design/stack-total-bar-options.html, direction 3. */}
-        <span
-          className="flex w-full flex-col items-center gap-[2px] rounded-[13px] px-5 pb-2.5 pt-2 text-white shadow-[0_14px_28px_-12px_rgba(201,101,15,0.8)] sm:w-auto sm:items-start"
+        {/* The chip is the price and the way to act on it. Nothing else in
+            the bar is clickable, so it carries its own hover lift and focus
+            ring to read as a control rather than a label. */}
+        <a
+          href={SIGNUP.href}
+          aria-label={
+            CHIP
+              ? `Start a free trial of Multiply OS on ${FEATURED_PLAN.toUpperCase()}: ${teamTotalLine(FEATURED_PLAN, leadBilling(), STACK_TEAM_SIZE)}`
+              : `Sign up for Multiply OS at ${money(PRICE)} a month`
+          }
+          className="flex w-full flex-col items-center gap-[2px] rounded-[13px] px-5 pb-2.5 pt-2 text-white shadow-[0_14px_28px_-12px_rgba(201,101,15,0.8)] transition-all duration-200 hover:-translate-y-0.5 hover:brightness-[1.06] hover:shadow-[0_18px_34px_-12px_rgba(201,101,15,0.9)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#FFE9D4] active:translate-y-0 sm:w-auto sm:items-start"
           style={{ background: ORANGE_GRAD }}
         >
           <span className="text-[9.5px] font-bold uppercase tracking-[0.13em] opacity-[0.82] sm:text-[10px]">
             With Multiply OS
           </span>
           <span className="text-[24px] font-black leading-none tracking-tight tabular-nums sm:text-[27px]">
-            {money(PRICE)}
+            {CHIP ? CHIP.price : money(PRICE)}
             <span className="ml-1 text-[11.5px] font-semibold sm:text-[12.5px]">/mo</span>
           </span>
-        </span>
+          {CHIP && (
+            <span className="whitespace-nowrap text-[10.5px] font-semibold leading-snug opacity-90 sm:text-[11px]">
+              {CHIP.detail}
+            </span>
+          )}
+        </a>
       </div>
     </div>
   );

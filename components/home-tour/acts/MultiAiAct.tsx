@@ -1,6 +1,6 @@
 "use client";
 
-// Tab 5 of 10 — Multi AI.
+// Tab 5 of 10: Multi AI.
 //
 // Short cut of AiCoachHeroTour, which is the AI Coach & Agent feature page. The
 // product calls that area Multi AI, which is the client's label for this tab.

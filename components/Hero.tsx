@@ -6,8 +6,9 @@ import WordSwap from "./WordSwap";
 import SystemTokens from "./SystemTokens";
 import HomeOsTour from "./home-tour";
 import { useDemo } from "./DemoModal";
+import { signupCta } from "@/lib/signup-cta";
 
-const APP_URL = "https://app.multiplyos.com";
+const SIGNUP = signupCta();
 
 export default function Hero() {
   const { openDemo } = useDemo();
@@ -76,10 +77,10 @@ export default function Hero() {
             Request a Demo
           </button>
           <Link
-            href={APP_URL}
+            href={SIGNUP.href}
             className="flex w-full items-center justify-center rounded-lg bg-brand-orange/20 px-6 py-2.5 text-base font-semibold text-brand-orange transition-colors hover:bg-brand-orange/30 sm:w-auto sm:min-w-[210px]"
           >
-            Log in
+            {SIGNUP.label}
           </Link>
         </motion.div>
       </div>
