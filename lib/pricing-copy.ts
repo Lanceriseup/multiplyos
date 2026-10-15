@@ -299,7 +299,7 @@ export const FAQ: readonly FaqItem[] = [
   },
   {
     q: "Can you set it up for us?",
-    a: `Yes. Setup packages start at ${launchValue} for teams up to 10, and MULTIPLY includes Launch onboarding.`,
+    a: "Yes. Our team can build your scoreboards, plan and meeting rhythm with you. MULTIPLY includes Launch onboarding.",
   },
 ];
 
