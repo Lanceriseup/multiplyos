@@ -104,15 +104,15 @@ export function teamTotalParts(plan: PlanId, billing: Billing, users: number): {
   };
 }
 
-// The total on a plan card, worded so it reads as following the Team size
-// picker and never as a minimum: "For a team of 10: $290 a month" (and
-// "billed $3,480 a year" on annual). Below MULTIPLY's minimum it says so:
-// "At the 10-user minimum: $490 a month".
+// The total on a plan card: "$290 a month for 10 users" (and "billed $3,480 a
+// year" on annual), following the Team size picker. Only when the picker is
+// below MULTIPLY's minimum does it name the minimum: "$490 a month at the
+// 10-user minimum", so it never says "for 10 users" while the picker says 3.
 export function pickerTotalParts(plan: PlanId, billing: Billing, users: number): { head: string; billed: string | null } {
   const n = billedUsers(plan, users);
-  const who = n > users ? `At the ${n}-user minimum` : n === 1 ? "For 1 user" : `For a team of ${n}`;
+  const amount = `${money(teamMonthly(plan, billing, n))} a month`;
   return {
-    head: `${who}: ${money(teamMonthly(plan, billing, n))} a month`,
+    head: n > users ? `${amount} at the ${n}-user minimum` : `${amount} for ${plural(n, "user")}`,
     billed: billing === "annual" ? `billed ${money(teamAnnualBilled(plan, n))} a year` : null,
   };
 }
