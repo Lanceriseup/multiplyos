@@ -213,7 +213,8 @@ export const FEATURE_GROUPS: readonly FeatureGroup[] = [
       row("SOP HQ", growAddon, Y, Y),
       row("Finance HQ and Banking Analytics", growAddon, Y, Y, { note: "Owner and CEO only" }),
       row("CRM and pipelines", N, Y, Y),
-      row("Hiring", N, Y, Y),
+      // Hiring is no longer its own row: it ships as part of People HQ, which is
+      // listed with the other HQ modules under "Whole company".
       row("Training", N, Y, Y, { note: "Courses and lessons" }),
       row("Performance reviews and engagement surveys", N, Y, Y, { tag: "Coming Q4" }),
       row("Websites", N, "2 published", "Unlimited"),
@@ -222,7 +223,6 @@ export const FEATURE_GROUPS: readonly FeatureGroup[] = [
         `${money(FORMS_ADDON_PRICE_PER_MONTH)}/mo add-on`,
         "25 forms, 100 signatures",
         "Unlimited forms",
-        { tag: "Coming soon" },
       ),
       row("Whiteboards", N, Y, Y),
       row("Calendars", N, Y, Y),
@@ -238,7 +238,7 @@ export const FEATURE_GROUPS: readonly FeatureGroup[] = [
         `${money(HQ_PRICE_PER_MONTH)}/mo each`,
         `${money(HQ_PRICE_PER_MONTH)}/mo each`,
         "2 included",
-        { note: "Inventory, Events; Contractor coming end of Oct; Marketing coming Q1" },
+        { note: "Inventory, Events, People; Contractor coming end of Oct; Marketing coming Q1" },
       ),
       row("Additional businesses", "10% off", "10% off", "25% off"),
       // Launch onboarding comes with MULTIPLY on either billing (decided Oct 13).
