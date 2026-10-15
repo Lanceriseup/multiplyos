@@ -100,12 +100,12 @@ test("GROW and SCALE read the same on both billings", () => {
 
 // ---- compare table -----------------------------------------------------------
 
-test("compare table with annual billing: three groups and 23 rows, each with a value for all three plans", () => {
+test("compare table with annual billing: three groups and 22 rows, each with a value for all three plans", () => {
   assert.deepEqual(
     visibleFeatureGroups({ differencesOnly: false, annual: true }).map((g) => [g.name, g.rows.length]),
     [
       ["The core", 8],
-      ["Business modules", 12],
+      ["Business modules", 11],
       ["Whole company", 3],
     ],
   );
@@ -127,27 +127,24 @@ test("compare table: Launch onboarding is included on MULTIPLY, on either billin
   }
 });
 
-test("compare table, monthly only: all 23 rows stay, Launch onboarding included", () => {
+test("compare table, monthly only: all 22 rows stay, Launch onboarding included", () => {
   const rows = rowsOf(visibleFeatureGroups({ differencesOnly: false, annual: false }));
-  assert.equal(rows.length, 23);
+  assert.equal(rows.length, 22);
   assert.ok(rows.some((r) => r.name === "Launch onboarding"));
 });
 
-test("compare table: Forms and e-signatures and performance reviews are tagged as coming", () => {
+test("compare table: performance reviews is the only row tagged as coming", () => {
   const tagged = rowsOf(FEATURE_GROUPS)
     .filter((r) => r.tag)
     .map((r) => [r.name, r.tag]);
-  assert.deepEqual(tagged, [
-    ["Performance reviews and engagement surveys", "Coming Q4"],
-    ["Forms and e-signatures", "Coming soon"],
-  ]);
+  assert.deepEqual(tagged, [["Performance reviews and engagement surveys", "Coming Q4"]]);
 });
 
 test("show differences only drops the six rows that read the same on every plan", () => {
-  assert.equal(rowsOf(visibleFeatureGroups({ differencesOnly: false, annual: true })).length, 23);
+  assert.equal(rowsOf(visibleFeatureGroups({ differencesOnly: false, annual: true })).length, 22);
 
   const kept = rowsOf(visibleFeatureGroups({ differencesOnly: true, annual: true })).map((r) => r.name);
-  assert.equal(kept.length, 17);
+  assert.equal(kept.length, 16);
   for (const same of [
     "One Page Plan",
     "Leadership meetings, team meetings and 1-on-1s",
@@ -163,9 +160,9 @@ test("show differences only drops the six rows that read the same on every plan"
   }
 });
 
-test("show differences only, monthly only: 17 rows, Launch onboarding among them", () => {
+test("show differences only, monthly only: 16 rows, Launch onboarding among them", () => {
   const kept = rowsOf(visibleFeatureGroups({ differencesOnly: true, annual: false })).map((r) => r.name);
-  assert.equal(kept.length, 17);
+  assert.equal(kept.length, 16);
   assert.ok(kept.includes("Launch onboarding"));
 });
 
