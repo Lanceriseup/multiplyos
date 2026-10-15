@@ -49,7 +49,7 @@ import {
   TRIAL_DAYS,
   clampUsers,
   money,
-  teamTotalParts,
+  pickerTotalParts,
 } from "@/lib/pricing-tiers";
 import type { Billing, PlanId } from "@/lib/pricing-tiers";
 import { HQ_ADDONS, PLANS, faqItems, planItems, visibleFeatureGroups } from "@/lib/pricing-copy";
@@ -204,7 +204,7 @@ function PlanCard({
   const copy = PLANS[plan];
   const featured = plan === FEATURED_PLAN;
   const rate = PRICE_PER_USER_MONTH[plan][billing];
-  const total = teamTotalParts(plan, billing, users);
+  const total = pickerTotalParts(plan, billing, users);
   const offerLine = promo ? boothPlanLine(plan, billing) : null;
 
   // The card is a subgrid of the grid around it from lg up, so the price, the

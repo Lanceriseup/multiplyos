@@ -35,6 +35,7 @@ const {
   teamMonthly,
   teamTotalLine,
   teamTotalParts,
+  pickerTotalParts,
 } = tiers;
 
 // ---- prices ------------------------------------------------------------------
@@ -216,3 +217,16 @@ test("setup packages: Launch $1,000, Accelerate $5,000, Momentum $18,000", () =>
   assert.deepEqual(SETUP_PRICE, { launch: 1000, accelerate: 5000, momentum: 18000 });
 });
 
+
+test("the card total reads as following the Team size picker, never as a minimum", () => {
+  assert.deepEqual(pickerTotalParts("scale", "annual", 10), { head: "For a team of 10: $290 a month", billed: "billed $3,480 a year" });
+  assert.deepEqual(pickerTotalParts("grow", "monthly", 10), { head: "For a team of 10: $190 a month", billed: null });
+  assert.deepEqual(pickerTotalParts("scale", "annual", 1), { head: "For 1 user: $29 a month", billed: "billed $348 a year" });
+  assert.deepEqual(pickerTotalParts("scale", "monthly", 25), { head: "For a team of 25: $975 a month", billed: null });
+});
+
+test("the card total names the MULTIPLY minimum when the picker is below it", () => {
+  assert.deepEqual(pickerTotalParts("multiply", "annual", 3), { head: "At the 10-user minimum: $490 a month", billed: "billed $5,880 a year" });
+  assert.deepEqual(pickerTotalParts("multiply", "annual", 10), { head: "For a team of 10: $490 a month", billed: "billed $5,880 a year" });
+  assert.deepEqual(pickerTotalParts("multiply", "monthly", 12), { head: "For a team of 12: $780 a month", billed: null });
+});
