@@ -212,7 +212,7 @@ test("changing plans: a true answer that settles no open decision (no proration,
 test("the setup answer: MULTIPLY includes Launch, on either billing", () => {
   for (const annual of [true, false]) {
     const answer = faqItems(annual).find((i) => i.q === "Can you set it up for us?").a;
-    assert.equal(answer, "Yes. Setup packages start at $1,000 for teams up to 10, and MULTIPLY includes Launch onboarding.");
+    assert.equal(answer, "Yes. Our team can build your scoreboards, plan and meeting rhythm with you. MULTIPLY includes Launch onboarding.");
   }
 });
 
