@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 
 export default function TermsPage() {
   return (
-    <LegalPage title="Multiply OS Terms of Service" lastUpdated="July 17, 2026">
+    <LegalPage title="Multiply OS Terms of Service" lastUpdated="October 20, 2026">
       <p>
         This Terms of Service (&ldquo;Agreement&rdquo;) governs your access to
         and use of the Multiply OS platform. Please read it carefully.
@@ -240,7 +240,32 @@ export default function TermsPage() {
         </p>
       </Section>
 
-      <Section heading="14. Contact Us">
+      <Section heading="14. Text Messaging (SMS) Program">
+        <p>
+          Multiply OS LLC operates the Multiply OS text messaging program (the
+          &ldquo;Messaging Program&rdquo;). By opting in, you agree to these SMS
+          terms in addition to the rest of this Agreement and our{" "}
+          <a href="/privacy" className="font-medium text-brand-orange hover:underline">
+            Privacy Policy
+          </a>
+          .
+        </p>
+        <List
+          items={[
+            "What you'll receive: account texts (onboarding help, account and billing notices, meeting and task reminders, customer care replies) and, only if you separately opt in, recurring automated marketing texts such as product news and offers.",
+            "How to opt in: on our text message opt-in form at app.multiplyos.com/f/kensbb, by entering your mobile number and checking the consent box. Account texts and marketing texts have separate checkboxes, and marketing consent is optional.",
+            "Consent is not a condition of purchase.",
+            "Message frequency varies.",
+            "Cost: Multiply OS LLC does not charge for the Messaging Program. Message and data rates may apply, billed by your wireless carrier.",
+            "Opt out: reply STOP, CANCEL, END, QUIT, UNSUBSCRIBE, STOPALL or REVOKE to any message. You will receive one confirmation text and no further messages unless you opt in again.",
+            "Help: reply HELP to any message, or email support@multiplyos.com.",
+            "Carriers are not liable for delayed or undelivered messages.",
+            "Privacy: we never share mobile information with third parties or affiliates for marketing or promotional purposes. See our Privacy Policy.",
+          ]}
+        />
+      </Section>
+
+      <Section heading="15. Contact Us">
         <p>
           If you have questions about this Agreement, please contact us at:
         </p>
