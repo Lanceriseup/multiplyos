@@ -60,9 +60,11 @@ export const ANNUAL_SAVINGS_LABEL = `Save up to ${ANNUAL_SAVINGS_PERCENT}%`;
 export const MIN_USERS = 1;
 export const MAX_USERS = 500;
 export const DEFAULT_USERS = 10;
-// Open decision D2 in the spec: one MULTIPLY user would get two HQ modules and
-// Launch onboarding for $49 a month, so MULTIPLY bills at least ten.
-export const MULTIPLY_MIN_USERS = 10;
+// Decision D2: one MULTIPLY user would get two HQ modules and Launch onboarding
+// for $49 a month, so MULTIPLY bills a minimum. Lowered from 10 to 5 on
+// 2026-10-20 (MOS Leadership) until 5 to 10 beta customers are on MULTIPLY.
+// Keep in step with PRICING_V2_DECISIONS.multiplyMinimumSeats in the app.
+export const MULTIPLY_MIN_USERS = 5;
 
 export function minUsers(plan: PlanId): number {
   return plan === "multiply" ? MULTIPLY_MIN_USERS : MIN_USERS;
