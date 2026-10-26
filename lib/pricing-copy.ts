@@ -33,7 +33,10 @@ import {
 
 export type HqAddon = { name: string; blurb: string; comingSoon?: string };
 
+// People HQ is first and reuses the app's blurb (MultiplyOS lib/billing/pricing-v2-copy.ts),
+// so the website and the in-app pricing say the same thing.
 export const HQ_ADDONS: readonly HqAddon[] = [
+  { name: "People HQ", blurb: "Hiring, performance reviews, engagement surveys and certifications" },
   {
     name: "Contractor HQ",
     blurb: "Jobs, crews, estimates, invoices and signatures for service businesses",
@@ -130,7 +133,6 @@ export const PLANS: Record<PlanId, PlanCopy> = {
       "SOP HQ",
       "Finance HQ and Banking Analytics",
       "CRM and pipelines",
-      "Hiring and Training",
       "Websites, whiteboards and calendars",
       "API access and audit log",
     ],
@@ -213,10 +215,10 @@ export const FEATURE_GROUPS: readonly FeatureGroup[] = [
       row("SOP HQ", growAddon, Y, Y),
       row("Finance HQ and Banking Analytics", growAddon, Y, Y, { note: "Owner and CEO only" }),
       row("CRM and pipelines", N, Y, Y),
-      // Hiring is no longer its own row: it ships as part of People HQ, which is
-      // listed with the other HQ modules under "Whole company".
+      // Hiring, performance reviews and engagement surveys are not their own rows:
+      // they ship as part of People HQ, which is listed with the other HQ modules
+      // under "Whole company".
       row("Training", N, Y, Y, { note: "Courses and lessons" }),
-      row("Performance reviews and engagement surveys", N, Y, Y, { tag: "Coming Q4" }),
       row("Websites", N, "2 published", "Unlimited"),
       row(
         "Forms and e-signatures",

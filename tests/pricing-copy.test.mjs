@@ -24,10 +24,11 @@ const rowsOf = (groups) => groups.flatMap((g) => g.rows);
 
 // ---- add-ons and setup packages ----------------------------------------------
 
-test("the four HQ modules: Contractor HQ coming end of October, Marketing HQ coming Q1", () => {
+test("the five HQ modules: People HQ available now, Contractor HQ coming end of October, Marketing HQ coming Q1", () => {
   assert.deepEqual(
     HQ_ADDONS.map((a) => [a.name, a.comingSoon ?? null]),
     [
+      ["People HQ", null],
       ["Contractor HQ", "Coming end of Oct"],
       ["Inventory HQ", null],
       ["Events HQ", null],
@@ -100,12 +101,12 @@ test("GROW and SCALE read the same on both billings", () => {
 
 // ---- compare table -----------------------------------------------------------
 
-test("compare table with annual billing: three groups and 22 rows, each with a value for all three plans", () => {
+test("compare table with annual billing: three groups and 21 rows, each with a value for all three plans", () => {
   assert.deepEqual(
     visibleFeatureGroups({ differencesOnly: false, annual: true }).map((g) => [g.name, g.rows.length]),
     [
       ["The core", 8],
-      ["Business modules", 11],
+      ["Business modules", 10],
       ["Whole company", 3],
     ],
   );
@@ -127,24 +128,27 @@ test("compare table: Launch onboarding is included on MULTIPLY, on either billin
   }
 });
 
-test("compare table, monthly only: all 22 rows stay, Launch onboarding included", () => {
+test("compare table, monthly only: all 21 rows stay, Launch onboarding included", () => {
   const rows = rowsOf(visibleFeatureGroups({ differencesOnly: false, annual: false }));
-  assert.equal(rows.length, 22);
+  assert.equal(rows.length, 21);
   assert.ok(rows.some((r) => r.name === "Launch onboarding"));
 });
 
-test("compare table: performance reviews is the only row tagged as coming", () => {
-  const tagged = rowsOf(FEATURE_GROUPS)
-    .filter((r) => r.tag)
-    .map((r) => [r.name, r.tag]);
-  assert.deepEqual(tagged, [["Performance reviews and engagement surveys", "Coming Q4"]]);
+test("compare table: no row is tagged as coming, and performance reviews is not its own row (it is part of People HQ)", () => {
+  const rows = rowsOf(FEATURE_GROUPS);
+  assert.deepEqual(rows.filter((r) => r.tag).map((r) => r.name), []);
+  assert.ok(!rows.some((r) => /performance reviews/i.test(r.name)));
+});
+
+test("SCALE card no longer lists Hiring and Training (Hiring ships in People HQ)", () => {
+  for (const billing of ["annual", "monthly"]) assert.ok(!planItems("scale", billing).includes("Hiring and Training"));
 });
 
 test("show differences only drops the six rows that read the same on every plan", () => {
-  assert.equal(rowsOf(visibleFeatureGroups({ differencesOnly: false, annual: true })).length, 22);
+  assert.equal(rowsOf(visibleFeatureGroups({ differencesOnly: false, annual: true })).length, 21);
 
   const kept = rowsOf(visibleFeatureGroups({ differencesOnly: true, annual: true })).map((r) => r.name);
-  assert.equal(kept.length, 16);
+  assert.equal(kept.length, 15);
   for (const same of [
     "One Page Plan",
     "Leadership meetings, team meetings and 1-on-1s",
@@ -160,9 +164,9 @@ test("show differences only drops the six rows that read the same on every plan"
   }
 });
 
-test("show differences only, monthly only: 16 rows, Launch onboarding among them", () => {
+test("show differences only, monthly only: 15 rows, Launch onboarding among them", () => {
   const kept = rowsOf(visibleFeatureGroups({ differencesOnly: true, annual: false })).map((r) => r.name);
-  assert.equal(kept.length, 16);
+  assert.equal(kept.length, 15);
   assert.ok(kept.includes("Launch onboarding"));
 });
 
