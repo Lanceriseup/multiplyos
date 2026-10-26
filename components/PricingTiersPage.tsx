@@ -329,11 +329,11 @@ function AddOns() {
           sub="Industry modules, priced per business, not per user. MULTIPLY includes any two."
         />
         <Reveal delay={0.08}>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
             {HQ_ADDONS.map((a) => (
               <div
                 key={a.name}
-                className={`flex min-w-0 flex-col gap-1.5 rounded-2xl border border-black/[0.08] p-4 ${
+                className={`flex min-w-0 flex-col gap-1.5 rounded-2xl border border-black/[0.08] p-4 sm:last:odd:col-span-2 lg:last:odd:col-span-1 ${
                   a.comingSoon ? "bg-white/50" : "bg-white"
                 }`}
               >
