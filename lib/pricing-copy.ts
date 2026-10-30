@@ -120,8 +120,8 @@ export const PLANS: Record<PlanId, PlanCopy> = {
       "Leadership, team and 1-on-1 meetings",
       "Org chart",
       "Projects and tasks",
-      "Multi AI and Hubs",
-      "MOS Scribe meeting notes",
+      "Multi AI and Hubs*",
+      "MOS Scribe meeting notes*",
     ],
   },
   scale: {
@@ -205,8 +205,8 @@ export const FEATURE_GROUPS: readonly FeatureGroup[] = [
       row("Org chart", Y, Y, Y),
       row("Quarterly Execution Plan", Y, Y, Y),
       row("Projects and tasks", Y, Y, Y),
-      row("Multi AI and Hubs", Y, "Adds interactive AI tools", "Adds expanded connections"),
-      row("MOS Scribe", Y, Y, Y, { note: "Meeting recording and notes" }),
+      row("Multi AI and Hubs*", Y, "Adds interactive AI tools", "Adds expanded connections"),
+      row("MOS Scribe*", Y, Y, Y, { note: "Meeting recording and notes" }),
     ],
   },
   {
