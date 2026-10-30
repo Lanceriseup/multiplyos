@@ -40,9 +40,13 @@ export const HQ_ADDONS: readonly HqAddon[] = [
   {
     name: "Contractor HQ",
     blurb: "Jobs, crews, estimates, invoices and signatures for service businesses",
-    comingSoon: "Coming end of Oct",
+    comingSoon: "Coming in Nov",
   },
-  { name: "Inventory HQ", blurb: "Items, stock levels, reorder points and transfers between locations" },
+  {
+    name: "Inventory HQ",
+    blurb: "Items, stock levels, reorder points and transfers between locations",
+    comingSoon: "Coming Q1",
+  },
   { name: "Events HQ", blurb: "Registration, attendee management and event portals" },
   {
     name: "Marketing HQ",
@@ -240,7 +244,7 @@ export const FEATURE_GROUPS: readonly FeatureGroup[] = [
         `${money(HQ_PRICE_PER_MONTH)}/mo each`,
         `${money(HQ_PRICE_PER_MONTH)}/mo each`,
         "2 included",
-        { note: "Inventory, Events, People; Contractor coming end of Oct; Marketing coming Q1" },
+        { note: "Events, People; Contractor coming in Nov; Inventory and Marketing coming Q1" },
       ),
       row("Additional businesses", "10% off", "10% off", "25% off"),
       // Launch onboarding comes with MULTIPLY on either billing (decided Oct 13).
