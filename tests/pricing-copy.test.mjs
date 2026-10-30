@@ -24,13 +24,13 @@ const rowsOf = (groups) => groups.flatMap((g) => g.rows);
 
 // ---- add-ons and setup packages ----------------------------------------------
 
-test("the five HQ modules: People HQ available now, Contractor HQ coming end of October, Marketing HQ coming Q1", () => {
+test("the five HQ modules: People HQ available now, Contractor HQ coming in November, Inventory and Marketing HQ coming Q1", () => {
   assert.deepEqual(
     HQ_ADDONS.map((a) => [a.name, a.comingSoon ?? null]),
     [
       ["People HQ", null],
-      ["Contractor HQ", "Coming end of Oct"],
-      ["Inventory HQ", null],
+      ["Contractor HQ", "Coming in Nov"],
+      ["Inventory HQ", "Coming Q1"],
       ["Events HQ", null],
       ["Marketing HQ", "Coming Q1"],
     ],
