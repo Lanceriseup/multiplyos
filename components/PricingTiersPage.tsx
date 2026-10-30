@@ -610,7 +610,7 @@ export default function PricingTiersPage({ promo }: { promo?: string } = {}) {
 
           <Reveal delay={0.18}>
             <p className="mx-auto mt-6 max-w-3xl rounded-xl bg-[#F6F3EE] px-4 py-3 text-center text-[13.5px] leading-relaxed text-brand-charcoal">
-              AI is billed by use, every two weeks, on the same card.{" "}
+              *AI is billed by use, every two weeks, on the same card.{" "}
               <b className="font-semibold text-brand-ink">You set a monthly cap</b> ({money(AI_MONTHLY_CAP_DEFAULT)} by
               default) and AI pauses when you reach it.
             </p>

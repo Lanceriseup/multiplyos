@@ -155,11 +155,11 @@ test("show differences only drops the six rows that read the same on every plan"
     "Org chart",
     "Quarterly Execution Plan",
     "Projects and tasks",
-    "MOS Scribe",
+    "MOS Scribe*",
   ]) {
     assert.ok(!kept.includes(same), `${same} should be hidden`);
   }
-  for (const differs of ["Scoreboards", "Multi AI and Hubs", "CRM and pipelines", "Launch onboarding"]) {
+  for (const differs of ["Scoreboards", "Multi AI and Hubs*", "CRM and pipelines", "Launch onboarding"]) {
     assert.ok(kept.includes(differs), `${differs} should stay`);
   }
 });
