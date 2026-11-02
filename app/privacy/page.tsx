@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 export default function PrivacyPage() {
   return (
-    <LegalPage title="Multiply OS Privacy Policy" lastUpdated="July 17, 2026">
+    <LegalPage title="Multiply OS Privacy Policy" lastUpdated="October 20, 2026">
       <Section heading="1. Introduction">
         <p>
           Multiply OS LLC (&ldquo;Company,&rdquo; &ldquo;we,&rdquo;
@@ -98,6 +98,14 @@ export default function PrivacyPage() {
             "Business transfers: In connection with a merger, acquisition, or sale of assets, your information may be transferred as part of that transaction.",
           ]}
         />
+        <p>
+          <strong>
+            The above excludes text messaging originator opt-in data and
+            consent; this information will not be shared with any third
+            parties.
+          </strong>{" "}
+          See section 10 for the full text messaging disclosures.
+        </p>
       </Section>
 
       <Section heading="5. Third-Party Integrations">
@@ -219,7 +227,56 @@ export default function PrivacyPage() {
         </p>
       </Section>
 
-      <Section heading="10. Changes to This Policy">
+      <Section heading="10. Text Messaging (SMS) and Your Mobile Information">
+        <p>
+          This section applies to the Multiply OS text messaging program,
+          operated by Multiply OS LLC. It describes the mobile information we
+          collect, how we use it, and how we protect it. The full program terms
+          (opt-in, message frequency, cost, STOP and HELP) are in our{" "}
+          <a href="/terms" className="font-medium text-brand-orange hover:underline">
+            Terms of Service
+          </a>
+          .
+        </p>
+        <SubHeading>10.1 What we collect</SubHeading>
+        <p>
+          When you opt in to receive text messages we collect the mobile number
+          you provide, your name, the date and time of your consent, the wording
+          of the consent you agreed to, and the page or form on which you gave
+          it. We also keep a record of the messages we send and receive, their
+          delivery status, and any opt-out or help keyword you send us.
+        </p>
+        <SubHeading>10.2 How we use it</SubHeading>
+        <p>
+          We use your mobile number only to send the categories of message you
+          consented to: onboarding help, account and billing notices, meeting
+          and task reminders, customer care replies, and, only if you separately
+          agreed to it, product news and offers. We use the consent record to
+          prove you opted in, and the delivery and keyword records to honor STOP
+          requests and operate the program reliably.
+        </p>
+        <SubHeading>10.3 How we protect it</SubHeading>
+        <p>
+          <strong>
+            No mobile information will be shared with third parties or
+            affiliates for marketing or promotional purposes.
+          </strong>{" "}
+          Text messaging originator opt-in data and consent are not shared,
+          sold, rented, or transferred to any third party, affiliate, or lead
+          generator for marketing purposes. Mobile information is shared only
+          with the communications vendors we use to deliver messages on our
+          behalf (currently Twilio), only so those messages can be delivered, or
+          where disclosure is required by law.
+        </p>
+        <SubHeading>10.4 Opting out</SubHeading>
+        <p>
+          You can stop messages at any time by replying STOP to any message.
+          Reply HELP for help, or contact support@multiplyos.com. Message
+          frequency varies. Message and data rates may apply.
+        </p>
+      </Section>
+
+      <Section heading="11. Changes to This Policy">
         <p>
           We may update this Privacy Policy from time to time. We will notify you
           of material changes by posting the updated policy on this page and
@@ -228,7 +285,7 @@ export default function PrivacyPage() {
         </p>
       </Section>
 
-      <Section heading="11. Contact Us">
+      <Section heading="12. Contact Us">
         <p>
           If you have questions about this Privacy Policy or wish to exercise your
           data rights, please contact us at:

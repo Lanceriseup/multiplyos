@@ -33,9 +33,20 @@ import {
 
 export type HqAddon = { name: string; blurb: string; comingSoon?: string };
 
+// People HQ is first and reuses the app's blurb (MultiplyOS lib/billing/pricing-v2-copy.ts),
+// so the website and the in-app pricing say the same thing.
 export const HQ_ADDONS: readonly HqAddon[] = [
-  { name: "Contractor HQ", blurb: "Jobs, crews, estimates, invoices and signatures for service businesses" },
-  { name: "Inventory HQ", blurb: "Items, stock levels, reorder points and transfers between locations" },
+  { name: "People HQ", blurb: "Hiring, performance reviews, engagement surveys and certifications" },
+  {
+    name: "Contractor HQ",
+    blurb: "Jobs, crews, estimates, invoices and signatures for service businesses",
+    comingSoon: "Coming in Nov",
+  },
+  {
+    name: "Inventory HQ",
+    blurb: "Items, stock levels, reorder points and transfers between locations",
+    comingSoon: "Coming Q1",
+  },
   { name: "Events HQ", blurb: "Registration, attendee management and event portals" },
   {
     name: "Marketing HQ",
@@ -113,8 +124,8 @@ export const PLANS: Record<PlanId, PlanCopy> = {
       "Leadership, team and 1-on-1 meetings",
       "Org chart",
       "Projects and tasks",
-      "Multi AI and Hubs",
-      "MOS Scribe meeting notes",
+      "Multi AI and Hubs*",
+      "MOS Scribe meeting notes*",
     ],
   },
   scale: {
@@ -126,7 +137,6 @@ export const PLANS: Record<PlanId, PlanCopy> = {
       "SOP HQ",
       "Finance HQ and Banking Analytics",
       "CRM and pipelines",
-      "Hiring and Training",
       "Websites, whiteboards and calendars",
       "API access and audit log",
     ],
@@ -199,8 +209,8 @@ export const FEATURE_GROUPS: readonly FeatureGroup[] = [
       row("Org chart", Y, Y, Y),
       row("Quarterly Execution Plan", Y, Y, Y),
       row("Projects and tasks", Y, Y, Y),
-      row("Multi AI and Hubs", Y, "Adds interactive AI tools", "Adds expanded connections"),
-      row("MOS Scribe", Y, Y, Y, { note: "Meeting recording and notes" }),
+      row("Multi AI and Hubs*", Y, "Adds interactive AI tools", "Adds expanded connections"),
+      row("MOS Scribe*", Y, Y, Y, { note: "Meeting recording and notes" }),
     ],
   },
   {
@@ -209,16 +219,16 @@ export const FEATURE_GROUPS: readonly FeatureGroup[] = [
       row("SOP HQ", growAddon, Y, Y),
       row("Finance HQ and Banking Analytics", growAddon, Y, Y, { note: "Owner and CEO only" }),
       row("CRM and pipelines", N, Y, Y),
-      row("Hiring", N, Y, Y),
+      // Hiring, performance reviews and engagement surveys are not their own rows:
+      // they ship as part of People HQ, which is listed with the other HQ modules
+      // under "Whole company".
       row("Training", N, Y, Y, { note: "Courses and lessons" }),
-      row("Performance reviews and engagement surveys", N, Y, Y, { tag: "Coming Q4" }),
       row("Websites", N, "2 published", "Unlimited"),
       row(
         "Forms and e-signatures",
         `${money(FORMS_ADDON_PRICE_PER_MONTH)}/mo add-on`,
         "25 forms, 100 signatures",
         "Unlimited forms",
-        { tag: "Coming soon" },
       ),
       row("Whiteboards", N, Y, Y),
       row("Calendars", N, Y, Y),
@@ -234,7 +244,7 @@ export const FEATURE_GROUPS: readonly FeatureGroup[] = [
         `${money(HQ_PRICE_PER_MONTH)}/mo each`,
         `${money(HQ_PRICE_PER_MONTH)}/mo each`,
         "2 included",
-        { note: "Contractor, Inventory, Events; Marketing coming Q1" },
+        { note: "Events, People; Contractor coming in Nov; Inventory and Marketing coming Q1" },
       ),
       row("Additional businesses", "10% off", "10% off", "25% off"),
       // Launch onboarding comes with MULTIPLY on either billing (decided Oct 13).
@@ -295,7 +305,7 @@ export const FAQ: readonly FaqItem[] = [
   },
   {
     q: "Can you set it up for us?",
-    a: `Yes. Setup packages start at ${launchValue} for teams up to 10, and MULTIPLY includes Launch onboarding.`,
+    a: "Yes. Our team can build your scoreboards, plan and meeting rhythm with you. MULTIPLY includes Launch onboarding.",
   },
 ];
 

@@ -24,12 +24,13 @@ const rowsOf = (groups) => groups.flatMap((g) => g.rows);
 
 // ---- add-ons and setup packages ----------------------------------------------
 
-test("the four HQ modules, with Marketing HQ marked Coming Q1", () => {
+test("the five HQ modules: People HQ available now, Contractor HQ coming in November, Inventory and Marketing HQ coming Q1", () => {
   assert.deepEqual(
     HQ_ADDONS.map((a) => [a.name, a.comingSoon ?? null]),
     [
-      ["Contractor HQ", null],
-      ["Inventory HQ", null],
+      ["People HQ", null],
+      ["Contractor HQ", "Coming in Nov"],
+      ["Inventory HQ", "Coming Q1"],
       ["Events HQ", null],
       ["Marketing HQ", "Coming Q1"],
     ],
@@ -100,12 +101,12 @@ test("GROW and SCALE read the same on both billings", () => {
 
 // ---- compare table -----------------------------------------------------------
 
-test("compare table with annual billing: three groups and 23 rows, each with a value for all three plans", () => {
+test("compare table with annual billing: three groups and 21 rows, each with a value for all three plans", () => {
   assert.deepEqual(
     visibleFeatureGroups({ differencesOnly: false, annual: true }).map((g) => [g.name, g.rows.length]),
     [
       ["The core", 8],
-      ["Business modules", 12],
+      ["Business modules", 10],
       ["Whole company", 3],
     ],
   );
@@ -127,45 +128,45 @@ test("compare table: Launch onboarding is included on MULTIPLY, on either billin
   }
 });
 
-test("compare table, monthly only: all 23 rows stay, Launch onboarding included", () => {
+test("compare table, monthly only: all 21 rows stay, Launch onboarding included", () => {
   const rows = rowsOf(visibleFeatureGroups({ differencesOnly: false, annual: false }));
-  assert.equal(rows.length, 23);
+  assert.equal(rows.length, 21);
   assert.ok(rows.some((r) => r.name === "Launch onboarding"));
 });
 
-test("compare table: Forms and e-signatures and performance reviews are tagged as coming", () => {
-  const tagged = rowsOf(FEATURE_GROUPS)
-    .filter((r) => r.tag)
-    .map((r) => [r.name, r.tag]);
-  assert.deepEqual(tagged, [
-    ["Performance reviews and engagement surveys", "Coming Q4"],
-    ["Forms and e-signatures", "Coming soon"],
-  ]);
+test("compare table: no row is tagged as coming, and performance reviews is not its own row (it is part of People HQ)", () => {
+  const rows = rowsOf(FEATURE_GROUPS);
+  assert.deepEqual(rows.filter((r) => r.tag).map((r) => r.name), []);
+  assert.ok(!rows.some((r) => /performance reviews/i.test(r.name)));
+});
+
+test("SCALE card no longer lists Hiring and Training (Hiring ships in People HQ)", () => {
+  for (const billing of ["annual", "monthly"]) assert.ok(!planItems("scale", billing).includes("Hiring and Training"));
 });
 
 test("show differences only drops the six rows that read the same on every plan", () => {
-  assert.equal(rowsOf(visibleFeatureGroups({ differencesOnly: false, annual: true })).length, 23);
+  assert.equal(rowsOf(visibleFeatureGroups({ differencesOnly: false, annual: true })).length, 21);
 
   const kept = rowsOf(visibleFeatureGroups({ differencesOnly: true, annual: true })).map((r) => r.name);
-  assert.equal(kept.length, 17);
+  assert.equal(kept.length, 15);
   for (const same of [
     "One Page Plan",
     "Leadership meetings, team meetings and 1-on-1s",
     "Org chart",
     "Quarterly Execution Plan",
     "Projects and tasks",
-    "MOS Scribe",
+    "MOS Scribe*",
   ]) {
     assert.ok(!kept.includes(same), `${same} should be hidden`);
   }
-  for (const differs of ["Scoreboards", "Multi AI and Hubs", "CRM and pipelines", "Launch onboarding"]) {
+  for (const differs of ["Scoreboards", "Multi AI and Hubs*", "CRM and pipelines", "Launch onboarding"]) {
     assert.ok(kept.includes(differs), `${differs} should stay`);
   }
 });
 
-test("show differences only, monthly only: 17 rows, Launch onboarding among them", () => {
+test("show differences only, monthly only: 15 rows, Launch onboarding among them", () => {
   const kept = rowsOf(visibleFeatureGroups({ differencesOnly: true, annual: false })).map((r) => r.name);
-  assert.equal(kept.length, 17);
+  assert.equal(kept.length, 15);
   assert.ok(kept.includes("Launch onboarding"));
 });
 
@@ -212,7 +213,7 @@ test("changing plans: a true answer that settles no open decision (no proration,
 test("the setup answer: MULTIPLY includes Launch, on either billing", () => {
   for (const annual of [true, false]) {
     const answer = faqItems(annual).find((i) => i.q === "Can you set it up for us?").a;
-    assert.equal(answer, "Yes. Setup packages start at $1,000 for teams up to 10, and MULTIPLY includes Launch onboarding.");
+    assert.equal(answer, "Yes. Our team can build your scoreboards, plan and meeting rhythm with you. MULTIPLY includes Launch onboarding.");
   }
 });
 
