@@ -10,7 +10,7 @@ const APP_URL = "https://app.multiplyos.com";
 const navItems: { label: string; href: string }[] = [
   { label: "Platform", href: "/" },
   { label: "AI", href: "#ai" },
-  { label: "Implementation", href: "https://multiplyos.com/implementation" },
+  { label: "Implementation", href: "/implementation" },
   { label: "Pricing", href: "/pricing" },
   { label: "Contact", href: "/contact" },
   { label: "Request a Demo", href: "#demo" },
