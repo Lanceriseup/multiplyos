@@ -217,7 +217,7 @@ type HqModule = Feature & { soon?: string };
 const hqModules: HqModule[] = [
   { label: "Events HQ", desc: "Plan, staff and run every event.", href: "/features/events-hq", color: "#C2412D", icon: EventsIcon },
   { label: "Inventory HQ", desc: "Stock, counts and reorders in one place.", href: "/features/inventory-hq", color: "#2F6F8F", icon: BoxesIcon },
-  { label: "People HQ", desc: "Hire, onboard and grow your people.", color: "#B0466E", icon: PeopleIcon },
+  { label: "People HQ", desc: "Hire, onboard and grow your people.", href: "/features/people-hq", color: "#B0466E", icon: PeopleIcon },
   { label: "SOP HQ", desc: "Every process, documented.", href: "/features/sop-hq", color: "#7A4E28", icon: BookIcon },
   { label: "Contractor HQ", desc: "Your contractors, organized.", color: "#9A7414", icon: HardHatIcon, soon: "Coming Nov" },
 ];
