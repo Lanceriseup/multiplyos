@@ -8,7 +8,7 @@
 // It is direction A of the MOS Pricing Rollout map (chief-of-staff repository,
 // references/mos-pricing-restructure/pricing-rollout.html): the plan picker, an
 // annual or monthly toggle, a team size that turns per user prices into a team
-// total, then the add-ons, setup packages, comparison table and FAQ.
+// total, then the add-ons, comparison table and FAQ.
 //
 // Where things live:
 //   - prices and the team total math: lib/pricing-tiers.ts. The plan cards, the
@@ -49,10 +49,10 @@ import {
   TRIAL_DAYS,
   clampUsers,
   money,
-  teamTotalParts,
+  pickerTotalParts,
 } from "@/lib/pricing-tiers";
 import type { Billing, PlanId } from "@/lib/pricing-tiers";
-import { HQ_ADDONS, PLANS, faqItems, planItems, visibleFeatureGroups, visibleSetupPackages } from "@/lib/pricing-copy";
+import { HQ_ADDONS, PLANS, faqItems, planItems, visibleFeatureGroups } from "@/lib/pricing-copy";
 import type { FeatureValue } from "@/lib/pricing-copy";
 import { leadBilling, pricingV2AnnualEnabled } from "@/lib/pricing-v2";
 import { boothOffer, boothPlanLine } from "@/lib/rukcon-booth";
@@ -204,7 +204,7 @@ function PlanCard({
   const copy = PLANS[plan];
   const featured = plan === FEATURED_PLAN;
   const rate = PRICE_PER_USER_MONTH[plan][billing];
-  const total = teamTotalParts(plan, billing, users);
+  const total = pickerTotalParts(plan, billing, users);
   const offerLine = promo ? boothPlanLine(plan, billing) : null;
 
   // The card is a subgrid of the grid around it from lg up, so the price, the
@@ -241,15 +241,17 @@ function PlanCard({
         </span>
       </div>
 
-      <p
-        className={`-mt-1.5 text-[12px] ${
-          plan === "multiply"
-            ? `font-semibold ${featured ? "text-[#F7A165]" : "text-brand-orange-dark"}`
-            : `font-medium ${featured ? "text-white/60" : "text-[#737373]"}`
-        }`}
-      >
-        {plan === "multiply" ? `Minimum ${MULTIPLY_MIN_USERS} users` : `From ${MIN_USERS} user`}
-      </p>
+      {/* Only MULTIPLY has a minimum. GROW and SCALE keep an empty line from
+          lg up so the three cards' rows stay aligned in the subgrid. */}
+      {plan === "multiply" ? (
+        <p className={`-mt-1.5 text-[12px] font-semibold ${featured ? "text-[#F7A165]" : "text-brand-orange-dark"}`}>
+          Minimum {MULTIPLY_MIN_USERS} users
+        </p>
+      ) : (
+        <p aria-hidden="true" className="invisible -mt-1.5 hidden text-[12px] lg:block">
+          &nbsp;
+        </p>
+      )}
 
       {/* Two parts, each on one line, so a narrow card breaks at the comma and
           never inside "10 users". */}
@@ -316,7 +318,7 @@ function PlanCard({
   );
 }
 
-// ---------------------------------------------------------------- add-ons and setup
+// ---------------------------------------------------------------- add-ons
 
 function AddOns() {
   return (
@@ -327,11 +329,11 @@ function AddOns() {
           sub="Industry modules, priced per business, not per user. MULTIPLY includes any two."
         />
         <Reveal delay={0.08}>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
             {HQ_ADDONS.map((a) => (
               <div
                 key={a.name}
-                className={`flex min-w-0 flex-col gap-1.5 rounded-2xl border border-black/[0.08] p-4 ${
+                className={`flex min-w-0 flex-col gap-1.5 rounded-2xl border border-black/[0.08] p-4 sm:last:odd:col-span-2 lg:last:odd:col-span-1 ${
                   a.comingSoon ? "bg-white/50" : "bg-white"
                 }`}
               >
@@ -359,50 +361,6 @@ function AddOns() {
   );
 }
 
-function SetupPackages() {
-  return (
-    <section className="bg-white px-5 py-14 sm:px-8 sm:py-20">
-      <div className="mx-auto max-w-container">
-        <SectionHead
-          title="Want us to set it up with you?"
-          sub="Our team builds your scoreboards, plan and meeting rhythm alongside you. Optional, and available any time."
-        />
-        <Reveal delay={0.08}>
-          <div className="mx-auto grid max-w-[480px] gap-3 lg:max-w-none lg:grid-cols-3">
-            {visibleSetupPackages(PRICING_V2_ANNUAL).map((s) => (
-              <div
-                key={s.name}
-                className="flex min-w-0 flex-col gap-2 rounded-2xl border border-black/[0.08] bg-white p-5 shadow-[0_24px_54px_-38px_rgba(40,30,15,0.4)]"
-              >
-                <h3 className="text-[13px] font-extrabold tracking-[0.09em] text-brand-ink">{s.name}</h3>
-                <p className="flex items-baseline gap-2">
-                  <span className="text-[30px] font-extrabold leading-none tracking-[-0.02em] text-brand-ink tabular-nums">
-                    {money(s.price)}
-                  </span>
-                  <span className="text-[12.5px] text-[#737373]">one time</span>
-                </p>
-                <p className="text-[12.5px] font-semibold text-brand-orange-dark">{s.fit}</p>
-                <ul className="mt-1 grid gap-1.5 text-[13px] leading-snug text-brand-charcoal">
-                  {s.items.map((item) => (
-                    <li key={item} className="grid grid-cols-[16px_minmax(0,1fr)] items-start gap-2">
-                      <Tick className="mt-[3px] h-[13px] w-[13px] text-brand-orange" />
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-                {s.included && (
-                  <span className="mt-auto inline-flex w-fit items-center rounded-md bg-[#F6F3EE] px-2 py-1 text-[12px] font-bold text-brand-ink">
-                    {s.included}
-                  </span>
-                )}
-              </div>
-            ))}
-          </div>
-        </Reveal>
-      </div>
-    </section>
-  );
-}
 
 // ---------------------------------------------------------------- compare
 
@@ -652,7 +610,7 @@ export default function PricingTiersPage({ promo }: { promo?: string } = {}) {
 
           <Reveal delay={0.18}>
             <p className="mx-auto mt-6 max-w-3xl rounded-xl bg-[#F6F3EE] px-4 py-3 text-center text-[13.5px] leading-relaxed text-brand-charcoal">
-              AI is billed by use, every two weeks, on the same card.{" "}
+              *AI is billed by use, every two weeks, on the same card.{" "}
               <b className="font-semibold text-brand-ink">You set a monthly cap</b> ({money(AI_MONTHLY_CAP_DEFAULT)} by
               default) and AI pauses when you reach it.
             </p>
@@ -661,7 +619,6 @@ export default function PricingTiersPage({ promo }: { promo?: string } = {}) {
       </section>
 
       <AddOns />
-      <SetupPackages />
       <Compare />
       <Faq />
 

@@ -60,9 +60,11 @@ export const ANNUAL_SAVINGS_LABEL = `Save up to ${ANNUAL_SAVINGS_PERCENT}%`;
 export const MIN_USERS = 1;
 export const MAX_USERS = 500;
 export const DEFAULT_USERS = 10;
-// Open decision D2 in the spec: one MULTIPLY user would get two HQ modules and
-// Launch onboarding for $49 a month, so MULTIPLY bills at least ten.
-export const MULTIPLY_MIN_USERS = 10;
+// Decision D2: one MULTIPLY user would get two HQ modules and Launch onboarding
+// for $49 a month, so MULTIPLY bills a minimum. Lowered from 10 to 5 on
+// 2026-10-20 (MOS Leadership) until 5 to 10 beta customers are on MULTIPLY.
+// Keep in step with PRICING_V2_DECISIONS.multiplyMinimumSeats in the app.
+export const MULTIPLY_MIN_USERS = 5;
 
 export function minUsers(plan: PlanId): number {
   return plan === "multiply" ? MULTIPLY_MIN_USERS : MIN_USERS;
@@ -100,6 +102,19 @@ export function teamTotalParts(plan: PlanId, billing: Billing, users: number): {
   const n = billedUsers(plan, users);
   return {
     head: `${money(teamMonthly(plan, billing, n))} a month for ${plural(n, "user")}`,
+    billed: billing === "annual" ? `billed ${money(teamAnnualBilled(plan, n))} a year` : null,
+  };
+}
+
+// The total on a plan card: "$290 a month for 10 users" (and "billed $3,480 a
+// year" on annual), following the Team size picker. Only when the picker is
+// below MULTIPLY's minimum does it name the minimum: "$490 a month at the
+// 10-user minimum", so it never says "for 10 users" while the picker says 3.
+export function pickerTotalParts(plan: PlanId, billing: Billing, users: number): { head: string; billed: string | null } {
+  const n = billedUsers(plan, users);
+  const amount = `${money(teamMonthly(plan, billing, n))} a month`;
+  return {
+    head: n > users ? `${amount} at the ${n}-user minimum` : `${amount} for ${plural(n, "user")}`,
     billed: billing === "annual" ? `billed ${money(teamAnnualBilled(plan, n))} a year` : null,
   };
 }

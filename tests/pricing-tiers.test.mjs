@@ -35,6 +35,7 @@ const {
   teamMonthly,
   teamTotalLine,
   teamTotalParts,
+  pickerTotalParts,
 } = tiers;
 
 // ---- prices ------------------------------------------------------------------
@@ -73,10 +74,12 @@ test("the annual saving label is true: the best plan saves 25% or a little more,
 
 // ---- team size and the MULTIPLY minimum --------------------------------------
 
-test("MULTIPLY bills at least 10 users; GROW and SCALE bill what you enter", () => {
-  assert.equal(MULTIPLY_MIN_USERS, 10);
-  assert.equal(billedUsers("multiply", 1), 10);
-  assert.equal(billedUsers("multiply", 9), 10);
+test("MULTIPLY bills at least 5 users; GROW and SCALE bill what you enter", () => {
+  assert.equal(MULTIPLY_MIN_USERS, 5);
+  assert.equal(billedUsers("multiply", 1), 5);
+  assert.equal(billedUsers("multiply", 4), 5);
+  assert.equal(billedUsers("multiply", 5), 5);
+  assert.equal(billedUsers("multiply", 9), 9);
   assert.equal(billedUsers("multiply", 10), 10);
   assert.equal(billedUsers("multiply", 25), 25);
   assert.equal(billedUsers("grow", 1), 1);
@@ -123,10 +126,10 @@ test("annual billing charges twelve months of the annual rate up front", () => {
   assert.equal(teamAnnualBilled("scale", 1), 348);
 });
 
-test("MULTIPLY totals use the 10 user minimum below 10 users", () => {
-  assert.equal(teamMonthly("multiply", "annual", 3), 490);
-  assert.equal(teamAnnualBilled("multiply", 3), 5880);
-  assert.equal(teamMonthly("multiply", "monthly", 3), 650);
+test("MULTIPLY totals use the 5 user minimum below 5 users", () => {
+  assert.equal(teamMonthly("multiply", "annual", 3), 245);
+  assert.equal(teamAnnualBilled("multiply", 3), 2940);
+  assert.equal(teamMonthly("multiply", "monthly", 3), 325);
 });
 
 test("the total line, annual and monthly, as the page words it", () => {
@@ -140,7 +143,7 @@ test("the total line, annual and monthly, as the page words it", () => {
 test("the total line says 1 user, not 1 users, and shows the MULTIPLY minimum", () => {
   assert.equal(teamTotalLine("grow", "annual", 1), "$15 a month for 1 user, billed $180 a year");
   assert.equal(teamTotalLine("scale", "monthly", 1), "$39 a month for 1 user");
-  assert.equal(teamTotalLine("multiply", "annual", 3), "$490 a month for 10 users, billed $5,880 a year");
+  assert.equal(teamTotalLine("multiply", "annual", 3), "$245 a month for 5 users, billed $2,940 a year");
 });
 
 test("the total line comes in two parts, so the page can keep each part on one line", () => {
@@ -150,8 +153,8 @@ test("the total line comes in two parts, so the page can keep each part on one l
   });
   assert.deepEqual(teamTotalParts("scale", "monthly", 10), { head: "$390 a month for 10 users", billed: null });
   assert.deepEqual(teamTotalParts("multiply", "annual", 3), {
-    head: "$490 a month for 10 users",
-    billed: "billed $5,880 a year",
+    head: "$245 a month for 5 users",
+    billed: "billed $2,940 a year",
   });
   // and the one line version is exactly the two parts joined
   for (const plan of PLAN_ORDER) {
@@ -216,3 +219,17 @@ test("setup packages: Launch $1,000, Accelerate $5,000, Momentum $18,000", () =>
   assert.deepEqual(SETUP_PRICE, { launch: 1000, accelerate: 5000, momentum: 18000 });
 });
 
+
+test("the card total keeps the original wording", () => {
+  assert.deepEqual(pickerTotalParts("scale", "annual", 10), { head: "$290 a month for 10 users", billed: "billed $3,480 a year" });
+  assert.deepEqual(pickerTotalParts("grow", "monthly", 10), { head: "$190 a month for 10 users", billed: null });
+  assert.deepEqual(pickerTotalParts("scale", "annual", 1), { head: "$29 a month for 1 user", billed: "billed $348 a year" });
+  assert.deepEqual(pickerTotalParts("multiply", "annual", 12), { head: "$588 a month for 12 users", billed: "billed $7,056 a year" });
+});
+
+test("the card total names the MULTIPLY minimum only when the picker is below it", () => {
+  assert.deepEqual(pickerTotalParts("multiply", "annual", 3), { head: "$245 a month at the 5-user minimum", billed: "billed $2,940 a year" });
+  assert.deepEqual(pickerTotalParts("multiply", "monthly", 4), { head: "$325 a month at the 5-user minimum", billed: null });
+  assert.deepEqual(pickerTotalParts("multiply", "annual", 5), { head: "$245 a month for 5 users", billed: "billed $2,940 a year" });
+  assert.deepEqual(pickerTotalParts("multiply", "monthly", 9), { head: "$585 a month for 9 users", billed: null });
+});
