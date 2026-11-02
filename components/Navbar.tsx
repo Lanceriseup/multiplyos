@@ -169,12 +169,16 @@ const EventsIcon = ({ className }: { className?: string }) => (
     <path d="M8 13.2h.01M12 13.2h.01M16 13.2h.01M8 16.6h.01M12 16.6h.01M16 16.6h.01" strokeWidth={2.4} />
   </svg>
 );
-const BoxIcon = ({ className }: { className?: string }) => (
+// Inventory HQ's own mark in the app: three boxes stacked, two below and one
+// on top. Replaces the single box the card carried before the page shipped.
+const BoxesIcon = ({ className }: { className?: string }) => (
   <svg className={className} {...svgProps}>
-    <path d="M12 3.2l7.8 4.3v9L12 20.8l-7.8-4.3v-9z" />
-    <path d="M4.4 7.6L12 11.8l7.6-4.2" />
-    <path d="M12 11.8v8.8" />
-    <path d="M8.1 5.4l7.7 4.3" />
+    <path d="M2.97 12.92A2 2 0 0 0 2 14.63v3.24a2 2 0 0 0 .97 1.71l3 1.8a2 2 0 0 0 2.06 0L12 19v-5.5l-5-3-4.03 2.42z" />
+    <path d="M7 16.5l-4.74-2.85M7 16.5l5-3M7 16.5v5.17" />
+    <path d="M12 13.5V19l3.97 2.38a2 2 0 0 0 2.06 0l3-1.8a2 2 0 0 0 .97-1.71v-3.24a2 2 0 0 0-.97-1.71L17 10.5l-5 3z" />
+    <path d="M17 16.5l-5-3M17 16.5l4.74-2.85M17 16.5v5.17" />
+    <path d="M7.97 4.42A2 2 0 0 0 7 6.13v4.37l5 3 5-3V6.13a2 2 0 0 0-.97-1.71l-3-1.8a2 2 0 0 0-2.06 0l-3 1.8z" />
+    <path d="M12 8L7.26 5.15M12 8l4.74-2.85M12 13.5V8" />
   </svg>
 );
 const PeopleIcon = ({ className }: { className?: string }) => (
@@ -205,14 +209,14 @@ const ArrowIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
-// Inventory and People HQ have no page yet, so they render as non-navigating
-// cards; add `href` as each page ships. `soon` replaces the Explore link with a
-// pulsing badge and keeps the card from navigating.
+// A module with no page yet renders as a non-navigating card; add `href` as each
+// page ships. `soon` replaces the Explore link with a pulsing badge and keeps
+// the card from navigating.
 type HqModule = Feature & { soon?: string };
 
 const hqModules: HqModule[] = [
   { label: "Events HQ", desc: "Plan, staff and run every event.", href: "/features/events-hq", color: "#C2412D", icon: EventsIcon },
-  { label: "Inventory HQ", desc: "Stock, counts and reorders in one place.", color: "#2F6F8F", icon: BoxIcon },
+  { label: "Inventory HQ", desc: "Stock, counts and reorders in one place.", href: "/features/inventory-hq", color: "#2F6F8F", icon: BoxesIcon },
   { label: "People HQ", desc: "Hire, onboard and grow your people.", color: "#B0466E", icon: PeopleIcon },
   { label: "SOP HQ", desc: "Every process, documented.", href: "/features/sop-hq", color: "#7A4E28", icon: BookIcon },
   { label: "Contractor HQ", desc: "Your contractors, organized.", color: "#9A7414", icon: HardHatIcon, soon: "Coming Nov" },
