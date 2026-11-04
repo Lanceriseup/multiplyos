@@ -363,3 +363,106 @@ body {
   .coach-cta, .coach-cta-tag { animation: none; }
   .coach-sheet { transition: none; }
 }
+
+/* ---- Features menu: HQ Module cards (full-colour, tilt + shine) ---- */
+@keyframes hq-menu-in {
+  from { opacity: 0; transform: translateY(-10px) scale(0.975); filter: blur(6px); }
+  to { opacity: 1; transform: none; filter: blur(0); }
+}
+.hq-menu-in { animation: hq-menu-in 0.42s cubic-bezier(0.2, 0.85, 0.25, 1) both; transform-origin: 50% 0; }
+
+.hq-card {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 172px;
+  border-radius: 17px;
+  padding: 16px;
+  color: #fff;
+  background:
+    radial-gradient(120% 90% at 100% 0%, rgba(255, 255, 255, 0.22), transparent 55%),
+    linear-gradient(150deg, color-mix(in srgb, var(--c) 92%, #fff), color-mix(in srgb, var(--c) 66%, #000));
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--c) 30%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  transition: transform 0.2s ease-out, box-shadow 0.3s;
+}
+/* decorative ring in the bottom-right corner */
+.hq-card::after {
+  content: "";
+  position: absolute;
+  right: -34px;
+  bottom: -44px;
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  border: 20px solid rgba(255, 255, 255, 0.08);
+  transition: transform 0.6s;
+}
+.hq-card-live:hover { box-shadow: 0 20px 40px color-mix(in srgb, var(--c) 42%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.3); }
+.hq-card-live:hover::after { transform: scale(1.2); }
+.hq-card-live:focus-visible { outline: 2px solid var(--c); outline-offset: 3px; }
+.hq-shine {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, 0.32) 50%, transparent 65%);
+  transform: translateX(-120%);
+}
+.hq-card-live:hover .hq-shine { transform: translateX(120%); transition: transform 0.9s ease; }
+.hq-glass {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  backdrop-filter: blur(4px);
+}
+.hq-go {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: auto;
+  padding-top: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  transition: gap 0.25s;
+}
+.hq-card-live:hover .hq-go { gap: 9px; }
+/* Not launched yet: neutral striped card with a pulsing badge */
+.hq-card-soon {
+  background:
+    repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.05) 0 10px, transparent 10px 20px),
+    linear-gradient(150deg, #4a443d, #1e1b17);
+  box-shadow: 0 10px 24px rgba(10, 10, 10, 0.18);
+}
+.hq-soon {
+  position: relative;
+  z-index: 1;
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  background: rgba(255, 255, 255, 0.16);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.hq-soon i { width: 6px; height: 6px; border-radius: 50%; background: #ffb36b; animation: hq-pulse 1.9s ease-out infinite; }
+@keyframes hq-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(234, 123, 27, 0.55); }
+  100% { box-shadow: 0 0 0 7px rgba(234, 123, 27, 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hq-menu-in, .hq-soon i { animation: none; }
+  .hq-card, .hq-card::after, .hq-shine, .hq-go { transition: none; }
+}
